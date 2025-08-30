@@ -1,0 +1,894 @@
+{
+    "projectId": "68aeee3e002954b489ae",
+    "endpoint": "https://fra.cloud.appwrite.io/v1",
+    "projectName": "vanVedaOrganics",
+    "settings": {
+        "services": {
+            "account": true,
+            "avatars": true,
+            "databases": true,
+            "locale": true,
+            "health": true,
+            "storage": true,
+            "teams": true,
+            "users": true,
+            "sites": true,
+            "functions": true,
+            "graphql": true,
+            "messaging": true
+        },
+        "auth": {
+            "methods": {
+                "jwt": true,
+                "phone": true,
+                "invites": true,
+                "anonymous": true,
+                "email-otp": true,
+                "magic-url": true,
+                "email-password": true
+            },
+            "security": {
+                "duration": 31536000,
+                "limit": 0,
+                "sessionsLimit": 10,
+                "passwordHistory": 0,
+                "passwordDictionary": false,
+                "personalDataCheck": false,
+                "sessionAlerts": false,
+                "mockNumbers": []
+            }
+        }
+    },
+    "databases": [
+        {
+            "$id": "68b1f78f00227e7da639",
+            "name": "vanVedaOrganics",
+            "enabled": true
+        }
+    ],
+    "collections": [
+        {
+            "$id": "products",
+            "$permissions": [
+                "create(\"team:68b2996d003dcf1ff6a7\")",
+                "read(\"team:68b2996d003dcf1ff6a7\")",
+                "update(\"team:68b2996d003dcf1ff6a7\")",
+                "delete(\"team:68b2996d003dcf1ff6a7\")",
+                "read(\"users\")"
+            ],
+            "databaseId": "68b1f78f00227e7da639",
+            "name": "products",
+            "enabled": true,
+            "documentSecurity": false,
+            "attributes": [
+                {
+                    "key": "name",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 256,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "slug",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 128,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "description",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 2000,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "price_cents",
+                    "type": "integer",
+                    "required": true,
+                    "array": false,
+                    "min": 0,
+                    "max": 9223372036854775807,
+                    "default": null
+                },
+                {
+                    "key": "currency",
+                    "type": "string",
+                    "required": false,
+                    "array": false,
+                    "size": 3,
+                    "default": "INR",
+                    "encrypt": false
+                },
+                {
+                    "key": "image_file_ids",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 256,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "stock",
+                    "type": "integer",
+                    "required": false,
+                    "array": false,
+                    "min": 0,
+                    "max": 9223372036854775807,
+                    "default": null
+                },
+                {
+                    "key": "sku",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 64,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "categories",
+                    "type": "relationship",
+                    "required": false,
+                    "array": false,
+                    "relatedCollection": "categories",
+                    "relationType": "manyToMany",
+                    "twoWay": true,
+                    "twoWayKey": "products",
+                    "onDelete": "restrict",
+                    "side": "parent"
+                }
+            ],
+            "indexes": [
+                {
+                    "key": "slug",
+                    "type": "unique",
+                    "status": "available",
+                    "attributes": [
+                        "slug"
+                    ],
+                    "orders": [
+                        "ASC"
+                    ]
+                }
+            ]
+        },
+        {
+            "$id": "categories",
+            "$permissions": [
+                "read(\"users\")",
+                "create(\"team:68b2996d003dcf1ff6a7\")",
+                "read(\"team:68b2996d003dcf1ff6a7\")",
+                "update(\"team:68b2996d003dcf1ff6a7\")",
+                "delete(\"team:68b2996d003dcf1ff6a7\")"
+            ],
+            "databaseId": "68b1f78f00227e7da639",
+            "name": "categories",
+            "enabled": true,
+            "documentSecurity": false,
+            "attributes": [
+                {
+                    "key": "name",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 128,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "slug",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 128,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "parent_id",
+                    "type": "string",
+                    "required": false,
+                    "array": false,
+                    "size": 256,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "order",
+                    "type": "integer",
+                    "required": false,
+                    "array": false,
+                    "min": 0,
+                    "max": 9223372036854775807,
+                    "default": 0
+                },
+                {
+                    "key": "products",
+                    "type": "relationship",
+                    "required": false,
+                    "array": false,
+                    "relatedCollection": "products",
+                    "relationType": "manyToMany",
+                    "twoWay": true,
+                    "twoWayKey": "categories",
+                    "onDelete": "restrict",
+                    "side": "child"
+                }
+            ],
+            "indexes": [
+                {
+                    "key": "slug",
+                    "type": "unique",
+                    "status": "available",
+                    "attributes": [
+                        "slug"
+                    ],
+                    "orders": [
+                        "ASC"
+                    ]
+                }
+            ]
+        },
+        {
+            "$id": "user_profiles",
+            "$permissions": [
+                "create(\"users\")"
+            ],
+            "databaseId": "68b1f78f00227e7da639",
+            "name": "user_profiles",
+            "enabled": true,
+            "documentSecurity": true,
+            "attributes": [
+                {
+                    "key": "user_id",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 256,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "displayName",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 126,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "phone",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 10,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "address",
+                    "type": "string",
+                    "required": false,
+                    "array": true,
+                    "size": 512,
+                    "default": null,
+                    "encrypt": false
+                }
+            ],
+            "indexes": []
+        },
+        {
+            "$id": "carts",
+            "$permissions": [
+                "create(\"users\")",
+                "read(\"team:68b2996d003dcf1ff6a7\")"
+            ],
+            "databaseId": "68b1f78f00227e7da639",
+            "name": "carts",
+            "enabled": true,
+            "documentSecurity": false,
+            "attributes": [
+                {
+                    "key": "user_id",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 256,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "items",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 1000,
+                    "default": null,
+                    "encrypt": false
+                }
+            ],
+            "indexes": []
+        },
+        {
+            "$id": "orders",
+            "$permissions": [
+                "create(\"users\")",
+                "read(\"team:68b2996d003dcf1ff6a7\")"
+            ],
+            "databaseId": "68b1f78f00227e7da639",
+            "name": "orders",
+            "enabled": true,
+            "documentSecurity": false,
+            "attributes": [
+                {
+                    "key": "orderNumber",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 256,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "userId",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 256,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "items",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 1000,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "shippingAddress",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 512,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "total_cents",
+                    "type": "integer",
+                    "required": true,
+                    "array": false,
+                    "min": 0,
+                    "max": 9223372036854775807,
+                    "default": null
+                },
+                {
+                    "key": "paymentStatus",
+                    "type": "string",
+                    "required": false,
+                    "array": false,
+                    "elements": [
+                        "Pending",
+                        "Paid",
+                        "Failed"
+                    ],
+                    "format": "enum",
+                    "default": "Pending"
+                },
+                {
+                    "key": "fulfillmentSattus",
+                    "type": "string",
+                    "required": false,
+                    "array": false,
+                    "elements": [
+                        "shipped",
+                        "delivered",
+                        "cancelled",
+                        "pending"
+                    ],
+                    "format": "enum",
+                    "default": "pending"
+                }
+            ],
+            "indexes": [
+                {
+                    "key": "orderNumber",
+                    "type": "unique",
+                    "status": "available",
+                    "attributes": [
+                        "orderNumber"
+                    ],
+                    "orders": [
+                        "ASC"
+                    ]
+                }
+            ]
+        },
+        {
+            "$id": "audti_logs",
+            "$permissions": [
+                "read(\"team:68b2996d003dcf1ff6a7\")",
+                "update(\"team:68b2996d003dcf1ff6a7\")"
+            ],
+            "databaseId": "68b1f78f00227e7da639",
+            "name": "audti_logs",
+            "enabled": true,
+            "documentSecurity": false,
+            "attributes": [
+                {
+                    "key": "actorId",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 256,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "action",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 256,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "targetCollection",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 256,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "target_id",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 256,
+                    "default": null,
+                    "encrypt": false
+                }
+            ],
+            "indexes": []
+        }
+    ],
+    "tables": [
+        {
+            "$id": "products",
+            "$permissions": [
+                "create(\"team:68b2996d003dcf1ff6a7\")",
+                "read(\"team:68b2996d003dcf1ff6a7\")",
+                "update(\"team:68b2996d003dcf1ff6a7\")",
+                "delete(\"team:68b2996d003dcf1ff6a7\")",
+                "read(\"users\")"
+            ],
+            "databaseId": "68b1f78f00227e7da639",
+            "name": "products",
+            "enabled": true,
+            "columns": [
+                {
+                    "key": "name",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 256,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "slug",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 128,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "description",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 2000,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "price_cents",
+                    "type": "integer",
+                    "required": true,
+                    "array": false,
+                    "min": 0,
+                    "max": 9223372036854775807,
+                    "default": null
+                },
+                {
+                    "key": "currency",
+                    "type": "string",
+                    "required": false,
+                    "array": false,
+                    "size": 3,
+                    "default": "INR",
+                    "encrypt": false
+                },
+                {
+                    "key": "image_file_ids",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 256,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "stock",
+                    "type": "integer",
+                    "required": false,
+                    "array": false,
+                    "min": 0,
+                    "max": 9223372036854775807,
+                    "default": null
+                },
+                {
+                    "key": "sku",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 64,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "categories",
+                    "type": "relationship",
+                    "required": false,
+                    "array": false,
+                    "relationType": "manyToMany",
+                    "twoWay": true,
+                    "twoWayKey": "products",
+                    "onDelete": "restrict",
+                    "side": "parent"
+                }
+            ],
+            "indexes": [
+                {
+                    "key": "slug",
+                    "type": "unique",
+                    "status": "available",
+                    "orders": [
+                        "ASC"
+                    ]
+                }
+            ]
+        },
+        {
+            "$id": "categories",
+            "$permissions": [
+                "read(\"users\")",
+                "create(\"team:68b2996d003dcf1ff6a7\")",
+                "read(\"team:68b2996d003dcf1ff6a7\")",
+                "update(\"team:68b2996d003dcf1ff6a7\")",
+                "delete(\"team:68b2996d003dcf1ff6a7\")"
+            ],
+            "databaseId": "68b1f78f00227e7da639",
+            "name": "categories",
+            "enabled": true,
+            "columns": [
+                {
+                    "key": "name",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 128,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "slug",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 128,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "parent_id",
+                    "type": "string",
+                    "required": false,
+                    "array": false,
+                    "size": 256,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "order",
+                    "type": "integer",
+                    "required": false,
+                    "array": false,
+                    "min": 0,
+                    "max": 9223372036854775807,
+                    "default": 0
+                },
+                {
+                    "key": "products",
+                    "type": "relationship",
+                    "required": false,
+                    "array": false,
+                    "relationType": "manyToMany",
+                    "twoWay": true,
+                    "twoWayKey": "categories",
+                    "onDelete": "restrict",
+                    "side": "child"
+                }
+            ],
+            "indexes": [
+                {
+                    "key": "slug",
+                    "type": "unique",
+                    "status": "available",
+                    "orders": [
+                        "ASC"
+                    ]
+                }
+            ]
+        },
+        {
+            "$id": "user_profiles",
+            "$permissions": [
+                "create(\"users\")"
+            ],
+            "databaseId": "68b1f78f00227e7da639",
+            "name": "user_profiles",
+            "enabled": true,
+            "columns": [
+                {
+                    "key": "user_id",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 256,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "displayName",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 126,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "phone",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 10,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "address",
+                    "type": "string",
+                    "required": false,
+                    "array": true,
+                    "size": 512,
+                    "default": null,
+                    "encrypt": false
+                }
+            ],
+            "indexes": []
+        },
+        {
+            "$id": "carts",
+            "$permissions": [
+                "create(\"users\")",
+                "read(\"team:68b2996d003dcf1ff6a7\")"
+            ],
+            "databaseId": "68b1f78f00227e7da639",
+            "name": "carts",
+            "enabled": true,
+            "columns": [
+                {
+                    "key": "user_id",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 256,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "items",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 1000,
+                    "default": null,
+                    "encrypt": false
+                }
+            ],
+            "indexes": []
+        },
+        {
+            "$id": "orders",
+            "$permissions": [
+                "create(\"users\")",
+                "read(\"team:68b2996d003dcf1ff6a7\")"
+            ],
+            "databaseId": "68b1f78f00227e7da639",
+            "name": "orders",
+            "enabled": true,
+            "columns": [
+                {
+                    "key": "orderNumber",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 256,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "userId",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 256,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "items",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 1000,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "shippingAddress",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 512,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "total_cents",
+                    "type": "integer",
+                    "required": true,
+                    "array": false,
+                    "min": 0,
+                    "max": 9223372036854775807,
+                    "default": null
+                },
+                {
+                    "key": "paymentStatus",
+                    "type": "string",
+                    "required": false,
+                    "array": false,
+                    "elements": [
+                        "Pending",
+                        "Paid",
+                        "Failed"
+                    ],
+                    "format": "enum",
+                    "default": "Pending"
+                },
+                {
+                    "key": "fulfillmentSattus",
+                    "type": "string",
+                    "required": false,
+                    "array": false,
+                    "elements": [
+                        "shipped",
+                        "delivered",
+                        "cancelled",
+                        "pending"
+                    ],
+                    "format": "enum",
+                    "default": "pending"
+                }
+            ],
+            "indexes": [
+                {
+                    "key": "orderNumber",
+                    "type": "unique",
+                    "status": "available",
+                    "orders": [
+                        "ASC"
+                    ]
+                }
+            ]
+        },
+        {
+            "$id": "audti_logs",
+            "$permissions": [
+                "read(\"team:68b2996d003dcf1ff6a7\")",
+                "update(\"team:68b2996d003dcf1ff6a7\")"
+            ],
+            "databaseId": "68b1f78f00227e7da639",
+            "name": "audti_logs",
+            "enabled": true,
+            "columns": [
+                {
+                    "key": "actorId",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 256,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "action",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 256,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "targetCollection",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 256,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "target_id",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 256,
+                    "default": null,
+                    "encrypt": false
+                }
+            ],
+            "indexes": []
+        }
+    ],
+    "buckets": [
+        {
+            "$id": "68b2a6d90028de639c6f",
+            "$permissions": [],
+            "fileSecurity": false,
+            "name": "productImages",
+            "enabled": true,
+            "maximumFileSize": 50000000,
+            "allowedFileExtensions": [],
+            "compression": "none",
+            "encryption": true,
+            "antivirus": true
+        }
+    ],
+    "teams": [
+        {
+            "$id": "68b2996d003dcf1ff6a7",
+            "name": "admins"
+        }
+    ]
+}

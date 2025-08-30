@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Outlet } from "react-router-dom";
 import {
   Menu,
   LogOut,
@@ -7,10 +8,11 @@ import {
   ShoppingCart,
   Megaphone,
   Tag,
+  X,
 } from "lucide-react";
-import { Link } from "react-router-dom"; 
+import { Link } from "react-router-dom";
 
-export default function AdminLayout({ children }) {
+export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
@@ -23,6 +25,10 @@ export default function AdminLayout({ children }) {
         <div className="space-grotesk-bold p-4 text-xl font-bold border-b border-green-900 flex items-center gap-3">
           <Package color="black" className="bg-[#dfb96a] rounded-md" />
           VanVed Organics
+          <X
+            className="md:hidden  transition-transform duration-300 active:scale-90 active:text-gray-400"
+            onClick={() => (setSidebarOpen(false))}
+          />
         </div>
         <nav className="space-grotesk-medium mt-4 flex flex-col space-y-2 p-4 text-sm">
           <Link
@@ -94,7 +100,7 @@ export default function AdminLayout({ children }) {
         </header>
 
         {/* Page Content */}
-        <main className="p-6 overflow-y-auto">{children}</main>
+        <main className="p-6 overflow-y-auto"><Outlet/></main>
       </div>
     </div>
   );

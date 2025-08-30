@@ -1,13 +1,12 @@
 import './App.css'
-import AdminLayout from '../admin/pages/AdminLayout'
+import { Outlet } from 'react-router-dom'
 
 function App() {
 
   return (
     <>
-      <AdminLayout>
-        
-      </AdminLayout>
+      <h1>HEllo World</h1>
+      <Outlet />
     </>
   )
 }
