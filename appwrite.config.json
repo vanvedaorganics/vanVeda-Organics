@@ -139,9 +139,9 @@
                     "required": false,
                     "array": false,
                     "relatedCollection": "categories",
-                    "relationType": "manyToMany",
-                    "twoWay": true,
-                    "twoWayKey": "products",
+                    "relationType": "manyToOne",
+                    "twoWay": false,
+                    "twoWayKey": "68b324af000a07622a06",
                     "onDelete": "restrict",
                     "side": "parent"
                 }
@@ -153,6 +153,17 @@
                     "status": "available",
                     "attributes": [
                         "slug"
+                    ],
+                    "orders": [
+                        "ASC"
+                    ]
+                },
+                {
+                    "key": "stock",
+                    "type": "key",
+                    "status": "available",
+                    "attributes": [
+                        "stock"
                     ],
                     "orders": [
                         "ASC"
@@ -209,18 +220,6 @@
                     "min": 0,
                     "max": 9223372036854775807,
                     "default": 0
-                },
-                {
-                    "key": "products",
-                    "type": "relationship",
-                    "required": false,
-                    "array": false,
-                    "relatedCollection": "products",
-                    "relationType": "manyToMany",
-                    "twoWay": true,
-                    "twoWayKey": "categories",
-                    "onDelete": "restrict",
-                    "side": "child"
                 }
             ],
             "indexes": [
@@ -322,7 +321,8 @@
             "$id": "orders",
             "$permissions": [
                 "create(\"users\")",
-                "read(\"team:68b2996d003dcf1ff6a7\")"
+                "read(\"team:68b2996d003dcf1ff6a7\")",
+                "update(\"team:68b2996d003dcf1ff6a7\")"
             ],
             "databaseId": "68b1f78f00227e7da639",
             "name": "orders",
@@ -400,6 +400,19 @@
                     ],
                     "format": "enum",
                     "default": "pending"
+                },
+                {
+                    "key": "paymentMode",
+                    "type": "string",
+                    "required": false,
+                    "array": false,
+                    "elements": [
+                        "UPI",
+                        "Card",
+                        "COD"
+                    ],
+                    "format": "enum",
+                    "default": "COD"
                 }
             ],
             "indexes": [
