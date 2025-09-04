@@ -1,5 +1,8 @@
-import React, { useState } from "react";
-import { Outlet } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import authService from "../../src/appwrite/authService";
+import { login, logout } from "../../src/store/authSlice";
+import { useDispatch } from "react-redux";
+import { Outlet, useNavigate } from "react-router-dom";
 import {
   Menu,
   LogOut,
@@ -14,6 +17,35 @@ import { Link } from "react-router-dom";
 
 export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    authService
+      .getUser()
+      .then((userData) => {
+        if (userData && userData.$id) {
+          authService.isAdmin().then((isAdmin) => {
+            if (isAdmin) {
+              dispatch(login({ user: userData }));
+            } else {
+              dispatch(logout());
+            }
+            setLoading(false);
+          });
+        }
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  const userLogout = async () => {
+    authService.logout().then(() => {
+      dispatch(logout());
+      navigate("/admin/login");
+      console.log("[Logout] Success");
+    });
+  };
 
   return (
     <div className="flex h-screen bg-gray-100">
@@ -27,7 +59,7 @@ export default function AdminLayout() {
           VanVed Organics
           <X
             className="md:hidden  transition-transform duration-300 active:scale-90 active:text-gray-400"
-            onClick={() => (setSidebarOpen(false))}
+            onClick={() => setSidebarOpen(false)}
           />
         </div>
         <nav className="space-grotesk-medium mt-4 flex flex-col space-y-2 p-4 text-sm">
@@ -93,14 +125,19 @@ export default function AdminLayout() {
 
           <div className="flex items-center gap-4">
             <span className="text-gray-700">Admin</span>
-            <button className="p-2 rounded hover:bg-gray-100">
+            <button
+              className="p-2 rounded hover:bg-gray-100"
+              onClick={userLogout}
+            >
               <LogOut className="h-5 w-5 text-gray-700" />
             </button>
           </div>
         </header>
 
         {/* Page Content */}
-        <main className="p-6 overflow-y-auto"><Outlet/></main>
+        <main className="p-6 overflow-y-auto">
+          {!loading ? <Outlet /> : <p>Loading...</p>}
+        </main>
       </div>
     </div>
   );
