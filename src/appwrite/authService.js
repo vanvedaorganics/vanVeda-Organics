@@ -118,6 +118,21 @@ export class AuthService {
       return "Appwrite Error :: Delete Team Membership :: " + error.message;
     }
   }
+
+  async isAdmin() {
+    try{
+      const user = await this.getUser();
+      const memberships = await this.teams.listMemberships(conf.appwriteTeamsId);
+      return memberships.memberships.some(
+        (m) => m.userId === user.$id && m.confirm
+      );
+    }catch (error){
+      console.log("Appwrite Error :: isAdmin :: " + error.message);
+      return false;
+    }
+
+  }
+
 }
 const appwriteAuthService = new AuthService();
 export default appwriteAuthService;

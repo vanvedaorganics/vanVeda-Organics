@@ -28,6 +28,14 @@ export default function Login() {
       // Get the user profile
       const user = await authService.getUser();
 
+      // Check if user is an admin
+      const isAdmin = await authService.isAdmin()
+
+      if (!isAdmin) {
+        await authService.logout();
+      throw new Error("You are not authorized to access the Admin Panel.");
+    }
+
       // Update Redux store
       dispatch(login({ user, session }));
 
