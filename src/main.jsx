@@ -1,11 +1,18 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { RouterProvider, createBrowserRouter } from 'react-router-dom'
+import { Provider } from 'react-redux'
 
 import './index.css'
 import App from './App.jsx'
 import AdminLayout from '../admin/pages/AdminLayout.jsx'
 import Products from '../admin/pages/Products.jsx'
+import AuthLayout from '../admin/components/AuthLayout.jsx'
+import Login from '../admin/pages/Login.jsx'
+import store from './store/store.js'
+import { initializeAppData } from './appwrite/initData.js'
+
+initializeAppData();
 
 const router = createBrowserRouter([
   {
@@ -15,15 +22,32 @@ const router = createBrowserRouter([
   {
     path: "/admin/",
     element: <AdminLayout />,
-    children: [{
-      path: "/admin/products",
-      element: <Products />
-    }]
-  }
-])
+    children: [
+      {
+        path: "login",
+        element: (
+          <AuthLayout authentication={false}>
+            <Login />
+          </AuthLayout>
+        ),
+      },
+      {
+        path: "products",
+        element: (
+          <AuthLayout authentication>
+            {" "}
+            <Products />
+          </AuthLayout>
+        ),
+      },
+    ],
+  },
+]);
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <RouterProvider router={router}/>
+    <Provider store={store}>
+      <RouterProvider router={router}/>
+    </Provider>
   </StrictMode>,
 )
