@@ -13,7 +13,7 @@ import {
   Tag,
   X,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 
 export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -28,7 +28,7 @@ export default function AdminLayout() {
         if (userData && userData.$id) {
           authService.isAdmin().then((isAdmin) => {
             if (isAdmin) {
-              dispatch(login({ user: userData }));
+              dispatch(login(userData));
             } else {
               dispatch(logout());
             }
@@ -55,7 +55,7 @@ export default function AdminLayout() {
         ${sidebarOpen ? "translate-x-0" : "-translate-x-64"} md:translate-x-0`}
       >
         <div className="space-grotesk-bold p-4 text-xl font-bold border-b border-green-900 flex items-center gap-3">
-          <Package color="black" className="bg-[#dfb96a] rounded-md" />
+          <Package color="#084629" className="bg-[#dfb96a] rounded-md" />
           VanVed Organics
           <X
             className="md:hidden  transition-transform duration-300 active:scale-90 active:text-gray-400"
@@ -63,41 +63,71 @@ export default function AdminLayout() {
           />
         </div>
         <nav className="space-grotesk-medium mt-4 flex flex-col space-y-2 p-4 text-sm">
-          <Link
+          <NavLink
             to="/admin/products"
-            className="px-3 py-2 rounded hover:bg-green-800 flex items-center gap-3"
+            className={({ isActive }) =>
+              `px-3 py-2 rounded flex items-center gap-3 ${
+                isActive
+                  ? "bg-[#dfb96a] text-[#084629] font-bold"
+                  : "hover:bg-green-800 active:bg-[#dfb96a] active:text-[#084629]"
+              }`
+            }
           >
             <Package size={15} />
             Products
-          </Link>
-          <Link
+          </NavLink>
+          <NavLink
             to="/admin/users"
-            className="px-3 py-2 rounded hover:bg-green-800 flex items-center gap-3"
+            className={({ isActive }) =>
+              `px-3 py-2 rounded flex items-center gap-3 ${
+                isActive
+                  ? "bg-[#dfb96a] text-[#084629] font-bold"
+                  : "hover:bg-green-800"
+              }`
+            }
           >
             <Users size={15} />
             Users
-          </Link>
-          <Link
+          </NavLink>
+          <NavLink
             to="/admin/orders"
-            className="px-3 py-2 rounded hover:bg-green-800 flex items-center gap-3"
+            className={({ isActive }) =>
+              `px-3 py-2 rounded flex items-center gap-3 ${
+                isActive
+                  ? "bg-[#dfb96a] text-[#084629] font-bold"
+                  : "hover:bg-green-800"
+              }`
+            }
           >
             <ShoppingCart size={15} />
             Orders
-          </Link>
-          <Link
+          </NavLink>
+          <NavLink
             to="/admin/ads"
-            className="px-3 py-2 rounded hover:bg-green-800 flex items-center gap-3"
+            className={({ isActive }) =>
+              `px-3 py-2 rounded flex items-center gap-3 ${
+                isActive
+                  ? "bg-[#dfb96a] text-[#084629] font-bold"
+                  : "hover:bg-green-800"
+              }`
+            }
           >
             <Megaphone size={15} />
             Advertisements
-          </Link>
-          <Link
+          </NavLink>
+          <NavLink
             to="/admin/offers"
-            className="px-3 py-2 rounded hover:bg-green-800 flex items-center gap-3"
+            className={({ isActive }) =>
+              `px-3 py-2 rounded flex items-center gap-3 ${
+                isActive
+                  ? "bg-[#dfb96a] text-[#084629] font-bold"
+                  : "hover:bg-green-800"
+              }`
+            }
           >
             <Tag size={15} />
             Offers
-          </Link>
+          </NavLink>
         </nav>
       </aside>
 
@@ -135,7 +165,7 @@ export default function AdminLayout() {
         </header>
 
         {/* Page Content */}
-        <main className="p-6 overflow-y-auto">
+        <main className="overflow-y-auto">
           {!loading ? <Outlet /> : <p>Loading...</p>}
         </main>
       </div>

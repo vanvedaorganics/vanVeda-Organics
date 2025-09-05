@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
-import Input from "../components/Input";
-import Button from "../components/Button";
+import { Eye, EyeOff } from "lucide-react"; // 👈 add icons
+// import Input from "../components/Input";
+// import Button from "../components/Button";
+import { Button, Input } from '../components';
 import authService from "../../src/appwrite/authService";
 import { login } from "../../src/store/authSlice";
 
@@ -11,6 +13,7 @@ export default function Login() {
   // Form state
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false); // 👈 toggle state
 
   // UI state
   const [loading, setLoading] = useState(false);
@@ -22,23 +25,16 @@ export default function Login() {
     setLoading(true);
 
     try {
-      // Call Appwrite login
       const session = await authService.login({ email, password });
-
-      // Get the user profile
       const user = await authService.getUser();
 
-      // Check if user is an admin
-      const isAdmin = await authService.isAdmin()
-
+      const isAdmin = await authService.isAdmin();
       if (!isAdmin) {
         await authService.logout();
-      throw new Error("You are not authorized to access the Admin Panel.");
-    }
+        throw new Error("You are not authorized to access the Admin Panel.");
+      }
 
-      // Update Redux store
       dispatch(login({ user, session }));
-
       console.log("[Login] Success:", user);
     } catch (err) {
       console.error("[Login] Error:", err);
@@ -68,16 +64,30 @@ export default function Login() {
             required
           />
 
-          {/* Password Input */}
+          {/* Password Input with Eye Toggle */}
           <Input
             name="password"
-            type="password"
+            type={showPassword ? "text" : "password"}
             label="Password"
             placeholder="••••••••"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             disabled={loading}
             required
+            suffix={
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="focus:outline-none"
+                tabIndex={-1} // don’t steal tab focus from input
+              >
+                {showPassword ? (
+                  <EyeOff className="w-5 h-5 text-gray-500" />
+                ) : (
+                  <Eye className="w-5 h-5 text-gray-500" />
+                )}
+              </button>
+            }
           />
 
           {/* Error message */}
@@ -86,7 +96,13 @@ export default function Login() {
           )}
 
           {/* Submit button */}
-          <Button type="submit" variant="primary" size="lg" loading={loading} className="w-full">
+          <Button
+            type="submit"
+            variant="primary"
+            size="lg"
+            loading={loading}
+            className="w-full"
+          >
             {loading ? "Logging in..." : "Login"}
           </Button>
         </form>
