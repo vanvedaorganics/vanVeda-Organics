@@ -3,7 +3,7 @@ import { useDispatch } from "react-redux";
 import { Eye, EyeOff } from "lucide-react"; // 👈 add icons
 // import Input from "../components/Input";
 // import Button from "../components/Button";
-import { Button, Input } from '../components';
+import { Button, Input } from '../components/index';
 import authService from "../../src/appwrite/authService";
 import { login } from "../../src/store/authSlice";
 
@@ -13,7 +13,7 @@ export default function Login() {
   // Form state
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false); // 👈 toggle state
+  const [showPassword, setShowPassword] = useState(false);
 
   // UI state
   const [loading, setLoading] = useState(false);

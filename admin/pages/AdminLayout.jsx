@@ -19,6 +19,7 @@ export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [userName, setUsername] = useState(null)
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -29,6 +30,7 @@ export default function AdminLayout() {
           authService.isAdmin().then((isAdmin) => {
             if (isAdmin) {
               dispatch(login(userData));
+              setUsername(userData.name)
             } else {
               dispatch(logout());
             }
@@ -37,11 +39,12 @@ export default function AdminLayout() {
         }
       })
       .finally(() => setLoading(false));
-  }, []);
+  });
 
   const userLogout = async () => {
     authService.logout().then(() => {
       dispatch(logout());
+      setUsername(null)
       navigate("/admin/login");
       console.log("[Logout] Success");
     });
@@ -51,7 +54,7 @@ export default function AdminLayout() {
     <div className="flex h-screen bg-gray-100">
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 h-full w-64 bg-[#084629] text-white transition-transform duration-300 
+        className={`fixed top-0 left-0 h-full w-64 bg-[#084629] text-white transition-transform duration-300 z-10 
         ${sidebarOpen ? "translate-x-0" : "-translate-x-64"} md:translate-x-0`}
       >
         <div className="space-grotesk-bold p-4 text-xl font-bold border-b border-green-900 flex items-center gap-3">
@@ -134,7 +137,7 @@ export default function AdminLayout() {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col md:ml-64">
         {/* Header */}
-        <header className="flex items-center justify-between bg-white border-b px-4 py-3 shadow-sm">
+        <header className="flex items-center justify-between bg-white  px-4 py-3 inset-shadow-xs">
           <div className="flex items-center gap-2">
             {/* Mobile menu button */}
             <button
@@ -154,7 +157,7 @@ export default function AdminLayout() {
           </div>
 
           <div className="flex items-center gap-4">
-            <span className="text-gray-700">Admin</span>
+            <span className="text-gray-700">{userName}</span>
             <button
               className="p-2 rounded hover:bg-gray-100"
               onClick={userLogout}

@@ -3,7 +3,6 @@ import { Client } from "appwrite";
 import store from "../store/store";
 import conf from "../conf/conf";
 
-// Import actions from slices
 import {
   addProduct,
   updateProduct,
@@ -28,12 +27,12 @@ const collectionHandlers = {
   [conf.appwriteProductsCollection]: {
     create: (payload) => store.dispatch(addProduct(payload)),
     update: (payload) => store.dispatch(updateProduct(payload)),
-    delete: (payload) => store.dispatch(deleteProduct(payload.$id)),
+    delete: (id) => store.dispatch(deleteProduct(id)),
   },
   [conf.appwriteCategoriesCollection]: {
     create: (payload) => store.dispatch(addCategory(payload)),
     update: (payload) => store.dispatch(updateCategory(payload)),
-    delete: (payload) => store.dispatch(deleteCategory(payload.$id)),
+    delete: (id) => store.dispatch(deleteCategory(id)),
   },
   [conf.appwriteOrdersCollection]: {
     create: (payload) => store.dispatch(addOrder(payload)),
@@ -42,7 +41,7 @@ const collectionHandlers = {
   [conf.appwriteCartsCollection]: {
     create: (payload) => store.dispatch(addCart(payload)),
     update: (payload) => store.dispatch(updateCart(payload)),
-    delete: (payload) => store.dispatch(deleteCart(payload.$id)),
+    delete: (id) => store.dispatch(deleteCart(id)),
   },
   [conf.appwriteUsersCollection]: {
     create: (payload) => store.dispatch(addUser(payload)),
@@ -61,13 +60,14 @@ export const initRealtimeSubscriptions = () => {
         const handler = collectionHandlers[collectionId];
 
         if (res.events.some((e) => e.includes(".create"))) {
+          console.log("[Realtime Create Payload]", res.payload);
           handler.create && handler.create(res.payload);
         }
         if (res.events.some((e) => e.includes(".update"))) {
           handler.update && handler.update(res.payload);
         }
         if (res.events.some((e) => e.includes(".delete"))) {
-          handler.delete && handler.delete(res.payload.$id);
+          handler.delete && handler.delete(res.payload.$id); 
         }
       }
     );

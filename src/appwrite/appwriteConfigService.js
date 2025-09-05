@@ -318,7 +318,7 @@ export class appwriteConfigService {
   }
 
   getfilePreview(fileId) {
-    return this.storage.getfilePreview(conf.appwriteBucketId, fileId);
+    return this.storage.getFilePreview(conf.appwriteBucketId, fileId);
   }
 
   async createUserProfile({ userId, name, phone, address, email }) {

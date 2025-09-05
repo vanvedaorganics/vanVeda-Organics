@@ -12,7 +12,10 @@ const productsSlice = createSlice({
   initialState: { items: [], loading: false, error: null },
   reducers: {
     addProduct: (state, action) => {
-      state.items.push(action.payload);
+      const exists = state.items.some((p) => p.$id === action.payload.$id);
+      if (!exists) {
+        state.items.push(action.payload);
+      }
     },
     updateProduct: (state, action) => {
       const idx = state.items.findIndex((p) => p.$id === action.payload.$id);
