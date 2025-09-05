@@ -99,7 +99,7 @@ export class appwriteConfigService {
     }
   }
 
-  async createCategory({ name, slug, parentId = null }) {
+  async createCategory({ name, slug }) {
     try {
       return await this.databases.createDocument(
         conf.appwriteDatabaseId,
@@ -107,7 +107,7 @@ export class appwriteConfigService {
         slug,
         {
           name,
-          parentId,
+          slug,
         }
       );
     } catch (error) {
@@ -116,7 +116,7 @@ export class appwriteConfigService {
     }
   }
 
-  async updateCategory(slug, { name, parentId = null }) {
+  async updateCategory(slug, { name }) {
     try {
       return await this.databases.updateDocument(
         conf.appwriteDatabaseId,
@@ -124,7 +124,6 @@ export class appwriteConfigService {
         slug,
         {
           name,
-          parentId,
         }
       );
     } catch (error) {

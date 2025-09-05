@@ -11,10 +11,12 @@ import {
   TableCaption,
 } from "./Table";
 import DataTable from "./DataTable";
+import Label from './Label'
 
 export {
   Button,
   Input,
+  Label,
   Table,
   TableHeader,
   TableBody,

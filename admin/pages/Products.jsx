@@ -1,9 +1,11 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { DataTable, Button } from "../components";
 import { Image, Plus, Pencil, Trash2 } from "lucide-react";
 import appwriteService from "../../src/appwrite/appwriteConfigService";
 import { fetchProducts } from "../../src/store/productsSlice";
+import Modal from "../components/Modal";
+import CategoriesForm from "../components/CategoriesForm";
 
 export default function ProductsPage() {
   const dispatch = useDispatch();
@@ -12,6 +14,9 @@ export default function ProductsPage() {
     loading,
     error,
   } = useSelector((state) => state.products);
+
+  // Modal state
+  const [categoryModalOpen, setCategoryModalOpen] = useState(false);
 
   // Define columns for DataTable
   const columns = [
@@ -75,7 +80,7 @@ export default function ProductsPage() {
           <button
             onClick={async () => {
               try {
-                await appwriteService.deleteProduct(row.$id); 
+                await appwriteService.deleteProduct(row.$id);
                 console.log(`Product ${row.$id} deleted`);
               } catch (err) {
                 console.error("Failed to delete product:", err);
@@ -99,6 +104,15 @@ export default function ProductsPage() {
 
   return (
     <div className="p-6">
+      {/* Category Modal */}
+      <Modal
+        open={categoryModalOpen}
+        onOpenChange={setCategoryModalOpen}
+        title="Add Category"
+      >
+        <CategoriesForm onSuccess={() => setCategoryModalOpen(false)} />
+      </Modal>
+
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl space-grotesk-bold text-[#084629]">
@@ -112,6 +126,7 @@ export default function ProductsPage() {
           <Button
             variant=""
             className="bg-[#dfb96a] focus:ring-0 hover:bg-[#c7a55c] mx-4 text-center"
+            onClick={() => setCategoryModalOpen(true)}
           >
             <Plus size={15} className="mr-1" /> Add Categories
           </Button>
