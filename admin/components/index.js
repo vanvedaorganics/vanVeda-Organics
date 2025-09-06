@@ -17,6 +17,7 @@ import Label from './Label';
 import CategoriesForm from  './CategoriesForm'
 import ProductsForm from "./ProductsForm";
 import Modal from "./Modal";
+import AdminUserForm from "./AdminUserForm";
 
 export {
   Button,
@@ -36,4 +37,5 @@ export {
   CategoriesForm,
   ProductsForm,
   Modal,
+  AdminUserForm
 };

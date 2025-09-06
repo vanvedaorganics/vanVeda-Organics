@@ -25,7 +25,7 @@ export class AuthService {
       if (userAccount) {
         //Call Login Function
         console.log("User Created Successfully");
-        return "User Created Successfully";
+        return userAccount;
       } else {
         console.log("An Error Occurred While Creating User");
         return userAccount;
@@ -45,7 +45,7 @@ export class AuthService {
 
   async logout() {
     try {
-      await this.account.deleteSession('current');
+      await this.account.deleteSession("current");
     } catch (error) {
       return "Appwrite Error :: Logout :: " + error.message;
     }
@@ -75,14 +75,15 @@ export class AuthService {
     }
   }
 
-  async createTeamMembership({ roles, email, userId }) {
+  async createTeamMembership({ roles, email, name }) {
     try {
-      return await this.teams.createMembership({
-        teamId: conf.appwriteTeamsId,
-        roles: [roles],
-        email: email,
-        userId: userId,
-      });
+      return await this.teams.createMembership(
+        conf.appwriteTeamsId,
+        email, // invite user by email
+        roles,
+        "https://your-app.com/invite-callback", // must be a valid URL in your Appwrite project settings
+        name // optional display name
+      );
     } catch (error) {
       return "Appwrite Error :: Create Team Membership :: " + error.message;
     }
@@ -120,19 +121,19 @@ export class AuthService {
   }
 
   async isAdmin() {
-    try{
+    try {
       const user = await this.getUser();
-      const memberships = await this.teams.listMemberships(conf.appwriteTeamsId);
+      const memberships = await this.teams.listMemberships(
+        conf.appwriteTeamsId
+      );
       return memberships.memberships.some(
         (m) => m.userId === user.$id && m.confirm
       );
-    }catch (error){
+    } catch (error) {
       console.log("Appwrite Error :: isAdmin :: " + error.message);
       return false;
     }
-
   }
-
 }
 const appwriteAuthService = new AuthService();
 export default appwriteAuthService;
