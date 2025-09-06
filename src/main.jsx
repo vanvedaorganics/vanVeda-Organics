@@ -9,7 +9,7 @@ import AdminLayout from '../admin/pages/AdminLayout.jsx'
 import Products from '../admin/pages/Products.jsx'
 import AuthLayout from '../admin/components/AuthLayout.jsx'
 import Login from '../admin/pages/Login.jsx'
-import UserList from '../admin/pages/UserLists.jsx'
+import User from '../admin/pages/UserLists.jsx'
 import store from './store/store.js'
 import { initializeAppData } from './appwrite/initData.js'
 
@@ -46,7 +46,7 @@ const router = createBrowserRouter([
         element: (
           <AuthLayout authentication>
             {" "}
-            <UserList />
+            <User />
           </AuthLayout>
         ),
       },

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Button, DataTable, Modal, AdminUserForm } from "../components";
 import { Plus } from "lucide-react";
 
-function UserLists() {
+function User() {
   const [userModalOpen, setUserModalOpen] = useState(false);
 
   return (
@@ -38,4 +38,4 @@ function UserLists() {
   );
 }
 
-export default UserLists;
+export default User;
