@@ -1,11 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { DataTable, Button } from "../components";
+import {
+  DataTable,
+  Button,
+  CategoriesForm,
+  Modal,
+  ProductsForm,
+} from "../components";
 import { Image, Plus, Pencil, Trash2 } from "lucide-react";
 import appwriteService from "../../src/appwrite/appwriteConfigService";
 import { fetchProducts } from "../../src/store/productsSlice";
-import Modal from "../components/Modal";
-import CategoriesForm from "../components/CategoriesForm";
+import conf from '../../src/conf/conf'
 
 export default function ProductsPage() {
   const dispatch = useDispatch();
@@ -13,10 +18,12 @@ export default function ProductsPage() {
     items: products,
     loading,
     error,
+    fetched,
   } = useSelector((state) => state.products);
 
   // Modal state
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
+  const [productModalOpen, setProductModalOpen] = useState(false);
 
   // Define columns for DataTable
   const columns = [
@@ -24,24 +31,21 @@ export default function ProductsPage() {
       header: "Preview",
       accessor: "image_file_ids",
       render: (row) => {
-        const fileId = Array.isArray(row.image_file_ids)
-          ? row.image_file_ids[0]
-          : row.image_file_ids;
-
-        if (!fileId) {
+        const fileId = row.image_file_ids;
+        if (!fileId || typeof fileId !== "string" || fileId.trim() === "") {
           return (
             <div className="flex items-center justify-center w-12 h-12 bg-gray-100 text-gray-400 rounded">
               <Image className="w-6 h-6" />
             </div>
           );
         }
-
-        // Get preview URL from Appwrite
-        const previewUrl = appwriteService.getfilePreview(fileId);
-
+        // Use /view endpoint for free plan
+        const viewUrl = appwriteService.getFileViewUrl
+          ? appwriteService.getFileViewUrl(fileId)
+          : `${conf.appwriteUrl}/storage/buckets/${conf.appwriteBucketId}/files/${fileId}/view?project=${conf.appwriteProjectId}`;
         return (
           <img
-            src={previewUrl}
+            src={viewUrl}
             alt={row.name}
             className="w-12 h-12 object-cover rounded"
           />
@@ -97,10 +101,10 @@ export default function ProductsPage() {
 
   // Fetch products from Redux slice
   useEffect(() => {
-    if (!products || products.length === 0) {
-      dispatch(fetchProducts()); // only fetch once if store is empty
+    if (!fetched && !loading) {
+      dispatch(fetchProducts());
     }
-  }, [dispatch, products]);
+  }, [dispatch, fetched, loading]);
 
   return (
     <div className="p-6">
@@ -111,6 +115,14 @@ export default function ProductsPage() {
         title="Add Category"
       >
         <CategoriesForm onSuccess={() => setCategoryModalOpen(false)} />
+      </Modal>
+
+      <Modal
+        open={productModalOpen}
+        onOpenChange={setProductModalOpen}
+        title="Add Product"
+      >
+        <ProductsForm onSuccess={() => setProductModalOpen(false)} />
       </Modal>
 
       <div className="flex justify-between items-center">
@@ -133,6 +145,7 @@ export default function ProductsPage() {
           <Button
             variant=""
             className="bg-[#dfb96a] focus:ring-0 hover:bg-[#c7a55c] text-center "
+            onClick={() => setProductModalOpen(true)}
           >
             <Plus size={15} className="mr-1" /> Add Products
           </Button>

@@ -9,7 +9,7 @@ export const fetchProducts = createAsyncThunk("products/fetch", async () => {
 
 const productsSlice = createSlice({
   name: "products",
-  initialState: { items: [], loading: false, error: null },
+  initialState: { items: [], loading: false, error: null, fetched: false },
   reducers: {
     addProduct: (state, action) => {
       const exists = state.items.some((p) => p.$id === action.payload.$id);
@@ -33,10 +33,12 @@ const productsSlice = createSlice({
       .addCase(fetchProducts.fulfilled, (s, a) => {
         s.loading = false;
         s.items = a.payload;
+        s.fetched = true;
       })
       .addCase(fetchProducts.rejected, (s, a) => {
         s.loading = false;
         s.error = a.error.message;
+        s.fetched = true;
       });
   },
 });

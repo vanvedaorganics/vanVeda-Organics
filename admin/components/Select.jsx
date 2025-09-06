@@ -3,7 +3,7 @@
 import React, { useMemo } from "react";
 import * as SelectPrimitive from "@radix-ui/react-select";
 import { CheckIcon, ChevronDownIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "../../utils/lib";
 
 /**
  * Simple options format:
@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
  * - children for advanced control
  */
 
-export function Select({ value, onValueChange, options = [], placeholder = "Select...", className = "", disabled = false, size = "default", children, ...props }) {
+export  default function Select({ value, onValueChange, options = [], placeholder = "Select...", className = "", disabled = false, size = "default", children, ...props }) {
   // memoize options rendering
   const items = useMemo(() => options, [options]);
 

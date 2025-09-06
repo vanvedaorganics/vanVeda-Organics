@@ -1,5 +1,7 @@
 import Button from "./Button";
 import Input from "./Input";
+import Select from "./Select"
+import Textarea from "./Textarea";
 import {
   Table,
   TableHeader,
@@ -11,12 +13,17 @@ import {
   TableCaption,
 } from "./Table";
 import DataTable from "./DataTable";
-import Label from './Label'
+import Label from './Label';
+import CategoriesForm from  './CategoriesForm'
+import ProductsForm from "./ProductsForm";
+import Modal from "./Modal";
 
 export {
   Button,
   Input,
   Label,
+  Textarea,
+  Select,
   Table,
   TableHeader,
   TableBody,
@@ -26,4 +33,7 @@ export {
   TableCell,
   TableCaption,
   DataTable,
+  CategoriesForm,
+  ProductsForm,
+  Modal,
 };

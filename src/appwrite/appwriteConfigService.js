@@ -34,6 +34,7 @@ export class appwriteConfigService {
         slug,
         {
           name,
+          slug,
           description,
           price_cents,
           image_file_ids,
@@ -314,6 +315,10 @@ export class appwriteConfigService {
       console.log("Appwrite :: deleteFile error ::", error);
       return false;
     }
+  }
+
+  getfileView(fileId) {
+    return this.storage.getFileView(conf.appwriteBucketId, fileId);
   }
 
   getfilePreview(fileId) {
