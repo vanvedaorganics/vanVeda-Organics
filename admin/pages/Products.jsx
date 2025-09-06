@@ -10,7 +10,7 @@ import {
 import { Image, Plus, Pencil, Trash2 } from "lucide-react";
 import appwriteService from "../../src/appwrite/appwriteConfigService";
 import { fetchProducts } from "../../src/store/productsSlice";
-import conf from '../../src/conf/conf'
+import conf from "../../src/conf/conf";
 
 export default function ProductsPage() {
   const dispatch = useDispatch();
@@ -24,6 +24,7 @@ export default function ProductsPage() {
   // Modal state
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
   const [productModalOpen, setProductModalOpen] = useState(false);
+  const [editProduct, setEditProduct] = useState(null);
 
   // Define columns for DataTable
   const columns = [
@@ -74,8 +75,11 @@ export default function ProductsPage() {
         <div className="flex gap-2">
           {/* Edit Button */}
           <button
-            onClick={() => console.log("Edit", row.$id)}
             className="p-2 rounded hover:bg-blue-50 text-blue-600"
+            onClick={() => {
+              setEditProduct(row);
+              setProductModalOpen(true);
+            }}
           >
             <Pencil size={16} />
           </button>
@@ -119,10 +123,19 @@ export default function ProductsPage() {
 
       <Modal
         open={productModalOpen}
-        onOpenChange={setProductModalOpen}
-        title="Add Product"
+        onOpenChange={(open) => {
+          setProductModalOpen(open);
+          if (!open) setEditProduct(null); // <-- Reset editProduct when modal closes
+        }}
+        title={editProduct ? "Edit Product" : "Add Product"}
       >
-        <ProductsForm onSuccess={() => setProductModalOpen(false)} />
+        <ProductsForm
+          onSuccess={() => {
+            setProductModalOpen(false);
+            setEditProduct(null);
+          }}
+          initialData={editProduct} // <-- Pass initialData for editing
+        />
       </Modal>
 
       <div className="flex justify-between items-center">
@@ -145,7 +158,10 @@ export default function ProductsPage() {
           <Button
             variant=""
             className="bg-[#dfb96a] focus:ring-0 hover:bg-[#c7a55c] text-center "
-            onClick={() => setProductModalOpen(true)}
+            onClick={() => {
+              setEditProduct(null); // <-- Ensure form is in "add" mode
+              setProductModalOpen(true);
+            }}
           >
             <Plus size={15} className="mr-1" /> Add Products
           </Button>
