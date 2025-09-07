@@ -55,14 +55,31 @@ export default function ProductsPage() {
     },
     { header: "Name", accessor: "name" },
     { header: "Slug", accessor: "slug" },
-    { header: "Description", accessor: "description" },
+    {
+      header: "Description",
+      accessor: "description",
+      render: (row) => {
+        const fullText = row.description || "";
+        const truncated =
+          fullText.length > 30 ? fullText.substring(0, 30) + "..." : fullText;
+
+        return (
+          <span
+            title={fullText} // native tooltip on hover
+            className="cursor-help block max-w-xs truncate"
+          >
+            {truncated}
+          </span>
+        );
+      },
+    },
     {
       header: "Price",
       accessor: "price_cents",
       render: (row) => `₹${(row.price_cents / 100).toFixed(2)}`,
     },
     { header: "Stock", accessor: "stock" },
-    { header: "SKU", accessor: "sku" },
+    { header: "SKU", accessor: "sku" }  ,
     {
       header: "Category",
       accessor: "categories",
