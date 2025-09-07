@@ -488,6 +488,23 @@ export class appwriteConfigService {
       throw error;
     }
   }
+
+  // In appwriteConfigService.js
+  async clearActiveAd() {
+    try {
+      const activeRes = await this.getActiveAd();
+      if (activeRes) {
+        await this.databases.deleteDocument(
+          conf.appwriteDatabaseId,
+          conf.appwriteActiveAdsCollection,
+          activeRes.$id
+        );
+      }
+    } catch (error) {
+      console.log("Appwrite :: clearActiveAd error ::", error);
+      throw error;
+    }
+  }
 }
 
 

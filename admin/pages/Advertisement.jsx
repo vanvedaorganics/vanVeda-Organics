@@ -43,21 +43,34 @@ function Advertisement() {
   }, []);
 
   // Handle status toggle
-  const handleStatusChange = async (adId, status) => {
-    if (status === "active") {
-      setSwitchingActive(true);
-      try {
-        await appwriteService.setActiveAd(adId);
-        setActiveAdId(adId);
-        toast.success("Active advertisement updated");
-      } catch (error) {
-        console.error("Error setting active ad:", error);
-        toast.error("Failed to set active advertisement");
-      } finally {
-        setSwitchingActive(false);
-      }
+const handleStatusChange = async (adId, status) => {
+  if (status === "active") {
+    setSwitchingActive(true);
+    try {
+      await appwriteService.setActiveAd(adId);
+      setActiveAdId(adId);
+      toast.success("Active advertisement updated");
+    } catch (error) {
+      console.error("Error setting active ad:", error);
+      toast.error("Failed to set active advertisement");
+    } finally {
+      setSwitchingActive(false);
     }
-  };
+  } else if (status === "inactive") {
+    setSwitchingActive(true);
+    try {
+      await appwriteService.clearActiveAd();
+      setActiveAdId(null);
+      toast.success("All ads set to inactive");
+    } catch (error) {
+      console.error("Error clearing active ad:", error);
+      toast.error("Failed to clear active advertisement");
+    } finally {
+      setSwitchingActive(false);
+    }
+  }
+};
+
 
   // Handle edit
   const handleEdit = (ad) => {

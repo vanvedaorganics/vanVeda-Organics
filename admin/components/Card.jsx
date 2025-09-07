@@ -16,10 +16,10 @@ export default function Card({
   className = "",
   "data-testid": dataTestId,
 }) {
-  const statusOptions = [
-    { value: "active", label: "Active", id: "active" },
-    { value: "inactive", label: "Inactive", id: "inactive" },
-  ];
+  // const statusOptions = [
+  //   { value: "active", label: "Active", id: "active" },
+  //   { value: "inactive", label: "Inactive", id: "inactive" },
+  // ];
 
   return (
     <motion.article
@@ -47,9 +47,11 @@ export default function Card({
         {/* Active/Inactive selector */}
         <Select
           value={isActive ? "active" : "inactive"}
-          onValueChange={(val) => onStatusChange?.(id, val)}
-          options={statusOptions}
-          className="min-w-[120px]"
+          onValueChange={(val) => onStatusChange(id, val)}
+          options={[
+            { value: "active", label: "Active", id: "opt-1" },
+            { value: "inactive", label: "Inactive", id: "opt-2" },
+          ]}
         />
       </header>
 
