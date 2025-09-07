@@ -76,6 +76,24 @@ export class appwriteConfigService {
 
   async deleteProduct(slug) {
     try {
+      // 1. Get product doc (to find image_file_ids)
+      const product = await this.databases.getDocument(
+        conf.appwriteDatabaseId,
+        conf.appwriteProductsCollection,
+        slug
+      );
+
+      // 2. Delete image if exists
+      if (product.image_file_ids) {
+        try {
+          await this.deleteFile(product.image_file_ids);
+          console.log(`Deleted image file ${product.image_file_ids}`);
+        } catch (fileErr) {
+          console.warn("Could not delete image file:", fileErr);
+        }
+      }
+
+      // 3. Delete the product document
       return await this.databases.deleteDocument(
         conf.appwriteDatabaseId,
         conf.appwriteProductsCollection,
@@ -506,7 +524,6 @@ export class appwriteConfigService {
     }
   }
 }
-
 
 const appwriteService = new appwriteConfigService();
 

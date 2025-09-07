@@ -65,9 +65,10 @@ export default function ProductsPage() {
     { header: "SKU", accessor: "sku" },
     {
       header: "Category",
-      accessor: "category",
-      render: (row) => row.category || "—",
+      accessor: "categories",
+      render: (row) => row.categories?.name || "—", // Appwrite will expand relationship
     },
+
     {
       header: "Actions",
       accessor: "actions",
