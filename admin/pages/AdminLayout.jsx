@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import authService from "../../src/appwrite/authService";
 import { login, logout } from "../../src/store/authSlice";
+import { Toaster } from "sonner";
 import { useDispatch } from "react-redux";
 import { Outlet, useNavigate } from "react-router-dom";
 import {
@@ -52,6 +53,7 @@ export default function AdminLayout() {
 
   return (
     <div className="flex h-screen bg-gray-100">
+       <Toaster richColors position="top-right" />
       {/* Sidebar */}
       <aside
         className={`fixed top-0 left-0 h-full w-64 bg-[#084629] text-white transition-transform duration-300 z-10 
@@ -168,7 +170,7 @@ export default function AdminLayout() {
         </header>
 
         {/* Page Content */}
-        <main className="overflow-y-auto">
+        <main className="overflow-y-auto bg-gray-100">
           {!loading ? <Outlet /> : <p>Loading...</p>}
         </main>
       </div>

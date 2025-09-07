@@ -391,7 +391,105 @@ export class appwriteConfigService {
       throw error;
     }
   }
+
+  // ---- Ads ----
+  async createAd({ title, description }) {
+    try {
+      return await this.databases.createDocument(
+        conf.appwriteDatabaseId,
+        conf.appwriteAdsCollection,
+        ID.unique(),
+        { title, description }
+      );
+    } catch (error) {
+      console.log("Appwrite :: createAd error ::", error);
+      throw error;
+    }
+  }
+
+  async updateAd(adId, { title, description }) {
+    try {
+      return await this.databases.updateDocument(
+        conf.appwriteDatabaseId,
+        conf.appwriteAdsCollection,
+        adId,
+        { title, description }
+      );
+    } catch (error) {
+      console.log("Appwrite :: updateAd error ::", error);
+      throw error;
+    }
+  }
+
+  async deleteAd(adId) {
+    try {
+      return await this.databases.deleteDocument(
+        conf.appwriteDatabaseId,
+        conf.appwriteAdsCollection,
+        adId
+      );
+    } catch (error) {
+      console.log("Appwrite :: deleteAd error ::", error);
+      throw error;
+    }
+  }
+
+  async listAds(queries = []) {
+    try {
+      return await this.databases.listDocuments(
+        conf.appwriteDatabaseId,
+        conf.appwriteAdsCollection,
+        queries
+      );
+    } catch (error) {
+      console.log("Appwrite :: listAds error ::", error);
+      throw error;
+    }
+  }
+
+  // ---- Active Ad ----
+  async getActiveAd() {
+    try {
+      // Always assume a single doc in this collection
+      const res = await this.databases.listDocuments(
+        conf.appwriteDatabaseId,
+        conf.appwriteActiveAdsCollection
+      );
+      return res.documents[0] ?? null;
+    } catch (error) {
+      console.log("Appwrite :: getActiveAd error ::", error);
+      throw error;
+    }
+  }
+
+  async setActiveAd(adId) {
+    try {
+      const activeDoc = await this.getActiveAd();
+
+      if (activeDoc) {
+        // Update the existing doc
+        return await this.databases.updateDocument(
+          conf.appwriteDatabaseId,
+          conf.appwriteActiveAdsCollection,
+          activeDoc.$id,
+          { activeAdId: adId }
+        );
+      } else {
+        // Create first-time active doc
+        return await this.databases.createDocument(
+          conf.appwriteDatabaseId,
+          conf.appwriteActiveAdsCollection,
+          ID.unique(),
+          { activeAdId: adId }
+        );
+      }
+    } catch (error) {
+      console.log("Appwrite :: setActiveAd error ::", error);
+      throw error;
+    }
+  }
 }
+
 
 const appwriteService = new appwriteConfigService();
 
