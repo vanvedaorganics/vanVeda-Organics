@@ -89,7 +89,7 @@ export class AuthService {
 
   async listTeamMemberships() {
     try {
-      return await this.teams.listMemberships({ teamId: conf.appwriteTeamsId });
+      return await this.teams.listMemberships( conf.appwriteTeamsId );
     } catch (error) {
       return "Appwrite Error :: List Team Memberships :: " + error.message;
     }
