@@ -10,8 +10,11 @@ import Products from '../admin/pages/Products.jsx'
 import AuthLayout from '../admin/components/AuthLayout.jsx'
 import Login from '../admin/pages/Login.jsx'
 import User from '../admin/pages/User.jsx'
+import Orders from '../admin/pages/Orders.jsx'
 import store from './store/store.js'
 import { initializeAppData } from './appwrite/initData.js'
+import Advertisement from '../admin/pages/Advertisement.jsx'
+import Offers from '../admin/pages/Offers.jsx'
 
 initializeAppData();
 
@@ -49,6 +52,33 @@ const router = createBrowserRouter([
             <User />
           </AuthLayout>
         ),
+      },
+      {
+        path: "orders",
+        element: (
+          <AuthLayout>
+            {" "}
+            <Orders />
+          </AuthLayout>
+        )
+      },
+      {
+        path: "ads",
+        element: (
+          <AuthLayout>
+            {" "}
+            <Advertisement/>
+          </AuthLayout>
+        )
+      },
+      {
+        path: "offers",
+        element: (
+          <AuthLayout>
+            {" "}
+            <Offers />
+          </AuthLayout>
+        )
       },
     ],
   },
