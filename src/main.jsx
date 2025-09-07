@@ -9,7 +9,7 @@ import AdminLayout from '../admin/pages/AdminLayout.jsx'
 import Products from '../admin/pages/Products.jsx'
 import AuthLayout from '../admin/components/AuthLayout.jsx'
 import Login from '../admin/pages/Login.jsx'
-import User from '../admin/pages/UserLists.jsx'
+import User from '../admin/pages/User.jsx'
 import store from './store/store.js'
 import { initializeAppData } from './appwrite/initData.js'
 

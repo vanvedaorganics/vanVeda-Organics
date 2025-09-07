@@ -75,14 +75,12 @@ export class AuthService {
     }
   }
 
-  async createTeamMembership({ roles, email, name }) {
+  async createTeamMembership({ roles, userId}) {
     try {
       return await this.teams.createMembership(
         conf.appwriteTeamsId,
-        email, // invite user by email
         roles,
-        "https://your-app.com/invite-callback", // must be a valid URL in your Appwrite project settings
-        name // optional display name
+        userId,
       );
     } catch (error) {
       return "Appwrite Error :: Create Team Membership :: " + error.message;

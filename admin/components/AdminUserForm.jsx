@@ -72,12 +72,11 @@ export default function AdminUserForm({ onSuccess }) {
       ) {
         throw new Error(createRes);
       }
-      // 2) Subscribe user to team with selected role
-    //   await authService.createTeamMembership({
-    //     roles: [data.role],
-    //     email: data.email,
-    //     name: data.username,
-    //   });
+      // // 2) Subscribe user to team with selected role
+      // await authService.createTeamMembership({
+      //   roles: [data.role],
+      //   userId: createRes.$id,
+      // });
       reset();
       if (onSuccess) onSuccess();
     } catch (err) {
