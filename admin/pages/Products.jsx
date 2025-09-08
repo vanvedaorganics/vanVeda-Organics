@@ -81,11 +81,24 @@ export default function ProductsPage() {
     { header: "Stock", accessor: "stock" },
     { header: "SKU", accessor: "sku" }  ,
     {
-      header: "Category",
-      accessor: "categories",
-      render: (row) => row.categories?.name || "—", // Appwrite will expand relationship
-    },
+  header: "Category",
+  accessor: "categories",
+  render: (row) => {
+    if (!row.categories) return "—";
 
+    // If it's a string (slug/id), just capitalize first letter
+    if (typeof row.categories === "string") {
+      return row.categories.charAt(0).toUpperCase() + row.categories.slice(1);
+    }
+
+    // If it's an object (expanded relation), show the name
+    if (typeof row.categories === "object") {
+      return row.categories.name || "—";
+    }
+
+    return "—";
+  },
+},
     {
       header: "Actions",
       accessor: "actions",
