@@ -21,6 +21,8 @@ import AdminUserForm from "./AdminUserForm";
 import Card from './Card';
 import CardGrid from "./CardGrid";
 import AdvertisementForm from "./AdvertisementFrom";
+import OfferCard from "./OfferCard";
+import ProductOfferModal from "./ProductOfferModal";
 
 export {
   Button,
@@ -44,4 +46,6 @@ export {
   Card,
   CardGrid,
   AdvertisementForm,
+  OfferCard,
+  ProductOfferModal,
 };

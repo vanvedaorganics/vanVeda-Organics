@@ -118,6 +118,20 @@ export class appwriteConfigService {
     }
   }
 
+  async updateProductDiscount(productId, discount) {
+    try {
+      return await this.databases.updateDocument(
+        conf.appwriteDatabaseId,
+        conf.appwriteProductsCollection,
+        productId,
+        { discount }
+      );
+    } catch (error) {
+      console.log("Appwrite :: updateProductDiscount error ::", error);
+      throw error;
+    }
+  }
+
   async createCategory({ name, slug }) {
     try {
       return await this.databases.createDocument(
