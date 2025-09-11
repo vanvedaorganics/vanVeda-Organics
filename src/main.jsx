@@ -16,12 +16,21 @@ import { initializeAppData } from './appwrite/initData.js'
 import Advertisement from '../admin/pages/Advertisement.jsx'
 import Offers from '../admin/pages/Offers.jsx'
 
+
+import Home from "./pages/Home.jsx"
+
 initializeAppData();
 
 const router = createBrowserRouter([
   {
     path: "/",
     element: <App />,
+    children: [
+      {
+        path: "/",
+        element: <Home />,
+      },
+    ],
   },
   {
     path: "/admin/",
