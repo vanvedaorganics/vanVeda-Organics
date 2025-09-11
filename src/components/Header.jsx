@@ -1,11 +1,12 @@
-import React, { useState } from "react"
-import { NavLink, Link } from "react-router-dom"
-import { ShoppingCart, Menu, User, X } from "lucide-react"
-import { Input } from "./index"
+import React, { useState } from "react";
+import { NavLink, Link } from "react-router-dom";
+import { ShoppingCart, Menu, User, X } from "lucide-react";
+import { Input } from "./index";
+import { motion, AnimatePresence } from "framer-motion";
 
 export function Header() {
-  const [cartItemCount, setCartItemCount] = useState(0)
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [cartItemCount, setCartItemCount] = useState(0);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navItems = [
     { to: "/products", label: "PRODUCTS" },
@@ -13,12 +14,12 @@ export function Header() {
     { to: "/blog", label: "BLOG" },
     { to: "/about-us", label: "ABOUT US" },
     { to: "/contact-us", label: "CONTACT US" },
-  ]
+  ];
 
   const navLinkClasses = ({ isActive }) =>
     `transition-colors hover:text-[#69A72A] ${
       isActive ? "text-green-900 font-semibold" : "text-gray-900"
-    }`
+    }`;
 
   return (
     <header className="w-full bg-white shadow-sm font-sans">
@@ -28,14 +29,33 @@ export function Header() {
       </div>
 
       {/* Main Header */}
-      <div className="max-w-7xl mx-auto flex h-16 md:h-20 items-center justify-between px-2 sm:px-4 md:px-6">
+      <motion.div
+        className="max-w-7xl mx-auto flex h-16 md:h-20 items-center justify-between px-2 sm:px-4 md:px-6"
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2 font-semibold text-xl text-[#2D1D1A]">
-          Van Veda Organics
-        </Link>
+        <motion.div
+          initial={{ x: -20, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+        >
+          <Link
+            to="/"
+            className="flex items-center gap-2 font-semibold text-xl text-[#2D1D1A]"
+          >
+            Van Veda Organics
+          </Link>
+        </motion.div>
 
         {/* Desktop Nav */}
-        <div className="hidden lg:flex items-center gap-6 text-sm font-medium">
+        <motion.div
+          className="hidden lg:flex items-center gap-6 text-sm font-medium"
+          initial={{ x: 20, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
           <Input
             type="search"
             placeholder="Search products..."
@@ -48,10 +68,15 @@ export function Header() {
               </NavLink>
             ))}
           </nav>
-        </div>
+        </motion.div>
 
         {/* Actions */}
-        <div className="flex items-center gap-2 md:gap-4">
+        <motion.div
+          className="flex items-center gap-2 md:gap-4"
+          initial={{ x: 20, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+        >
           {/* Cart */}
           <button className="relative hover:bg-gray-100 p-2 rounded-full">
             <ShoppingCart className="h-5 w-5 text-gray-900" />
@@ -87,48 +112,72 @@ export function Header() {
             )}
             <span className="sr-only">Toggle navigation menu</span>
           </button>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
-      {/* Mobile Menu */}
-      {mobileMenuOpen && (
-        <div className="lg:hidden border-t bg-white shadow-md px-4 py-6">
-          <Input
-            type="search"
-            placeholder="Search products..."
-            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-green-900 focus:ring-1 focus:ring-green-900"
-          />
-          <nav className="mt-6 flex flex-col gap-4 font-semibold">
-            {navItems.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                className={({ isActive }) =>
-                  `py-2 text-lg transition-colors hover:text-green-900 ${
-                    isActive ? "text-green-900 font-semibold" : "text-gray-900"
-                  }`
-                }
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {item.label}
-              </NavLink>
-            ))}
-            <NavLink
-              to="/my-account"
-              className={({ isActive }) =>
-                `py-2 text-lg transition-colors hover:text-green-900 ${
-                  isActive ? "text-green-900 font-semibold" : "text-gray-900"
-                }`
-              }
+      {/* Mobile Menu Sidebar */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <>
+            {/* Overlay */}
+            <motion.div
+              className="fixed inset-0 bg-black/40 z-40"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               onClick={() => setMobileMenuOpen(false)}
+            />
+
+            {/* Sidebar */}
+            <motion.div
+              className="fixed top-0 right-0 bottom-0 w-72 bg-white z-50 p-6 shadow-lg flex flex-col"
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
             >
-              Login
-            </NavLink>
-          </nav>
-        </div>
-      )}
+              <Input
+                type="search"
+                placeholder="Search products..."
+                className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-green-900 focus:ring-1 focus:ring-green-900"
+              />
+              <nav className="mt-6 flex flex-col gap-4 font-semibold">
+                {navItems.map((item) => (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    className={({ isActive }) =>
+                      `py-2 text-lg transition-colors hover:text-green-900 ${
+                        isActive
+                          ? "text-green-900 font-semibold"
+                          : "text-gray-900"
+                      }`
+                    }
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    {item.label}
+                  </NavLink>
+                ))}
+                <NavLink
+                  to="/my-account"
+                  className={({ isActive }) =>
+                    `py-2 text-lg transition-colors hover:text-green-900 ${
+                      isActive
+                        ? "text-green-900 font-semibold"
+                        : "text-gray-900"
+                    }`
+                  }
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Login
+                </NavLink>
+              </nav>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </header>
-  )
+  );
 }
 
-export default Header
+export default Header;

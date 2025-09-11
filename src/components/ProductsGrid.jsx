@@ -1,24 +1,24 @@
-import React from "react"
-import ProductCard from "./ProductCard"
+import React from "react";
+import ProductCard from "./ProductCard";
 
 const ProductsGrid = ({ products = [] }) => {
   return (
-    <div className="flex flex-wrap -mx-2">
-      {products.map((product, idx) => (
-        <div
-          key={idx}
-          className="
-            w-full px-2 mb-4
-            sm:w-1/2
-            lg:w-1/3
-            xl:w-1/4
-          "
-        >
-          <ProductCard {...product} />
-        </div>
-      ))}
+    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div
+        className="
+          grid gap-6 sm:gap-8
+          grid-cols-1
+          sm:grid-cols-2
+          lg:grid-cols-3
+          xl:grid-cols-4
+        "
+      >
+        {products.map((product) => (
+          <ProductCard key={product.$id} {...product} />
+        ))}
+      </div>
     </div>
-  )
-}
+  );
+};
 
-export default ProductsGrid
+export default ProductsGrid;
