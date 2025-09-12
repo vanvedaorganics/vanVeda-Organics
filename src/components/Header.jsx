@@ -1,12 +1,16 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { NavLink, Link } from "react-router-dom";
 import { ShoppingCart, Menu, User, X } from "lucide-react";
 import { Input } from "./index";
 import { motion, AnimatePresence } from "framer-motion";
+import appwriteService from "../appwrite/appwriteConfigService";
+import { Query } from "appwrite";
 
 export function Header() {
   const [cartItemCount, setCartItemCount] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [offerLoading, setOfferLoading] = useState(true);
+  const [offer, setOffer] = useState(null);
 
   const navItems = [
     { to: "/products", label: "PRODUCTS" },
@@ -21,12 +25,36 @@ export function Header() {
       isActive ? "text-green-900 font-semibold" : "text-gray-900"
     }`;
 
+  useEffect(() => {
+    setOfferLoading(true);
+    appwriteService
+      .getActiveAd()
+      .then((res) => {
+        appwriteService
+          .listAds([Query.equal("$id", [res.activeAdId])])
+          .then((res) => {
+            setOffer(res.documents[0]?.description);
+          });
+      })
+      .finally(setOfferLoading(false));
+  }, []);
+
   return (
     <header className="w-full bg-white shadow-sm font-sans">
       {/* Top bar */}
-      <div className="bg-[#69A72A] text-white text-center py-2 text-sm">
-        Free Delivery on orders above ₹300 | Shop Now!
-      </div>
+      {offer !== null && (
+        <div className="bg-[#69A72A] text-white text-center py-2 text-sm">
+          {offerLoading ? (
+            // Spinner loader
+            <div role="status" className="flex justify-center">
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              <span className="sr-only">Loading...</span>
+            </div>
+          ) : (
+            offer
+          )}
+        </div>
+      )}
 
       {/* Main Header */}
       <motion.div
