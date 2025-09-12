@@ -40,7 +40,7 @@ export function Header() {
   }, []);
 
   return (
-    <header className="w-full bg-white shadow-sm font-sans">
+    <header className="w-full bg-white shadow-[0_6px_10px_-2px_rgba(0,0,0,0.2)] border-b border-gray-200 font-sans">
       {/* Top bar */}
       {offer !== null && (
         <div className="bg-[#69A72A] text-white text-center py-2 text-sm">

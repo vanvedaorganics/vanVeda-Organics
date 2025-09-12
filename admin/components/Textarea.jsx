@@ -19,7 +19,7 @@ const Textarea = React.forwardRef(function Textarea(
         aria-describedby={describedBy}
         disabled={disabled}
         className={cn(
-          "w-full min-h-[4rem] rounded-md border px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-offset-0 focus:ring-ring transition-shadow",
+          "w-full min-h-[4rem] rounded-md border px-3 py-2 text-sm placeholder:text-[#613d38] focus:outline-none focus:ring-2 focus:ring-offset-0 focus:ring-ring transition-shadow",
           disabled && "opacity-60 cursor-not-allowed",
           error && "border-destructive",
           className

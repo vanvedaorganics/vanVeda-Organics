@@ -19,6 +19,7 @@ import Offers from '../admin/pages/Offers.jsx'
 
 import Home from "./pages/Home.jsx"
 import ClientProducts from './pages/ClientProducts.jsx'
+import Certificates from './pages/Certificates.jsx'
 
 initializeAppData();
 
@@ -34,6 +35,10 @@ const router = createBrowserRouter([
       {
         path: "products",
         element: <ClientProducts />
+      },
+      {
+        path: "certificates",
+        element: <Certificates />
       },
     ],
   },
