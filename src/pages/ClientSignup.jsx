@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import appwriteAuthService from "../appwrite/authService";
+import appwriteConfigService from "../appwrite/appwriteConfigService";
 import { Link, useNavigate } from "react-router-dom";
 import { login } from "../store/authSlice";
 import { Button, Input } from "../components";
@@ -15,7 +16,7 @@ function ClientSignup() {
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { register, handleSubmit } = useForm();
+  const { register, handleSubmit, reset } = useForm();
 
   const create = async (data) => {
     setError("");
@@ -28,14 +29,52 @@ function ClientSignup() {
         return;
       }
 
-      const userData = await appwriteAuthService.createAccount(data);
-      if (userData) {
-        const user = await appwriteAuthService.getCurrentUser();
-        if (user) dispatch(login(user));
-        navigate("/");
+      // Create account (Appwrite expects only email, password, name)
+      const userData = await appwriteAuthService.createAccount({
+        email: data.email,
+        password: data.password,
+        name: data.username, // Using username as the "name" field
+      });
+
+      await appwriteAuthService.login({
+        email: data.email,
+        password: data.password,
+      })
+
+      if (userData && userData.$id) {
+        // Get current user
+        const user = await appwriteAuthService.getUser();
+
+        if (user) {
+          // Prepare address object
+          const addressObj = {
+            state: data.state,
+            city: data.city,
+            pincode: data.pincode,
+            street: data.street,
+            landmark: data.landmark || "",
+          };
+
+          // Stringify object because DB expects array<string>
+          const addressArray = [JSON.stringify(addressObj)];
+
+          // Create user profile in Appwrite DB
+          await appwriteConfigService.createUserProfile({
+            user_id: user.$id,
+            displayName: data.username, // username as profile name
+            phone: data.phone,
+            email: data.email,
+            address: addressArray,
+          });
+
+          // Dispatch login and navigate
+          dispatch(login(user));
+          reset();
+          navigate("/");
+        }
       }
     } catch (error) {
-      setError(error.message);
+      setError(error.message || "Something went wrong during signup.");
     } finally {
       setLoading(false);
     }
@@ -44,8 +83,6 @@ function ClientSignup() {
   return (
     <div className="w-full bg-[#fafafa] min-h-screen flex items-center justify-center px-4">
       <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-8">
-        {/* Logo */}
-
         {/* Title */}
         <h2 className="text-center text-3xl md:text-4xl font-bold text-[#2D1D1A]">
           Sign up to create account
@@ -67,14 +104,6 @@ function ClientSignup() {
 
         {/* Form */}
         <form onSubmit={handleSubmit(create)} className="space-y-6 mt-6">
-          {/* Name */}
-          <Input
-            label="Name"
-            placeholder="Enter your full name"
-            {...register("name", { required: true })}
-            disabled={loading}
-          />
-
           {/* Username */}
           <Input
             label="Username"
@@ -98,6 +127,49 @@ function ClientSignup() {
             })}
             disabled={loading}
           />
+
+          {/* Phone */}
+          <Input
+            label="Phone"
+            type="tel"
+            placeholder="Enter your mobile number"
+            {...register("phone", { required: true })}
+            disabled={loading}
+          />
+
+          {/* Address */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Input
+              label="State"
+              placeholder="Enter state"
+              {...register("state", { required: true })}
+              disabled={loading}
+            />
+            <Input
+              label="City"
+              placeholder="Enter city"
+              {...register("city", { required: true })}
+              disabled={loading}
+            />
+            <Input
+              label="Pincode"
+              placeholder="Enter pincode"
+              {...register("pincode", { required: true })}
+              disabled={loading}
+            />
+            <Input
+              label="Street"
+              placeholder="Street / Area"
+              {...register("street", { required: true })}
+              disabled={loading}
+            />
+            <Input
+              label="Landmark (Optional)"
+              placeholder="Near park, mall..."
+              {...register("landmark")}
+              disabled={loading}
+            />
+          </div>
 
           {/* Password */}
           <Input
@@ -149,7 +221,6 @@ function ClientSignup() {
           <Button
             type="submit"
             size="lg"
-            loading={loading}
             disabled={loading}
             className="w-full rounded-xl bg-[#2D1D1A] text-white shadow-md hover:bg-[#2D1D1A]/90 hover:shadow-lg transition-all duration-300"
           >

@@ -357,7 +357,7 @@ export class appwriteConfigService {
     return this.storage.getFilePreview(conf.appwriteBucketId, fileId);
   }
 
-  async createUserProfile({ userId, name, phone, address, email }) {
+  async createUserProfile({ user_id, displayName, phone, address, email }) {
     try {
       if (address === null || address === undefined) {
         throw new Error("Address is required to create user profile");
@@ -365,9 +365,10 @@ export class appwriteConfigService {
       return await this.databases.createDocument(
         conf.appwriteDatabaseId,
         conf.appwriteUsersCollection,
-        userId,
+        ID.unique(),
         {
-          name,
+          user_id,
+          displayName,
           phone,
           address,
           email,
