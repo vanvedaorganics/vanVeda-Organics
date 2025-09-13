@@ -1,26 +1,28 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import { RouterProvider, createBrowserRouter } from 'react-router-dom'
-import { Provider } from 'react-redux'
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import { RouterProvider, createBrowserRouter } from "react-router-dom";
+import { Provider } from "react-redux";
 
-import './index.css'
-import App from './App.jsx'
-import AdminLayout from '../admin/pages/AdminLayout.jsx'
-import Products from '../admin/pages/Products.jsx'
-import AuthLayout from '../admin/components/AuthLayout.jsx'
-import Login from '../admin/pages/Login.jsx'
-import User from '../admin/pages/User.jsx'
-import Orders from '../admin/pages/Orders.jsx'
-import store from './store/store.js'
-import { initializeAppData } from './appwrite/initData.js'
-import Advertisement from '../admin/pages/Advertisement.jsx'
-import Offers from '../admin/pages/Offers.jsx'
+import "./index.css";
+import App from "./App.jsx";
+import AdminLayout from "../admin/pages/AdminLayout.jsx";
+import Products from "../admin/pages/Products.jsx";
+import AuthLayout from "../admin/components/AuthLayout.jsx";
+import Login from "../admin/pages/Login.jsx";
+import User from "../admin/pages/User.jsx";
+import Orders from "../admin/pages/Orders.jsx";
+import store from "./store/store.js";
+import { initializeAppData } from "./appwrite/initData.js";
+import Advertisement from "../admin/pages/Advertisement.jsx";
+import Offers from "../admin/pages/Offers.jsx";
 
 // Client pages
-import Home from "./pages/Home.jsx"
-import ClientProducts from './pages/ClientProducts.jsx'
-import Certificates from './pages/Certificates.jsx'
-import ProductDetails from './pages/ProductDetails.jsx'   // ✅ import new page
+import Home from "./pages/Home.jsx";
+import ClientProducts from "./pages/ClientProducts.jsx";
+import Certificates from "./pages/Certificates.jsx";
+import ProductDetails from "./pages/ProductDetails.jsx";
+import ClientLogin from "./pages/ClientLogin.jsx";
+import ClientAuthLayout from "./components/ClientAuthLayout.jsx";
 
 initializeAppData();
 
@@ -34,16 +36,24 @@ const router = createBrowserRouter([
         element: <Home />,
       },
       {
-        path: "products",
-        element: <ClientProducts />
+        path: "login",
+        element: (
+          <ClientAuthLayout authentication={false}>
+            <ClientLogin />
+          </ClientAuthLayout>
+        ),
       },
       {
-        path: "products/:slug",     // ✅ Dynamic route for product details
-        element: <ProductDetails />
+        path: "products",
+        element: <ClientProducts />,
+      },
+      {
+        path: "products/:slug", // ✅ Dynamic route for product details
+        element: <ProductDetails />,
       },
       {
         path: "certificates",
-        element: <Certificates />
+        element: <Certificates />,
       },
     ],
   },
@@ -81,15 +91,15 @@ const router = createBrowserRouter([
           <AuthLayout>
             <Orders />
           </AuthLayout>
-        )
+        ),
       },
       {
         path: "ads",
         element: (
           <AuthLayout>
-            <Advertisement/>
+            <Advertisement />
           </AuthLayout>
-        )
+        ),
       },
       {
         path: "offers",
@@ -97,16 +107,16 @@ const router = createBrowserRouter([
           <AuthLayout>
             <Offers />
           </AuthLayout>
-        )
+        ),
       },
     ],
   },
 ]);
 
-createRoot(document.getElementById('root')).render(
+createRoot(document.getElementById("root")).render(
   <StrictMode>
     <Provider store={store}>
-      <RouterProvider router={router}/>
+      <RouterProvider router={router} />
     </Provider>
-  </StrictMode>,
-)
+  </StrictMode>
+);
