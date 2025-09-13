@@ -1,6 +1,6 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import { Star, Package } from "lucide-react";
-import { Button } from "./index";
 import { cn } from "../../utils/lib";
 import { getImageUrl } from "../../utils/getImageUrl";
 
@@ -28,9 +28,10 @@ const ProductCard = ({
   const imageUrl = getImageUrl(image_file_ids);
 
   return (
-    <div
+    <Link
+      to={`/products/${slug}`} // ✅ Navigate using slug
       className={cn(
-        "group relative max-w-sm mx-auto overflow-hidden rounded-xl border border-gray-100 bg-white text-gray-900 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1",
+        "group relative max-w-sm mx-auto overflow-hidden rounded-xl border border-gray-100 bg-white text-gray-900 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 cursor-pointer",
         className
       )}
     >
@@ -76,27 +77,19 @@ const ProductCard = ({
           <span>({reviews})</span>
         </div>
 
-        {/* Price + Button */}
-        <div className="mt-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-lg font-bold text-gray-900">
-              {currency} {discountedPrice.toFixed(2)}
+        {/* Price */}
+        <div className="mt-3 flex items-center gap-2">
+          <span className="text-lg font-bold text-gray-900">
+            {currency} {discountedPrice.toFixed(2)}
+          </span>
+          {hasDiscount && (
+            <span className="text-xs line-through text-gray-500">
+              {currency} {price.toFixed(2)}
             </span>
-            {hasDiscount && (
-              <span className="text-xs line-through text-gray-500">
-                {currency} {price.toFixed(2)}
-              </span>
-            )}
-          </div>
-          <Button
-            size="sm"
-            className="bg-green-600 hover:bg-green-700 text-white rounded-md"
-          >
-            Add
-          </Button>
+          )}
         </div>
       </div>
-    </div>
+    </Link>
   );
 };
 

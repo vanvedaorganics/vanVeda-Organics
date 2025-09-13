@@ -16,10 +16,11 @@ import { initializeAppData } from './appwrite/initData.js'
 import Advertisement from '../admin/pages/Advertisement.jsx'
 import Offers from '../admin/pages/Offers.jsx'
 
-
+// Client pages
 import Home from "./pages/Home.jsx"
 import ClientProducts from './pages/ClientProducts.jsx'
 import Certificates from './pages/Certificates.jsx'
+import ProductDetails from './pages/ProductDetails.jsx'   // ✅ import new page
 
 initializeAppData();
 
@@ -35,6 +36,10 @@ const router = createBrowserRouter([
       {
         path: "products",
         element: <ClientProducts />
+      },
+      {
+        path: "products/:slug",     // ✅ Dynamic route for product details
+        element: <ProductDetails />
       },
       {
         path: "certificates",
@@ -58,7 +63,6 @@ const router = createBrowserRouter([
         path: "products",
         element: (
           <AuthLayout authentication>
-            {" "}
             <Products />
           </AuthLayout>
         ),
@@ -67,7 +71,6 @@ const router = createBrowserRouter([
         path: "users",
         element: (
           <AuthLayout authentication>
-            {" "}
             <User />
           </AuthLayout>
         ),
@@ -76,7 +79,6 @@ const router = createBrowserRouter([
         path: "orders",
         element: (
           <AuthLayout>
-            {" "}
             <Orders />
           </AuthLayout>
         )
@@ -85,7 +87,6 @@ const router = createBrowserRouter([
         path: "ads",
         element: (
           <AuthLayout>
-            {" "}
             <Advertisement/>
           </AuthLayout>
         )
@@ -94,7 +95,6 @@ const router = createBrowserRouter([
         path: "offers",
         element: (
           <AuthLayout>
-            {" "}
             <Offers />
           </AuthLayout>
         )
