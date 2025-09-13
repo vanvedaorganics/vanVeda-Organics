@@ -54,8 +54,8 @@ export class AuthService {
   async getUser() {
     try {
       return await this.account.get();
-    } catch (error) {
-      return "Appwrite Error :: Get User :: " + error.message;
+    } catch {
+      return null; // not a string
     }
   }
 
@@ -75,12 +75,12 @@ export class AuthService {
     }
   }
 
-  async createTeamMembership({ roles, userId}) {
+  async createTeamMembership({ roles, userId }) {
     try {
       return await this.teams.createMembership(
         conf.appwriteTeamsId,
         roles,
-        userId,
+        userId
       );
     } catch (error) {
       return "Appwrite Error :: Create Team Membership :: " + error.message;
@@ -89,7 +89,7 @@ export class AuthService {
 
   async listTeamMemberships() {
     try {
-      return await this.teams.listMemberships( conf.appwriteTeamsId );
+      return await this.teams.listMemberships(conf.appwriteTeamsId);
     } catch (error) {
       return "Appwrite Error :: List Team Memberships :: " + error.message;
     }

@@ -23,6 +23,7 @@ import Certificates from "./pages/Certificates.jsx";
 import ProductDetails from "./pages/ProductDetails.jsx";
 import ClientLogin from "./pages/ClientLogin.jsx";
 import ClientAuthLayout from "./components/ClientAuthLayout.jsx";
+import ClientSignup from "./pages/ClientSignup.jsx";
 
 initializeAppData();
 
@@ -40,6 +41,14 @@ const router = createBrowserRouter([
         element: (
           <ClientAuthLayout authentication={false}>
             <ClientLogin />
+          </ClientAuthLayout>
+        ),
+      },
+      {
+        path: "/signup",
+        element: (
+          <ClientAuthLayout authentication={false}>
+            <ClientSignup />
           </ClientAuthLayout>
         ),
       },

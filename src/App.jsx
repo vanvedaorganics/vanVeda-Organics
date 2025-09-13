@@ -4,7 +4,7 @@ import { Outlet } from "react-router-dom";
 import { Header, Footer } from "./components";
 import appwriteAuthService from "./appwrite/authService";
 import { login, logout } from "./store/authSlice";
-import { Loader2 } from "lucide-react"; 
+import { Loader2 } from "lucide-react";
 import "./App.css";
 
 function App() {
@@ -16,7 +16,7 @@ function App() {
       .getUser()
       .then((userData) => {
         if (userData) {
-          dispatch(login({ userData }));
+          dispatch(login(userData));
         } else {
           dispatch(logout());
         }

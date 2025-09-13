@@ -29,12 +29,50 @@ export function Header() {
   const navigate = useNavigate();
   const authStatus = useSelector((state) => state.auth.status);
 
+  // nav items follow the sample file logic
   const navItems = [
-    { to: "/products", label: "PRODUCTS", icon: <Package className="h-5 w-5" /> },
-    { to: "/certificates", label: "CERTIFICATES", icon: <Award className="h-5 w-5" /> },
-    { to: "/blog", label: "BLOG", icon: <BookOpen className="h-5 w-5" /> },
-    { to: "/about-us", label: "ABOUT US", icon: <Info className="h-5 w-5" /> },
-    { to: "/contact-us", label: "CONTACT US", icon: <Phone className="h-5 w-5" /> },
+    {
+      name: "Products",
+      slug: "/products",
+      icon: <Package className="h-5 w-5" />,
+      active: true,
+    },
+    {
+      name: "Certificates",
+      slug: "/certificates",
+      icon: <Award className="h-5 w-5" />,
+      active: true,
+    },
+    {
+      name: "Blog",
+      slug: "/blog",
+      icon: <BookOpen className="h-5 w-5" />,
+      active: true,
+    },
+    {
+      name: "About Us",
+      slug: "/about-us",
+      icon: <Info className="h-5 w-5" />,
+      active: true,
+    },
+    {
+      name: "Contact Us",
+      slug: "/contact-us",
+      icon: <Phone className="h-5 w-5" />,
+      active: true,
+    },
+    {
+      name: "Profile",
+      slug: "/profile",
+      icon: <User className="h-5 w-5" />,
+      active: authStatus,
+    },
+    {
+      name: "Login",
+      slug: "/login",
+      icon: <User className="h-5 w-5" />,
+      active: !authStatus,
+    },
   ];
 
   const navLinkClasses = ({ isActive }) =>
@@ -90,47 +128,46 @@ export function Header() {
         transition={{ duration: 0.5 }}
       >
         {/* Logo */}
-        <motion.div
-          initial={{ x: -20, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
+        <Link
+          to="/"
+          className="flex items-center gap-2 font-semibold text-xl text-[#2D1D1A]"
         >
-          <Link
-            to="/"
-            className="flex items-center gap-2 font-semibold text-xl text-[#2D1D1A]"
-          >
-            Van Veda Organics
-          </Link>
-        </motion.div>
+          Van Veda Organics
+        </Link>
 
         {/* Desktop Nav */}
-        <motion.div
-          className="hidden lg:flex items-center gap-6 text-sm font-medium"
-          initial={{ x: 20, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
+        <div className="hidden lg:flex items-center gap-6 text-sm font-medium">
           <Input
             type="search"
             placeholder="Search products..."
             className="w-[200px] lg:w-[250px] rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-green-900 focus:ring-1 focus:ring-green-900"
           />
           <nav className="hidden lg:flex items-center gap-4 xl:gap-6">
-            {navItems.map((item) => (
-              <NavLink key={item.to} to={item.to} className={navLinkClasses}>
-                {item.label}
-              </NavLink>
-            ))}
+            {navItems.map(
+              (item) =>
+                item.active && (
+                  <NavLink
+                    key={item.slug}
+                    to={item.slug}
+                    className={navLinkClasses}
+                  >
+                    {item.name}
+                  </NavLink>
+                )
+            )}
+            {authStatus && (
+              <button
+                onClick={handleLogout}
+                className="text-sm font-medium text-gray-900 hover:text-green-900"
+              >
+                Sign Out
+              </button>
+            )}
           </nav>
-        </motion.div>
+        </div>
 
         {/* Actions */}
-        <motion.div
-          className="flex items-center gap-2 md:gap-4"
-          initial={{ x: 20, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-        >
+        <div className="flex items-center gap-2 md:gap-4">
           {/* Cart */}
           <button className="relative hover:bg-gray-100 p-2 rounded-full">
             <ShoppingCart className="h-5 w-5 text-gray-900" />
@@ -141,35 +178,6 @@ export function Header() {
             )}
             <span className="sr-only">Shopping Cart</span>
           </button>
-
-          {/* Auth Buttons */}
-          {authStatus ? (
-            <div className="hidden lg:flex items-center gap-4">
-              <NavLink
-                to="/profile"
-                className="flex items-center gap-1 text-sm font-medium transition-colors hover:text-green-900 text-gray-900"
-              >
-                <User className="h-4 w-4" /> Profile
-              </NavLink>
-              <button
-                onClick={handleLogout}
-                className="text-sm font-medium text-gray-900 hover:text-green-900"
-              >
-                Sign Out
-              </button>
-            </div>
-          ) : (
-            <NavLink
-              to="/login"
-              className={({ isActive }) =>
-                `hidden lg:flex items-center gap-1 text-sm font-medium transition-colors hover:text-green-900 ${
-                  isActive ? "text-green-900 font-semibold" : "text-gray-900"
-                }`
-              }
-            >
-              <User className="h-4 w-4" /> Login
-            </NavLink>
-          )}
 
           {/* Mobile Menu Toggle */}
           <button
@@ -183,14 +191,13 @@ export function Header() {
             )}
             <span className="sr-only">Toggle navigation menu</span>
           </button>
-        </motion.div>
+        </div>
       </motion.div>
 
       {/* Mobile Menu Sidebar */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <>
-            {/* Overlay */}
             <motion.div
               className="fixed inset-0 bg-black/40 z-40"
               initial={{ opacity: 0 }}
@@ -199,7 +206,6 @@ export function Header() {
               onClick={() => setMobileMenuOpen(false)}
             />
 
-            {/* Sidebar */}
             <motion.div
               className="fixed top-0 right-0 bottom-0 w-72 bg-white z-50 p-6 shadow-lg flex flex-col"
               initial={{ x: "100%" }}
@@ -213,64 +219,36 @@ export function Header() {
                 className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-green-900 focus:ring-1 focus:ring-green-900"
               />
               <nav className="mt-6 flex flex-col gap-2 font-semibold">
-                {navItems.map((item) => (
-                  <NavLink
-                    key={item.to}
-                    to={item.to}
-                    className={({ isActive }) =>
-                      `flex items-center gap-2 rounded-md px-3 py-2 text-lg transition-colors ${
-                        isActive
-                          ? "bg-green-100 text-green-900 font-semibold"
-                          : "text-gray-900 hover:text-green-900"
-                      }`
-                    }
-                    onClick={() => setMobileMenuOpen(false)}
+                {navItems.map(
+                  (item) =>
+                    item.active && (
+                      <NavLink
+                        key={item.slug}
+                        to={item.slug}
+                        className={({ isActive }) =>
+                          `flex items-center gap-2 rounded-md px-3 py-2 text-lg transition-colors ${
+                            isActive
+                              ? "bg-green-100 text-green-900 font-semibold"
+                              : "text-gray-900 hover:text-green-900"
+                          }`
+                        }
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        {item.icon}
+                        {item.name}
+                      </NavLink>
+                    )
+                )}
+                {authStatus && (
+                  <button
+                    onClick={() => {
+                      handleLogout();
+                      setMobileMenuOpen(false);
+                    }}
+                    className="flex items-center gap-2 rounded-md px-3 py-2 text-lg text-gray-900 hover:text-green-900 text-left"
                   >
-                    {item.icon}
-                    {item.label}
-                  </NavLink>
-                ))}
-
-                {authStatus ? (
-                  <>
-                    <NavLink
-                      to="/profile"
-                      className={({ isActive }) =>
-                        `flex items-center gap-2 rounded-md px-3 py-2 text-lg ${
-                          isActive
-                            ? "bg-green-100 text-green-900 font-semibold"
-                            : "text-gray-900 hover:text-green-900"
-                        }`
-                      }
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      <User className="h-5 w-5" />
-                      Profile
-                    </NavLink>
-                    <button
-                      onClick={() => {
-                        handleLogout();
-                        setMobileMenuOpen(false);
-                      }}
-                      className="flex items-center gap-2 rounded-md px-3 py-2 text-lg text-gray-900 hover:text-green-900 text-left"
-                    >
-                      <X className="h-5 w-5" /> Sign Out
-                    </button>
-                  </>
-                ) : (
-                  <NavLink
-                    to="/login"
-                    className={({ isActive }) =>
-                      `flex items-center gap-2 rounded-md px-3 py-2 text-lg ${
-                        isActive
-                          ? "bg-green-100 text-green-900 font-semibold"
-                          : "text-gray-900 hover:text-green-900"
-                      }`
-                    }
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <User className="h-5 w-5" /> Login
-                  </NavLink>
+                    <X className="h-5 w-5" /> Sign Out
+                  </button>
                 )}
               </nav>
             </motion.div>
