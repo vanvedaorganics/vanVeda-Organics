@@ -3,7 +3,7 @@ import store from "../store/store";
 import { fetchProducts } from "../store/productsSlice";
 import { fetchCategories } from "../store/categoriesSlice";
 import { fetchOrders } from "../store/ordersSlice";
-import { fetchCarts } from "../store/cartsSlice";
+import { fetchCart } from "../store/cartsSlice";
 import { fetchUsers } from "../store/usersSlice";
 import { initRealtimeSubscriptions } from "./realtimeService.js";
 
@@ -16,7 +16,7 @@ export const initializeAppData = async () => {
       store.dispatch(fetchProducts()),
       store.dispatch(fetchCategories()),
       store.dispatch(fetchOrders()),
-      store.dispatch(fetchCarts()),
+      store.dispatch(fetchCart()),
       store.dispatch(fetchUsers()),
     ]);
 

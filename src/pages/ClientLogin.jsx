@@ -4,6 +4,7 @@ import { Eye, EyeOff, Loader2 } from "lucide-react"; // Added Loader2 icon
 import { Button, Input } from "../components";
 import appwriteAuthService from "../appwrite/authService";
 import { login } from "../store/authSlice";
+import { fetchCart } from "../store/cartsSlice";
 
 export default function ClientLogin() {
   const dispatch = useDispatch();
@@ -18,23 +19,41 @@ export default function ClientLogin() {
   const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
+  e.preventDefault();
+  setError("");
+  setLoading(true);
 
+  try {
+    // 1️⃣ Login
+    const session = await appwriteAuthService.login({ email, password });
+
+    // 2️⃣ Get current user
+    const user = await appwriteAuthService.getUser();
+
+    // 3️⃣ Dispatch login to Redux
+    dispatch(login({ user, session }));
+
+    // 4️⃣ Fetch user's cart immediately
     try {
-      const session = await appwriteAuthService.login({ email, password });
-      const user = await appwriteAuthService.getUser();
-
-      dispatch(login({ user, session }));
-      console.log("[ClientLogin] Success:", user);
-    } catch (err) {
-      console.error("[ClientLogin] Error:", err);
-      setError(err.message || "Login failed. Please try again.");
-    } finally {
-      setLoading(false);
+      await dispatch(fetchCart()).unwrap(); // unwrap to catch errors
+    } catch (cartErr) {
+      console.error("Failed to fetch cart:", cartErr);
+      setError("Logged in but failed to fetch cart.");
     }
-  };
+
+    console.log("[ClientLogin] Success:", user);
+
+    // 5️⃣ Optional: navigate to home/dashboard
+    // navigate("/"); // Uncomment if you want automatic navigation
+
+  } catch (err) {
+    console.error("[ClientLogin] Error:", err);
+    setError(err.message || "Login failed. Please try again.");
+  } finally {
+    setLoading(false); // spinner stops only after both login & cart fetch
+  }
+};
+
 
   return (
     <div className="w-full bg-[#fafafa] min-h-screen flex items-center justify-center px-4">

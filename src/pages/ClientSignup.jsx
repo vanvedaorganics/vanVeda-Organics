@@ -7,6 +7,7 @@ import { Button, Input } from "../components";
 import { useDispatch } from "react-redux";
 import { useForm } from "react-hook-form";
 import { Eye, EyeOff } from "lucide-react";
+import { fetchCart } from "../store/cartsSlice"; // fetch cart after signup
 
 function ClientSignup() {
   const [error, setError] = useState("");
@@ -25,63 +26,69 @@ function ClientSignup() {
     try {
       if (data.password !== data.confirmPassword) {
         setError("Passwords do not match.");
+        setLoading(false);
         return;
       }
 
-      // 1. Create account (Appwrite expects only email, password, name)
-      const userData = await appwriteAuthService.createAccount({
+      // 1️⃣ Create account
+      await appwriteAuthService.createAccount({
         email: data.email,
         password: data.password,
         name: data.username,
       });
 
-      // 2. Login after signup
+      // 2️⃣ Login after signup
       await appwriteAuthService.login({
         email: data.email,
         password: data.password,
       });
 
-      if (userData && userData.$id) {
-        // 3. Safely get current user
-        let user = null;
-        try {
-          user = await appwriteAuthService.getUser();
-        } catch {
-          // swallow silently — user stays null
-        }
+      // 3️⃣ Get current user
+      const user = await appwriteAuthService.getUser();
 
-        if (user) {
-          // Prepare address object
-          const addressObj = {
-            state: data.state,
-            city: data.city,
-            pincode: data.pincode,
-            street: data.street,
-            landmark: data.landmark || "",
-          };
+      if (!user) throw new Error("Unable to get user after signup.");
 
-          // Stringify object because DB expects array<string>
-          const addressArray = [JSON.stringify(addressObj)];
+      // 4️⃣ Prepare address object
+      const addressObj = {
+        state: data.state,
+        city: data.city,
+        pincode: data.pincode,
+        street: data.street,
+        landmark: data.landmark || "",
+      };
+      const addressArray = [JSON.stringify(addressObj)]; // Appwrite expects array<string>
 
-          // 4. Create user profile in Appwrite DB
-          await appwriteConfigService.createUserProfile({
-            user_id: user.$id,
-            displayName: data.username,
-            phone: data.phone,
-            email: data.email,
-            address: addressArray,
-          });
+      // 5️⃣ Create user profile
+      await appwriteConfigService.createUserProfile({
+        user_id: user.$id,
+        displayName: data.username,
+        phone: data.phone,
+        email: data.email,
+        address: addressArray,
+      });
 
-          // 5. Dispatch login and navigate
-          dispatch(login(user));
-          reset();
-          navigate("/");
-        }
+      // 6️⃣ Create empty cart
+      await appwriteConfigService.createCart({ user_id: user.$id, items: {} });
+
+      // 7️⃣ Dispatch login
+      dispatch(login(user));
+
+      // 8️⃣ Fetch cart immediately
+      try {
+        await dispatch(fetchCart()).unwrap();
+      } catch (cartErr) {
+        console.error("Failed to fetch cart:", cartErr);
+        setError("Account created, but failed to fetch cart.");
       }
-    } catch (error) {
-      setError(error?.message || "Something went wrong during signup.");
+
+      // 9️⃣ Reset form & navigate
+      reset();
+      navigate("/");
+    } catch (err) {
+      console.error("[Signup] Error:", err);
+      setError(err.message || "Something went wrong during signup.");
     } finally {
-      setLoading(false);
+      setLoading(false); // spinner stops only after all tasks complete
     }
   };
 

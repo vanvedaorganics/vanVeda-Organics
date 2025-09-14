@@ -1,43 +1,60 @@
+// store/cartSlice.js
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import appwriteService from "../appwrite/appwriteConfigService";
+import authService from "../appwrite/authService";
 
-export const fetchCarts = createAsyncThunk("carts/fetch", async () => {
-  const res = await appwriteService.listCarts();
-  return res.documents;
+// Fetch cart for current user
+export const fetchCart = createAsyncThunk("cart/fetch", async () => {
+  const user = await authService.getUser();
+  return await appwriteService.getCart(user.$id); // assumes cart exists
 });
 
-const cartsSlice = createSlice({
-  name: "carts",
-  initialState: { items: [], loading: false, error: null, fetched: false },
+// Update cart items
+export const updateUserCart = createAsyncThunk("cart/update", async (items) => {
+  const user = await authService.getUser();
+  const updated = await appwriteService.updateCart(user.$id, { items });
+  return updated;
+});
+
+// Empty cart
+export const emptyUserCart = createAsyncThunk("cart/empty", async () => {
+  const user = await authService.getUser();
+  const emptied = await appwriteService.emptyCart(user.$id);
+  return emptied;
+});
+
+const cartSlice = createSlice({
+  name: "cart",
+  initialState: { cart: null, loading: false, error: null, fetched: false },
   reducers: {
-    addCart: (state, action) => {
-      state.items.push(action.payload);
-    },
-    updateCart: (state, action) => {
-      const idx = state.items.findIndex((c) => c.$id === action.payload.$id);
-      if (idx !== -1) state.items[idx] = action.payload;
-    },
-    deleteCart: (state, action) => {
-      state.items = state.items.filter((c) => c.$id !== action.payload);
+    setCart: (state, action) => {
+      state.cart = action.payload;
     },
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchCarts.pending, (s) => {
+      .addCase(fetchCart.pending, (s) => {
         s.loading = true;
       })
-      .addCase(fetchCarts.fulfilled, (s, a) => {
+      .addCase(fetchCart.fulfilled, (s, a) => {
         s.loading = false;
-        s.items = a.payload;
+        s.cart = a.payload;
+        s.error = null;
         s.fetched = true;
       })
-      .addCase(fetchCarts.rejected, (s, a) => {
+      .addCase(fetchCart.rejected, (s, a) => {
         s.loading = false;
         s.error = a.error.message;
         s.fetched = true;
+      })
+      .addCase(updateUserCart.fulfilled, (s, a) => {
+        s.cart = a.payload;
+      })
+      .addCase(emptyUserCart.fulfilled, (s, a) => {
+        s.cart = a.payload;
       });
   },
 });
 
-export const { addCart, updateCart, deleteCart } = cartsSlice.actions;
-export default cartsSlice.reducer;
+export const { setCart } = cartSlice.actions;
+export default cartSlice.reducer;

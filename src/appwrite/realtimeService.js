@@ -1,4 +1,4 @@
-// services/realtimeService.js
+// realtimeService.js
 import { Client } from "appwrite";
 import store from "../store/store";
 import conf from "../conf/conf";
@@ -14,15 +14,13 @@ import {
   deleteCategory,
 } from "../store/categoriesSlice";
 import { addOrder, updateOrder } from "../store/ordersSlice";
-import { addCart, updateCart, deleteCart } from "../store/cartsSlice";
+import { setCart } from "../store/cartsSlice";
 import { addUser, updateUser } from "../store/usersSlice";
 
-// Setup Appwrite Client
 const client = new Client()
   .setEndpoint(conf.appwriteUrl)
   .setProject(conf.appwriteProjectId);
 
-// Define mapping of collections → Redux handlers
 const collectionHandlers = {
   [conf.appwriteProductsCollection]: {
     create: (payload) => store.dispatch(addProduct(payload)),
@@ -39,9 +37,9 @@ const collectionHandlers = {
     update: (payload) => store.dispatch(updateOrder(payload)),
   },
   [conf.appwriteCartsCollection]: {
-    create: (payload) => store.dispatch(addCart(payload)),
-    update: (payload) => store.dispatch(updateCart(payload)),
-    delete: (id) => store.dispatch(deleteCart(id)),
+    create: (payload) => store.dispatch(setCart(payload)), // always replace
+    update: (payload) => store.dispatch(setCart(payload)), // always replace
+    delete: () => store.dispatch(setCart(null)),
   },
   [conf.appwriteUsersCollection]: {
     create: (payload) => store.dispatch(addUser(payload)),
@@ -49,26 +47,18 @@ const collectionHandlers = {
   },
 };
 
-// Initialize subscriptions
 export const initRealtimeSubscriptions = () => {
   Object.keys(collectionHandlers).forEach((collectionId) => {
     client.subscribe(
       `databases.${conf.appwriteDatabaseId}.collections.${collectionId}.documents`,
       (res) => {
-        console.log("[Realtime Event]", res);
-
         const handler = collectionHandlers[collectionId];
-
-        if (res.events.some((e) => e.includes(".create"))) {
-          console.log("[Realtime Create Payload]", res.payload);
-          handler.create && handler.create(res.payload);
-        }
-        if (res.events.some((e) => e.includes(".update"))) {
-          handler.update && handler.update(res.payload);
-        }
-        if (res.events.some((e) => e.includes(".delete"))) {
-          handler.delete && handler.delete(res.payload.$id); 
-        }
+        if (res.events.some((e) => e.includes(".create")))
+          handler.create?.(res.payload);
+        if (res.events.some((e) => e.includes(".update")))
+          handler.update?.(res.payload);
+        if (res.events.some((e) => e.includes(".delete")))
+          handler.delete?.(res.payload.$id);
       }
     );
   });

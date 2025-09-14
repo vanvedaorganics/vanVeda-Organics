@@ -1,5 +1,14 @@
 import conf from "../conf/conf.js";
-import { Client, Account, Databases, Storage, Query, ID, Permission, Role } from "appwrite";
+import {
+  Client,
+  Account,
+  Databases,
+  Storage,
+  Query,
+  ID,
+  Permission,
+  Role,
+} from "appwrite";
 
 export class appwriteConfigService {
   client = new Client();
@@ -265,16 +274,23 @@ export class appwriteConfigService {
     }
   }
 
-  async createCart({ user_id, items = {} }) {
+async createCart({ user_id, items = {} }) {
     try {
+      const payload = {
+        user_id,
+        items: JSON.stringify(items), // auto stringify
+      };
+
       return await this.databases.createDocument(
         conf.appwriteDatabaseId,
         conf.appwriteCartsCollection,
         user_id,
-        {
-          user_id,
-          items,
-        }
+        payload,
+        [
+          Permission.read(Role.user(user_id)),
+          Permission.update(Role.user(user_id)),
+          Permission.delete(Role.user(user_id)),
+        ]
       );
     } catch (error) {
       console.log("Appwrite :: createCart error ::", error);
@@ -284,15 +300,20 @@ export class appwriteConfigService {
 
   async updateCart(user_id, { items = {} }) {
     try {
-      return await this.databases.updateDocument(
+      const payload = {
+        user_id,
+        items: JSON.stringify(items), // auto stringify
+      };
+
+      const updatedDoc = await this.databases.updateDocument(
         conf.appwriteDatabaseId,
         conf.appwriteCartsCollection,
         user_id,
-        {
-          user_id,
-          items,
-        }
+        payload
       );
+
+      // Return items parsed for frontend
+      return { ...updatedDoc, items };
     } catch (error) {
       console.log("Appwrite :: updateCart error ::", error);
       throw error;
@@ -301,11 +322,16 @@ export class appwriteConfigService {
 
   async getCart(user_id) {
     try {
-      return await this.databases.getDocument(
+      const doc = await this.databases.getDocument(
         conf.appwriteDatabaseId,
         conf.appwriteCartsCollection,
         user_id
       );
+
+      return {
+        ...doc,
+        items: doc.items ? JSON.parse(doc.items) : {}, // auto parse
+      };
     } catch (error) {
       console.log("Appwrite :: getCart error ::", error);
       throw error;
@@ -314,19 +340,20 @@ export class appwriteConfigService {
 
   async emptyCart(user_id) {
     try {
-      return await this.databases.updateDocument(
+      const updatedDoc = await this.databases.updateDocument(
         conf.appwriteDatabaseId,
         conf.appwriteCartsCollection,
         user_id,
-        {
-          items: {},
-        }
+        { items: JSON.stringify({}) }
       );
+
+      return { ...updatedDoc, items: {} }; // return empty object
     } catch (error) {
       console.log("Appwrite :: emptyCart error ::", error);
       throw error;
     }
   }
+
 
   async uploadFile(file) {
     try {
@@ -399,7 +426,7 @@ export class appwriteConfigService {
           phone,
           address,
           email,
-        },
+        }
       );
     } catch (error) {
       console.log("Appwrite :: updateUserProfile error ::", error);
