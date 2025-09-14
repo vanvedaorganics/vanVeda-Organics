@@ -25,25 +25,30 @@ function ClientSignup() {
     try {
       if (data.password !== data.confirmPassword) {
         setError("Passwords do not match.");
-        setLoading(false);
         return;
       }
 
-      // Create account (Appwrite expects only email, password, name)
+      // 1. Create account (Appwrite expects only email, password, name)
       const userData = await appwriteAuthService.createAccount({
         email: data.email,
         password: data.password,
-        name: data.username, // Using username as the "name" field
+        name: data.username,
       });
 
+      // 2. Login after signup
       await appwriteAuthService.login({
         email: data.email,
         password: data.password,
-      })
+      });
 
       if (userData && userData.$id) {
-        // Get current user
-        const user = await appwriteAuthService.getUser();
+        // 3. Safely get current user
+        let user = null;
+        try {
+          user = await appwriteAuthService.getUser();
+        } catch {
+          // swallow silently — user stays null
+        }
 
         if (user) {
           // Prepare address object
@@ -58,23 +63,23 @@ function ClientSignup() {
           // Stringify object because DB expects array<string>
           const addressArray = [JSON.stringify(addressObj)];
 
-          // Create user profile in Appwrite DB
+          // 4. Create user profile in Appwrite DB
           await appwriteConfigService.createUserProfile({
             user_id: user.$id,
-            displayName: data.username, // username as profile name
+            displayName: data.username,
             phone: data.phone,
             email: data.email,
             address: addressArray,
           });
 
-          // Dispatch login and navigate
+          // 5. Dispatch login and navigate
           dispatch(login(user));
           reset();
           navigate("/");
         }
       }
     } catch (error) {
-      setError(error.message || "Something went wrong during signup.");
+      setError(error?.message || "Something went wrong during signup.");
     } finally {
       setLoading(false);
     }

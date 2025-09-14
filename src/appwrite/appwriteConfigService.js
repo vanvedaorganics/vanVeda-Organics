@@ -1,5 +1,5 @@
 import conf from "../conf/conf.js";
-import { Client, Account, Databases, Storage, Query, ID } from "appwrite";
+import { Client, Account, Databases, Storage, Query, ID, Permission, Role } from "appwrite";
 
 export class appwriteConfigService {
   client = new Client();
@@ -265,13 +265,14 @@ export class appwriteConfigService {
     }
   }
 
-  async createCart({ userId, items = {} }) {
+  async createCart({ user_id, items = {} }) {
     try {
       return await this.databases.createDocument(
         conf.appwriteDatabaseId,
         conf.appwriteCartsCollection,
-        userId,
+        user_id,
         {
+          user_id,
           items,
         }
       );
@@ -281,13 +282,14 @@ export class appwriteConfigService {
     }
   }
 
-  async updateCart(userId, { items = {} }) {
+  async updateCart(user_id, { items = {} }) {
     try {
       return await this.databases.updateDocument(
         conf.appwriteDatabaseId,
         conf.appwriteCartsCollection,
-        userId,
+        user_id,
         {
+          user_id,
           items,
         }
       );
@@ -297,12 +299,12 @@ export class appwriteConfigService {
     }
   }
 
-  async getCart(userId) {
+  async getCart(user_id) {
     try {
       return await this.databases.getDocument(
         conf.appwriteDatabaseId,
         conf.appwriteCartsCollection,
-        userId
+        user_id
       );
     } catch (error) {
       console.log("Appwrite :: getCart error ::", error);
@@ -310,12 +312,12 @@ export class appwriteConfigService {
     }
   }
 
-  async emptyCart(userId) {
+  async emptyCart(user_id) {
     try {
       return await this.databases.updateDocument(
         conf.appwriteDatabaseId,
         conf.appwriteCartsCollection,
-        userId,
+        user_id,
         {
           items: {},
         }
@@ -365,14 +367,19 @@ export class appwriteConfigService {
       return await this.databases.createDocument(
         conf.appwriteDatabaseId,
         conf.appwriteUsersCollection,
-        ID.unique(),
+        user_id,
         {
           user_id,
           displayName,
           phone,
           address,
           email,
-        }
+        },
+        [
+          Permission.read(Role.user(user_id)),
+          Permission.update(Role.user(user_id)),
+          Permission.delete(Role.user(user_id)),
+        ]
       );
     } catch (error) {
       console.log("Appwrite :: createUserProfile error ::", error);
@@ -380,18 +387,19 @@ export class appwriteConfigService {
     }
   }
 
-  async updateUserProfile(userId, { name, phone, address, email }) {
+  async updateUserProfile({ user_id, displayName, phone, address, email }) {
     try {
       return await this.databases.updateDocument(
         conf.appwriteDatabaseId,
         conf.appwriteUsersCollection,
-        userId,
+        user_id,
         {
-          name,
+          user_id,
+          displayName,
           phone,
           address,
           email,
-        }
+        },
       );
     } catch (error) {
       console.log("Appwrite :: updateUserProfile error ::", error);

@@ -11,18 +11,23 @@ function App() {
   const [loading, setLoading] = useState(true);
   const dispatch = useDispatch();
 
-  useEffect(() => {
-    appwriteAuthService
-      .getUser()
-      .then((userData) => {
-        if (userData) {
-          dispatch(login(userData));
-        } else {
-          dispatch(logout());
-        }
-      })
-      .finally(() => setLoading(false));
-  }, [dispatch]);
+ useEffect(() => {
+  appwriteAuthService
+    .getUser()
+    .then((userData) => {
+      if (userData) {
+        dispatch(login(userData));
+      } else {
+        dispatch(logout());
+      }
+    })
+    .catch(() => {
+      // swallow error silently so no "Uncaught (in promise)" appears
+      dispatch(logout());
+    })
+    .finally(() => setLoading(false));
+}, [dispatch]);
+
 
   if (loading) {
     return (
