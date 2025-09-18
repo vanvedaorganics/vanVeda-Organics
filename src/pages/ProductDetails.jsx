@@ -1,19 +1,32 @@
+// components/ProductDetails.jsx
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useParams, useNavigate } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
 import { Button, Input } from "../components";
 import { Star, Minus, Plus } from "lucide-react";
 import { getImageUrl } from "../../utils/getImageUrl";
+import {
+  changeItemQuantity,
+  addItemOne,
+  removeItemCompletely,
+  selectCartItems,
+} from "../store/cartsSlice";
 
 function ProductDetails() {
   const { slug } = useParams();
   const products = useSelector((state) => state.products.items);
+  const authStatus = useSelector((state) => state.auth.status);
+  const items = useSelector(selectCartItems);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [quantity, setQuantity] = useState(1);
+
+  const quantity = Number(items[slug] || 0);
 
   useEffect(() => {
-    if (products.length > 0) {
+    if (products?.length > 0) {
       const found = products.find((p) => p.slug === slug);
       setProduct(found || null);
       setLoading(false);
@@ -38,11 +51,37 @@ function ProductDetails() {
 
   const imageUrl = getImageUrl(product.image_file_ids);
 
+  const ensureLoggedInThen = (cb) => {
+    if (!authStatus || authStatus === false) {
+      navigate(`/login?returnTo=/product/${slug}`);
+      return;
+    }
+    cb();
+  };
+
+  const updateQty = (newQty) => {
+    ensureLoggedInThen(() => {
+      dispatch(changeItemQuantity({ slug, qty: Math.max(0, newQty) }));
+    });
+  };
+
+  const onAddToCartClick = () => {
+    ensureLoggedInThen(() => {
+      if (quantity > 0) {
+        dispatch(removeItemCompletely(slug));
+      } else {
+        dispatch(addItemOne(slug));
+      }
+    });
+  };
+
+  const inCart = quantity > 0;
+
   return (
     <div className="w-full px-4 sm:px-6 lg:px-12 xl:px-20 py-8 md:py-12 font-sans">
       <div className="mx-auto max-w-7xl">
         <div className="grid gap-8 md:grid-cols-2 lg:gap-16">
-          {/* Product Image */}
+          {/* Image */}
           <div className="flex flex-col items-center">
             <div className="relative w-full max-w-md aspect-square rounded-lg overflow-hidden shadow-lg mb-4">
               <img
@@ -54,7 +93,7 @@ function ProductDetails() {
             </div>
           </div>
 
-          {/* Product Details */}
+          {/* Details */}
           <div className="grid gap-6">
             <div>
               <h1 className="syne-bold text-3xl md:text-4xl text-[#201413]">
@@ -63,11 +102,10 @@ function ProductDetails() {
 
               <div className="roboto-bold mt-4 text-3xl font-bold text-[#2D1D1A]">
                 ₹
-                {(
-                  product.discount > 0
-                    ? product.price_cents / 100 -
-                      (product.price_cents / 100) * (product.discount / 100)
-                    : product.price_cents / 100
+                {(product.discount > 0
+                  ? product.price_cents / 100 -
+                    (product.price_cents / 100) * (product.discount / 100)
+                  : product.price_cents / 100
                 ).toFixed(2)}
                 {product.discount > 0 && (
                   <span className="ml-2 text-base text-[#613D38] line-through">
@@ -93,15 +131,15 @@ function ProductDetails() {
               </div>
             </div>
 
-            {/* Quantity Selector */}
+            {/* Quantity selector */}
             <div className="grid gap-2 mt-4">
               <h2 className="text-base font-semibold">Quantity:</h2>
               <div className="flex items-center gap-2">
                 <Button
                   variant="outline"
                   size="icon"
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  disabled={quantity <= 1}
+                  onClick={() => updateQty(quantity - 1)}
+                  disabled={quantity <= 0}
                   className="hover:bg-gray-100"
                 >
                   <Minus className="h-4 w-4" />
@@ -110,15 +148,15 @@ function ProductDetails() {
                   type="number"
                   value={quantity}
                   onChange={(e) =>
-                    setQuantity(Math.max(1, Number(e.target.value)))
+                    updateQty(Number.isNaN(Number(e.target.value)) ? 0 : e.target.value)
                   }
                   className="w-20 text-center text-[#201413] border focus:border-[#201413] focus:ring-[#201413]"
-                  min="1"
+                  min="0"
                 />
                 <Button
                   variant="outline"
                   size="icon"
-                  onClick={() => setQuantity(quantity + 1)}
+                  onClick={() => updateQty(quantity + 1)}
                   className="hover:bg-gray-100"
                 >
                   <Plus className="h-4 w-4" />
@@ -126,13 +164,18 @@ function ProductDetails() {
               </div>
             </div>
 
-            {/* Action Buttons */}
+            {/* Actions */}
             <div className="flex gap-4 mt-6">
               <Button
                 size="lg"
-                className="flex-1 bg-[#2D1D1A] hover:bg-[#2D1D1A]/90 text-white shadow-md hover:shadow-lg transition-all duration-300"
+                className={`flex-1 ${
+                  inCart
+                    ? "bg-[#2D1D1A] hover:bg-[#2D1D1A]/90"
+                    : "bg-[#2D1D1A] hover:bg-[#2D1D1A]/90"
+                } text-white shadow-md hover:shadow-lg transition-all duration-300`}
+                onClick={onAddToCartClick}
               >
-                Add To Cart
+                {inCart ? "Remove From Cart" : "Add To Cart"}
               </Button>
               <Button
                 size="lg"
@@ -143,7 +186,7 @@ function ProductDetails() {
               </Button>
             </div>
 
-            {/* Product Overview */}
+            {/* Overview */}
             <div className="mt-6 border rounded-lg p-4 shadow-sm bg-white">
               <h2 className="syne-bold text-lg font-semibold mb-2">
                 {product.name} Overview
@@ -151,56 +194,6 @@ function ProductDetails() {
               <p className="text-gray-600 text-sm leading-relaxed">
                 {product.description}
               </p>
-            </div>
-
-            {/* Customer Reviews Section */}
-            <div className="mt-8">
-              <h2 className="syne-bold text-[#2D1D1A] text-2xl font-bold font-serif mb-4">
-                Customer Reviews
-              </h2>
-              <div className="space-y-6">
-                {/* Example Review 1 */}
-                <div className="border-b pb-4">
-                  <div className="flex items-center gap-1 text-[#2D1D1A]">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="h-4 w-4 fill-[#2D1D1A]" />
-                    ))}
-                  </div>
-                  <p className="text-sm font-semibold mt-2">Amazing quality!</p>
-                  <p className="text-gray-600 text-sm">
-                    "This jaggery powder is so pure and tastes incredible.
-                    Highly recommend!"
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    - Priya S. (Verified Buyer)
-                  </p>
-                </div>
-
-                {/* Example Review 2 */}
-                <div className="border-b pb-4">
-                  <div className="flex items-center gap-1 text-[#2D1D1A]">
-                    {[...Array(4)].map((_, i) => (
-                      <Star key={i} className="h-4 w-4 fill-[#2D1D1A]" />
-                    ))}
-                    <Star className="h-4 w-4 text-gray-400" />
-                  </div>
-                  <p className="text-sm font-semibold mt-2">
-                    Good product, slightly pricey
-                  </p>
-                  <p className="text-gray-600 text-sm">
-                    "Love the organic quality, but wish it was a bit more
-                    affordable."
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">- Rahul K.</p>
-                </div>
-
-                <Button
-                  variant="outline"
-                  className="mt-4 text-[#2D1D1A] bg-transparent hover:bg-[#e7ce9d]"
-                >
-                  Read All Reviews
-                </Button>
-              </div>
             </div>
           </div>
         </div>

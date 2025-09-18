@@ -18,9 +18,11 @@ import appwriteAuthService from "../appwrite/authService";
 import { Query } from "appwrite";
 import { useDispatch, useSelector } from "react-redux";
 import { logout as logoutAction } from "../store/authSlice";
+import { setEmptyCart } from "../store/cartsSlice";
+import { selectCartTotalCount } from "../store/cartsSlice";
 
 export function Header() {
-  const [cartItemCount, setCartItemCount] = useState(0);
+  const cartItemCount = useSelector(selectCartTotalCount);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [offerLoading, setOfferLoading] = useState(true);
   const [offer, setOffer] = useState(null);
@@ -98,6 +100,7 @@ export function Header() {
     try {
       await appwriteAuthService.logout();
       dispatch(logoutAction());
+      dispatch(setEmptyCart());
       navigate("/");
     } catch (err) {
       console.error("Logout failed:", err);
@@ -172,7 +175,7 @@ export function Header() {
           <button className="relative hover:bg-gray-100 p-2 rounded-full">
             <ShoppingCart className="h-5 w-5 text-gray-900" />
             {cartItemCount > 0 && (
-              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-green-900 text-xs text-white">
+              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#e7ce9d] text-xs text-[#2D1D1A]">
                 {cartItemCount}
               </span>
             )}
