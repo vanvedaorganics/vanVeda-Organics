@@ -23,7 +23,6 @@ export class AuthService {
         name
       );
       if (userAccount) {
-        //Call Login Function
         console.log("User Created Successfully");
         return userAccount;
       } else {
@@ -31,15 +30,15 @@ export class AuthService {
         return userAccount;
       }
     } catch (error) {
-      return "Appwrite Error :: Create Account :: " + error.message;
+      throw new Error("Appwrite Error :: Create Account :: " + error.message) ;
     }
   }
 
   async login({ email, password }) {
     try {
-      await this.account.createEmailPasswordSession(email, password);
+      return await this.account.createEmailPasswordSession(email, password);
     } catch (error) {
-      return "Appwrite Error :: Login :: " + error.message;
+      throw new Error("Appwrite Error :: Login :: " + error.message);
     }
   }
 
@@ -47,7 +46,7 @@ export class AuthService {
     try {
       await this.account.deleteSession("current");
     } catch (error) {
-      return "Appwrite Error :: Logout :: " + error.message;
+      throw new Error ("Appwrite Error :: Logout :: " + error.message);
     }
   }
 

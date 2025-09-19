@@ -24,62 +24,64 @@ function ClientSignup() {
     setLoading(true);
 
     try {
+      // 1️⃣ Password check
       if (data.password !== data.confirmPassword) {
         setError("Passwords do not match.");
-        setLoading(false);
         return;
       }
 
-      // 1️⃣ Create account
-      await appwriteAuthService.createAccount({
+      // 2️⃣ Create account (Appwrite will auto-create session)
+      const account = await appwriteAuthService.createAccount({
         email: data.email,
         password: data.password,
         name: data.username,
       });
+      if (!account) throw new Error("Account creation failed.");
 
-      // 2️⃣ Login after signup
-      await appwriteAuthService.login({
+      const session = await appwriteAuthService.login({
         email: data.email,
         password: data.password,
       });
+      if (!session) throw new Error("Login after signup failed.");
 
-      // 3️⃣ Get current user
+      // 3️⃣ Get current user (session already active from signup)
       const user = await appwriteAuthService.getUser();
-
       if (!user) throw new Error("Unable to get user after signup.");
 
       // 4️⃣ Prepare address object
       const addressObj = {
-        state: data.state,
-        city: data.city,
-        pincode: data.pincode,
-        street: data.street,
+        residencyAddress: data.residencyAddress,
         landmark: data.landmark || "",
+        street: data.street,
+        pincode: data.pincode,
+        city: data.city,
+        state: data.state,
       };
-      const addressArray = [JSON.stringify(addressObj)]; // Appwrite expects array<string>
+      const addressArray = [JSON.stringify(addressObj)];
 
       // 5️⃣ Create user profile
-      await appwriteConfigService.createUserProfile({
+      const profile = await appwriteConfigService.createUserProfile({
         user_id: user.$id,
         displayName: data.username,
         phone: data.phone,
         email: data.email,
         address: addressArray,
       });
+      if (!profile) throw new Error("User profile creation failed.");
 
       // 6️⃣ Create empty cart
-      await appwriteConfigService.createCart({ user_id: user.$id, items: {} });
+      const cart = await appwriteConfigService.createCart({
+        user_id: user.$id,
+        items: {},
+      });
+      if (!cart) throw new Error("Cart creation failed.");
 
       // 7️⃣ Dispatch login
       dispatch(login(user));
 
-      // 8️⃣ Fetch cart immediately
-      try {
-        await dispatch(fetchCart()).unwrap();
-      } catch (cartErr) {
-        console.error("Failed to fetch cart:", cartErr);
-        setError("Account created, but failed to fetch cart.");
-      }
+      // 8️⃣ Fetch cart immediately (strict dependency)
+      const fetchedCart = await dispatch(fetchCart()).unwrap();
+      if (!fetchedCart) throw new Error("Cart fetch failed.");
 
       // 9️⃣ Reset form & navigate
       reset();
@@ -88,7 +90,7 @@ function ClientSignup() {
       console.error("[Signup] Error:", err);
       setError(err.message || "Something went wrong during signup.");
     } finally {
-      setLoading(false); // spinner stops only after all tasks complete
+      setLoading(false);
     }
   };
 
@@ -150,23 +152,18 @@ function ClientSignup() {
           />
 
           {/* Address */}
+          {/* Address */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
-              label="State"
-              placeholder="Enter state"
-              {...register("state", { required: true })}
+              label="Residency Address"
+              placeholder="Flat / Building / Residency"
+              {...register("residencyAddress", { required: true })}
               disabled={loading}
             />
             <Input
-              label="City"
-              placeholder="Enter city"
-              {...register("city", { required: true })}
-              disabled={loading}
-            />
-            <Input
-              label="Pincode"
-              placeholder="Enter pincode"
-              {...register("pincode", { required: true })}
+              label="Landmark (Optional)"
+              placeholder="Near park, mall..."
+              {...register("landmark")}
               disabled={loading}
             />
             <Input
@@ -176,9 +173,21 @@ function ClientSignup() {
               disabled={loading}
             />
             <Input
-              label="Landmark (Optional)"
-              placeholder="Near park, mall..."
-              {...register("landmark")}
+              label="Pincode"
+              placeholder="Enter pincode"
+              {...register("pincode", { required: true })}
+              disabled={loading}
+            />
+            <Input
+              label="City"
+              placeholder="Enter city"
+              {...register("city", { required: true })}
+              disabled={loading}
+            />
+            <Input
+              label="State"
+              placeholder="Enter state"
+              {...register("state", { required: true })}
               disabled={loading}
             />
           </div>
