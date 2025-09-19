@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+// components/Header.jsx
+import React, { useState, useEffect, useMemo } from "react";
 import { NavLink, Link, useNavigate } from "react-router-dom";
 import {
   ShoppingCart,
@@ -18,10 +19,18 @@ import appwriteAuthService from "../appwrite/authService";
 import { Query } from "appwrite";
 import { useDispatch, useSelector } from "react-redux";
 import { logout as logoutAction } from "../store/authSlice";
-import { setEmptyCart, selectCartTotalCount } from "../store/cartsSlice";
+import {
+  setEmptyCart,
+  selectCartTotalCount,
+  selectCartItems,
+} from "../store/cartsSlice";
+import { CartCard }from "./index";
 
 export function Header() {
   const cartItemCount = useSelector(selectCartTotalCount);
+  const cartItems = useSelector(selectCartItems);
+  const products = useSelector((state) => state.products.items);
+
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const [offerLoading, setOfferLoading] = useState(true);
@@ -86,12 +95,15 @@ export function Header() {
     appwriteService
       .getActiveAd()
       .then((res) => {
+        if (!res?.activeAdId) return;
         appwriteService
           .listAds([Query.equal("$id", [res.activeAdId])])
-          .then((res) => {
-            setOffer(res.documents[0]?.description);
-          });
+          .then((res2) => {
+            setOffer(res2.documents[0]?.description ?? null);
+          })
+          .catch(() => setOffer(null));
       })
+      .catch(() => setOffer(null))
       .finally(() => setOfferLoading(false));
   }, []);
 
@@ -105,6 +117,30 @@ export function Header() {
       console.error("Logout failed:", err);
     }
   };
+
+  // Build cartProducts array: [{ product, qty }]
+  const cartProducts = useMemo(() => {
+    if (!cartItems || !products) return [];
+    return Object.entries(cartItems)
+      .map(([slug, qty]) => {
+        const product = products.find((p) => p.slug === slug);
+        if (!product) return null;
+        return { product, qty: Number(qty || 0) };
+      })
+      .filter(Boolean);
+  }, [cartItems, products]);
+
+  // Subtotal calculation
+  const subtotal = useMemo(() => {
+    return cartProducts.reduce((acc, { product, qty }) => {
+      const price =
+        product.discount > 0
+          ? product.price_cents / 100 -
+            (product.price_cents / 100) * (product.discount / 100)
+          : product.price_cents / 100;
+      return acc + price * qty;
+    }, 0);
+  }, [cartProducts]);
 
   return (
     <header className="w-full bg-white shadow-[0_6px_10px_-2px_rgba(0,0,0,0.2)] border-b border-gray-200 font-sans">
@@ -177,6 +213,7 @@ export function Header() {
             whileTap={{ scale: 0.95 }}
             transition={{ type: "spring", stiffness: 300, damping: 15 }}
             className="relative p-2 rounded-full bg-white shadow-md hover:shadow-lg transition-shadow duration-300"
+            aria-label="Open cart"
           >
             <ShoppingCart className="h-5 w-5 text-gray-900" />
             {cartItemCount > 0 && (
@@ -196,6 +233,7 @@ export function Header() {
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="lg:hidden hover:bg-gray-100 p-2 rounded-full"
+            aria-label="Toggle navigation menu"
           >
             {mobileMenuOpen ? (
               <X className="h-5 w-5 text-gray-900" />
@@ -294,10 +332,15 @@ export function Header() {
                 <h2 className="text-xl syne-bold mb-4 text-[#2D2D1A]">
                   Your Cart
                 </h2>
-                {/* Cart Items Placeholder */}
+
                 <div className="space-y-4">
-                  {/* Example: <CartItem /> */}
-                  <p className="text-gray-500">Cart items go here...</p>
+                  {cartProducts.length === 0 ? (
+                    <p className="text-gray-500">Cart items go here...</p>
+                  ) : (
+                    cartProducts.map(({ product, qty }) => (
+                      <CartCard key={product.slug} product={product} qty={qty} />
+                    ))
+                  )}
                 </div>
               </div>
 
@@ -305,13 +348,23 @@ export function Header() {
               <div className="p-4 border-t bg-white flex flex-col gap-2">
                 <div className="flex justify-between ubuntu-bold text-lg text-[#2D2D1A]">
                   <span>Total:</span>
-                  <span>₹0.00</span>
+                  <span>₹{subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex gap-2">
-                  <button className="flex-1 py-2 px-4 ubuntu-medium bg-[#E7CE9D] hover:bg-[#E7CE9D]/90 rounded-md text-[#2D2D1A]">
+                  <button
+                    onClick={() => dispatch(setEmptyCart())}
+                    className="flex-1 py-2 px-4 ubuntu-medium bg-[#E7CE9D] hover:bg-[#E7CE9D]/90 rounded-md text-[#2D2D1A]"
+                  >
                     Empty Cart
                   </button>
-                  <button className="flex-1 py-2 px-4 ubuntu-medium bg-[#69A72A] hover:bg-[#69A72A]/90 text-white rounded-md">
+                  <button
+                    onClick={() => {
+                      // navigate to checkout or handle checkout flow
+                      navigate("/checkout");
+                      setCartOpen(false);
+                    }}
+                    className="flex-1 py-2 px-4 ubuntu-medium bg-[#69A72A] hover:bg-[#69A72A]/90 text-white rounded-md"
+                  >
                     Checkout
                   </button>
                 </div>
@@ -335,21 +388,36 @@ export function Header() {
               </div>
 
               {/* Scrollable Cart Content */}
-              <div className="flex-1 overflow-y-auto p-4">
-                <p className="text-gray-500">Cart items go here...</p>
+              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                {cartProducts.length === 0 ? (
+                  <p className="text-gray-500">Cart items go here...</p>
+                ) : (
+                  cartProducts.map(({ product, qty }) => (
+                    <CartCard key={product.slug} product={product} qty={qty} />
+                  ))
+                )}
               </div>
 
               {/* Footer Section */}
               <div className="p-4 border-t flex flex-col gap-2">
                 <div className="flex justify-between font-semibold text-lg">
                   <span>Total:</span>
-                  <span>₹0.00</span>
+                  <span>₹{subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex gap-2">
-                  <button className="flex-1 py-2 px-4 bg-gray-200 hover:bg-gray-300 rounded-md">
+                  <button
+                    onClick={() => dispatch(setEmptyCart())}
+                    className="flex-1 py-2 px-4 bg-gray-200 hover:bg-gray-300 rounded-md"
+                  >
                     Empty Cart
                   </button>
-                  <button className="flex-1 py-2 px-4 bg-green-600 hover:bg-green-700 text-white rounded-md">
+                  <button
+                    onClick={() => {
+                      navigate("/checkout");
+                      setCartOpen(false);
+                    }}
+                    className="flex-1 py-2 px-4 bg-green-600 hover:bg-green-700 text-white rounded-md"
+                  >
                     Checkout
                   </button>
                 </div>
