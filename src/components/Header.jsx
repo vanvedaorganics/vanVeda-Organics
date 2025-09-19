@@ -18,12 +18,12 @@ import appwriteAuthService from "../appwrite/authService";
 import { Query } from "appwrite";
 import { useDispatch, useSelector } from "react-redux";
 import { logout as logoutAction } from "../store/authSlice";
-import { setEmptyCart } from "../store/cartsSlice";
-import { selectCartTotalCount } from "../store/cartsSlice";
+import { setEmptyCart, selectCartTotalCount } from "../store/cartsSlice";
 
 export function Header() {
   const cartItemCount = useSelector(selectCartTotalCount);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [cartOpen, setCartOpen] = useState(false);
   const [offerLoading, setOfferLoading] = useState(true);
   const [offer, setOffer] = useState(null);
 
@@ -31,7 +31,6 @@ export function Header() {
   const navigate = useNavigate();
   const authStatus = useSelector((state) => state.auth.status);
 
-  // nav items follow the sample file logic
   const navItems = [
     {
       name: "Products",
@@ -172,15 +171,26 @@ export function Header() {
         {/* Actions */}
         <div className="flex items-center gap-2 md:gap-4">
           {/* Cart */}
-          <button className="relative hover:bg-gray-100 p-2 rounded-full">
+          <motion.button
+            onClick={() => setCartOpen(true)}
+            whileHover={{ scale: 1.1, rotate: -2 }}
+            whileTap={{ scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 300, damping: 15 }}
+            className="relative p-2 rounded-full bg-white shadow-md hover:shadow-lg transition-shadow duration-300"
+          >
             <ShoppingCart className="h-5 w-5 text-gray-900" />
             {cartItemCount > 0 && (
-              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#e7ce9d] text-xs text-[#2D1D1A]">
+              <motion.span
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                exit={{ scale: 0 }}
+                className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#e7ce9d] text-xs text-[#2D1D1A] shadow-sm"
+              >
                 {cartItemCount}
-              </span>
+              </motion.span>
             )}
             <span className="sr-only">Shopping Cart</span>
-          </button>
+          </motion.button>
 
           {/* Mobile Menu Toggle */}
           <button
@@ -254,6 +264,96 @@ export function Header() {
                   </button>
                 )}
               </nav>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Cart Sidebar / Page */}
+      <AnimatePresence>
+        {cartOpen && (
+          <>
+            <motion.div
+              className="fixed inset-0 bg-black/40 z-40"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setCartOpen(false)}
+            />
+
+            {/* Desktop Sidebar */}
+            <motion.div
+              className="hidden lg:flex fixed top-0 right-0 bottom-0 w-[38%] bg-white z-50 shadow-lg flex-col"
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            >
+              {/* Scrollable Cart Content */}
+              <div className="flex-1 overflow-y-auto p-6">
+                <h2 className="text-xl syne-bold mb-4 text-[#2D2D1A]">
+                  Your Cart
+                </h2>
+                {/* Cart Items Placeholder */}
+                <div className="space-y-4">
+                  {/* Example: <CartItem /> */}
+                  <p className="text-gray-500">Cart items go here...</p>
+                </div>
+              </div>
+
+              {/* Footer Section */}
+              <div className="p-4 border-t bg-white flex flex-col gap-2">
+                <div className="flex justify-between ubuntu-bold text-lg text-[#2D2D1A]">
+                  <span>Total:</span>
+                  <span>₹0.00</span>
+                </div>
+                <div className="flex gap-2">
+                  <button className="flex-1 py-2 px-4 ubuntu-medium bg-[#E7CE9D] hover:bg-[#E7CE9D]/90 rounded-md text-[#2D2D1A]">
+                    Empty Cart
+                  </button>
+                  <button className="flex-1 py-2 px-4 ubuntu-medium bg-[#69A72A] hover:bg-[#69A72A]/90 text-white rounded-md">
+                    Checkout
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Mobile Full Page */}
+            <motion.div
+              className="lg:hidden fixed inset-0 bg-white z-50 flex flex-col"
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between p-4 border-b">
+                <h2 className="text-lg font-semibold">Your Cart</h2>
+                <button onClick={() => setCartOpen(false)}>
+                  <X className="h-6 w-6 text-gray-700" />
+                </button>
+              </div>
+
+              {/* Scrollable Cart Content */}
+              <div className="flex-1 overflow-y-auto p-4">
+                <p className="text-gray-500">Cart items go here...</p>
+              </div>
+
+              {/* Footer Section */}
+              <div className="p-4 border-t flex flex-col gap-2">
+                <div className="flex justify-between font-semibold text-lg">
+                  <span>Total:</span>
+                  <span>₹0.00</span>
+                </div>
+                <div className="flex gap-2">
+                  <button className="flex-1 py-2 px-4 bg-gray-200 hover:bg-gray-300 rounded-md">
+                    Empty Cart
+                  </button>
+                  <button className="flex-1 py-2 px-4 bg-green-600 hover:bg-green-700 text-white rounded-md">
+                    Checkout
+                  </button>
+                </div>
+              </div>
             </motion.div>
           </>
         )}
