@@ -2,7 +2,7 @@
 import React, { useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { Minus, Plus, X } from "lucide-react";
+import { Minus, Plus } from "lucide-react";
 import { Input } from "../components";
 import { getImageUrl } from "../../utils/getImageUrl";
 import {
@@ -78,14 +78,6 @@ function CartCard({ product, qty: propQty }) {
             >
               {product.name}
             </Link>
-            <button
-              onClick={handleRemove}
-              className="text-gray-400 hover:text-red-600 p-1"
-              aria-label={`Remove ${product.name} from cart`}
-              title="Remove"
-            >
-              <X className="h-4 w-4" />
-            </button>
           </div>
 
           <div>
@@ -97,14 +89,23 @@ function CartCard({ product, qty: propQty }) {
                 </span>
               )}
             </div>
-            <div className="text-xs text-gray-600">
+            <div className="text-xs flex items-center justify-between gap-2 text-gray-600">
               Total: ₹{lineTotal.toFixed(2)}
+               <button
+              onClick={handleRemove}
+              className="ubuntu-medium text-sm text-[#2D1D1A] hover:text-[#2D1D1A]/80 cursor-pointer p-1"
+              aria-label={`Remove ${product.name} from cart`}
+              title="Remove"
+            >
+              Remove Item
+            </button>
             </div>
+            
           </div>
         </div>
 
         {/* Right side: Quantity controls */}
-        <div className="flex ml-4 shadow-sm rounded-md overflow-hidden border border-[#2D1D1A] h-10">
+        <div className="flex ml-4 shadow-sm rounded-md overflow-hidden border border-gray-400 h-10">
           {/* Minus */}
           <button
             onClick={() => updateQty(quantity - 1)}
