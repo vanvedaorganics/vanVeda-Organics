@@ -3,7 +3,7 @@ import React, { useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { Minus, Plus, X } from "lucide-react";
-import { Button, Input } from "../components";
+import { Input } from "../components";
 import { getImageUrl } from "../../utils/getImageUrl";
 import {
   changeItemQuantity,
@@ -17,17 +17,16 @@ function CartCard({ product, qty: propQty }) {
   const items = useSelector(selectCartItems);
   const authStatus = useSelector((s) => s.auth?.status);
 
-  // Prefer prop qty (passed from Header). Fallback to store.
-  const quantity = typeof propQty === "number" ? propQty : Number(items[product.slug] || 0);
+  const quantity =
+    typeof propQty === "number" ? propQty : Number(items[product.slug] || 0);
 
-  // Compute price and line total
-  const unitPrice =
-    product?.discount > 0
-      ? product.price_cents / 100 - (product.price_cents / 100) * (product.discount / 100)
-      : product.price_cents / 100;
+  const basePrice = product.price_cents / 100;
+  const hasDiscount = product?.discount > 0;
+  const unitPrice = hasDiscount
+    ? basePrice - basePrice * (product.discount / 100)
+    : basePrice;
   const lineTotal = Number((unitPrice * (quantity || 0)).toFixed(2));
 
-  // Ensure user is logged in before mutating cart
   const ensureLoggedInThen = useCallback(
     (cb) => {
       if (!authStatus) {
@@ -41,7 +40,6 @@ function CartCard({ product, qty: propQty }) {
 
   const updateQty = useCallback(
     (newQty) => {
-      // normalize to integer >= 0
       const normalized = Math.max(0, Math.floor(Number(newQty) || 0));
       ensureLoggedInThen(() => {
         dispatch(changeItemQuantity({ slug: product.slug, qty: normalized }));
@@ -57,82 +55,87 @@ function CartCard({ product, qty: propQty }) {
   }, [dispatch, ensureLoggedInThen, product.slug]);
 
   return (
-    <div className="flex gap-4 border rounded-lg p-4 shadow-sm bg-white hover:shadow-md transition-shadow duration-200">
+    <div className="flex gap-4 border-2 border-[#2D1D1A] rounded-md p-4 shadow-md bg-white hover:shadow-lg transition-all duration-200">
       {/* Image */}
-      <div className="w-20 h-20 flex-shrink-0 rounded-md overflow-hidden">
+      <div className="w-24 h-24 flex-shrink-0 overflow-hidden border-r-2 border-[#2D1D1A] pr-2">
         <img
           src={getImageUrl(product.image_file_ids)}
           alt={product.name}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover rounded-sm shadow-sm"
           onError={(e) => (e.target.src = "/placeholder.svg")}
         />
       </div>
 
-      {/* Details */}
-      <div className="flex-1 flex flex-col justify-between">
-        <div className="flex justify-between items-start gap-2">
-          <Link
-            to={`/product/${product.slug}`}
-            className="text-sm font-semibold text-gray-800 hover:underline"
-            title={`View ${product.name}`}
-          >
-            {product.name}
-          </Link>
+      {/* Details + Quantity */}
+      <div className="flex-1 flex justify-between items-center">
+        {/* Left side: title + price */}
+        <div className="flex flex-col justify-between gap-2">
+          <div className="flex justify-between items-start gap-2">
+            <Link
+              to={`/product/${product.slug}`}
+              className="syne-bold text-base text-[#201413] hover:underline"
+              title={`View ${product.name}`}
+            >
+              {product.name}
+            </Link>
+            <button
+              onClick={handleRemove}
+              className="text-gray-400 hover:text-red-600 p-1"
+              aria-label={`Remove ${product.name} from cart`}
+              title="Remove"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
 
-          <button
-            onClick={handleRemove}
-            className="text-gray-400 hover:text-red-600 p-1"
-            aria-label={`Remove ${product.name} from cart`}
-            title="Remove"
-          >
-            <X className="h-4 w-4" />
-          </button>
+          <div>
+            <div className="roboto-bold text-lg text-[#2D1D1A]">
+              ₹{unitPrice.toFixed(2)}
+              {hasDiscount && (
+                <span className="ml-2 text-sm text-[#613D38] line-through">
+                  ₹{basePrice.toFixed(2)}
+                </span>
+              )}
+            </div>
+            <div className="text-xs text-gray-600">
+              Total: ₹{lineTotal.toFixed(2)}
+            </div>
+          </div>
         </div>
 
-        <div className="flex justify-between items-center mt-2">
-          {/* Quantity Controls */}
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => updateQty(quantity - 1)}
-              disabled={quantity <= 0}
-              className="hover:bg-gray-100"
-              aria-label={`Decrease quantity of ${product.name}`}
-              title="Decrease"
-            >
-              <Minus className="h-4 w-4" />
-            </Button>
+        {/* Right side: Quantity controls */}
+        <div className="flex ml-4 shadow-sm rounded-md overflow-hidden border border-[#2D1D1A] h-10">
+          {/* Minus */}
+          <button
+            onClick={() => updateQty(quantity - 1)}
+            disabled={quantity <= 0}
+            className="bg-[#E7CE9D] w-10 h-full flex items-center justify-center disabled:opacity-50 cursor-pointer"
+            aria-label={`Decrease quantity of ${product.name}`}
+          >
+            <Minus className="h-4 w-4" />
+          </button>
 
-            <Input
-              type="number"
-              value={quantity}
-              onChange={(e) => {
-                const v = parseInt(e.target.value, 10);
-                updateQty(Number.isNaN(v) ? 0 : v);
-              }}
-              className="w-16 text-center text-sm border focus:border-[#201413] focus:ring-[#201413]"
-              min="0"
-              aria-label={`Quantity for ${product.name}`}
-            />
+          {/* Input */}
+          <Input
+            type="number"
+            value={quantity}
+            onChange={(e) => {
+              const v = parseInt(e.target.value, 10);
+              updateQty(Number.isNaN(v) ? 0 : v);
+            }}
+            className="w-16 text-center text-sm border-0 focus:ring-0 focus:outline-none h-full"
+            min="0"
+            aria-label={`Quantity for ${product.name}`}
+          />
 
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => updateQty(quantity + 1)}
-              className="hover:bg-gray-100"
-              aria-label={`Increase quantity of ${product.name}`}
-              title="Increase"
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
-          </div>
-
-          {/* Price + Line Total */}
-          <div className="text-sm text-right">
-            <div className="font-medium text-gray-800">₹{unitPrice.toFixed(2)}</div>
-            <div className="text-xs text-gray-500">Total: ₹{lineTotal.toFixed(2)}</div>
-          </div>
+          {/* Plus */}
+          <button
+            onClick={() => updateQty(quantity + 1)}
+            className="bg-[#e7ce9d] w-10 h-full flex items-center justify-center cursor-pointer"
+            aria-label={`Increase quantity of ${product.name}`}
+          >
+            <Plus className="h-4 w-4" />
+          </button>
         </div>
       </div>
     </div>
