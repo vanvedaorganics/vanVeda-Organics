@@ -363,7 +363,7 @@ export function Header() {
                       navigate("/checkout");
                       setCartOpen(false);
                     }}
-                    className="flex-1 py-2 px-4 ubuntu-medium bg-[#69A72A] hover:bg-[#69A72A]/90 text-white rounded-md"
+                    className="flex-1 py-2 px-4 ubuntu-medium bg-[#2D1D1A] hover:bg-[#2D1D1A]/90 text-white rounded-md"
                   >
                     Checkout
                   </button>
