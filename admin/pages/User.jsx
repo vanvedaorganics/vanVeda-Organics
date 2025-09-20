@@ -7,9 +7,12 @@ import AuthService from "../../src/appwrite/authService";
 
 function User() {
   const dispatch = useDispatch();
-  const { items: users, loading, error, fetched } = useSelector(
-    (state) => state.users
-  );
+  const {
+    items: users,
+    loading,
+    error,
+    fetched,
+  } = useSelector((state) => state.users);
 
   const [userModalOpen, setUserModalOpen] = useState(false);
   const [showTeamMembers, setShowTeamMembers] = useState(false);
@@ -24,8 +27,11 @@ function User() {
     {
       header: "Address",
       accessor: "address",
-      render: (row) => `${row.address[0]}`
+      render: (row) => {
+        const addr = JSON.parse(row.address[0]);
+        return `${addr.residencyAddress}, ${addr.landmark}, ${addr.street}, ${addr.pincode}, ${addr.city}, ${addr.state}`;
       },
+    },
     { header: "Email", accessor: "email" },
   ];
 
@@ -53,7 +59,7 @@ function User() {
       if (showTeamMembers) {
         setTeamLoading(true);
         try {
-          const res = await AuthService.listTeamMemberships();
+          const res = await AuthService.listTeamMemberships();         
           if (res.memberships) {
             const formatted = res.memberships.map((m) => ({
               userName: m.user?.name ?? "Unknown",
@@ -97,6 +103,7 @@ function User() {
             variant=""
             className="bg-[#dfb96a] focus:ring-0 hover:bg-[#c7a55c] text-center "
             onClick={() => setUserModalOpen(true)}
+            disabled
           >
             <Plus size={15} className="mr-1" /> Add Users
           </Button>
@@ -106,9 +113,9 @@ function User() {
             variant=""
             className="bg-gray-200 hover:bg-gray-300 text-black"
             onClick={() => setShowTeamMembers((prev) => !prev)}
-            disabled
+            
           >
-            {showTeamMembers ? "Show Client Users" : "Show Team Members"}
+            {showTeamMembers ? "Show Client Users" : "Show Admin Members"}
           </Button>
         </div>
       </div>

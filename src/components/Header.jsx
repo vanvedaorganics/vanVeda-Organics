@@ -23,8 +23,9 @@ import {
   setEmptyCart,
   selectCartTotalCount,
   selectCartItems,
+  emptyUserCart,
 } from "../store/cartsSlice";
-import { CartCard }from "./index";
+import { CartCard } from "./index";
 
 export function Header() {
   const cartItemCount = useSelector(selectCartTotalCount);
@@ -338,7 +339,11 @@ export function Header() {
                     <p className="text-gray-500">Cart items go here...</p>
                   ) : (
                     cartProducts.map(({ product, qty }) => (
-                      <CartCard key={product.slug} product={product} qty={qty} />
+                      <CartCard
+                        key={product.slug}
+                        product={product}
+                        qty={qty}
+                      />
                     ))
                   )}
                 </div>
@@ -352,7 +357,10 @@ export function Header() {
                 </div>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => dispatch(setEmptyCart())}
+                    onClick={() => {
+                      dispatch(emptyUserCart());
+                      dispatch(setEmptyCart());
+                    }}
                     className="flex-1 py-2 px-4 ubuntu-medium bg-[#E7CE9D] hover:bg-[#E7CE9D]/90 rounded-md text-[#2D2D1A]"
                   >
                     Empty Cart
@@ -406,8 +414,11 @@ export function Header() {
                 </div>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => dispatch(setEmptyCart())}
-                    className="flex-1 py-2 px-4 bg-gray-200 hover:bg-gray-300 rounded-md"
+                    onClick={() => {
+                      dispatch(emptyUserCart());
+                      dispatch(setEmptyCart());
+                    }}
+                    className="flex-1 py-2 px-4 ubuntu-medium bg-[#E7CE9D] hover:bg-[#E7CE9D]/90 rounded-md text-[#2D2D1A]"
                   >
                     Empty Cart
                   </button>
@@ -416,7 +427,7 @@ export function Header() {
                       navigate("/checkout");
                       setCartOpen(false);
                     }}
-                    className="flex-1 py-2 px-4 bg-green-600 hover:bg-green-700 text-white rounded-md"
+                    className="flex-1 py-2 px-4 ubuntu-medium bg-[#2D1D1A] hover:bg-[#2D1D1A]/90 text-white rounded-md"
                   >
                     Checkout
                   </button>
