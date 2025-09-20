@@ -19,8 +19,8 @@ const CertificateCard = ({ cert }) => {
       whileTap={{ scale: 0.98 }}
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.2, ease: "easeOut" }}
-      className="group relative rounded-lg border border-[#d1cec7] bg-[#ffffff] text-[#330700] shadow-lg hover:shadow-xl transition-shadow duration-200 text-center overflow-hidden"
+      transition={{ duration: 0.25, ease: "easeOut" }}
+      className="group relative rounded-lg border border-[#d1cec7] bg-white text-[#330700] shadow-lg hover:shadow-xl transition-all duration-300 flex flex-col h-full"
     >
       {/* Hover Overlay with Download Button */}
       {cert.file && (
@@ -36,7 +36,7 @@ const CertificateCard = ({ cert }) => {
       )}
 
       {/* Header */}
-      <div className="flex flex-col items-center p-6 pb-4 box-border relative z-0">
+      <div className="flex flex-col items-center p-6 pb-4">
         <div className="relative h-24 w-24 mb-4">
           <img
             src={cert.image || "/placeholder.svg"}
@@ -48,8 +48,8 @@ const CertificateCard = ({ cert }) => {
       </div>
 
       {/* Content */}
-      <div className="p-6 pt-0 relative z-0">
-        <p className="ubuntu-regular text-[#613d38] text-sm">
+      <div className="p-6 pt-0 flex-grow flex items-center">
+        <p className="ubuntu-regular text-[#613d38] text-sm text-center">
           {cert.description}
         </p>
       </div>

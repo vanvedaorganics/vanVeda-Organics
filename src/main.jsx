@@ -25,6 +25,9 @@ import ClientLogin from "./pages/ClientLogin.jsx";
 import ClientAuthLayout from "./components/ClientAuthLayout.jsx";
 import ClientSignup from "./pages/ClientSignup.jsx";
 import Profile from "./pages/Profile.jsx";
+import Blog from "./pages/Blog/Blog.jsx";
+import AboutUs from "./pages/AboutUs.jsx";
+import ContactUs from "./pages/ContactUs.jsx";
 
 initializeAppData();
 
@@ -72,6 +75,18 @@ const router = createBrowserRouter([
             <Profile/>
           </ClientAuthLayout>
         ),
+      },
+      {
+        path: "/blog",
+        element: <Blog />,
+      },
+      {
+        path: "/contact-us",
+        element: <ContactUs />
+      },
+      {
+        path: "/about-us",
+        element: <AboutUs />
       },
     ],
   },

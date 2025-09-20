@@ -1,6 +1,17 @@
 import React from "react";
 import { CertificateCard } from "../components";
 import { CheckCircle } from "lucide-react";
+import { motion } from "framer-motion";
+
+// Reusable fade-in-up variant
+const fadeInUp = {
+  hidden: { opacity: 0, y: 30 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.6, ease: "easeOut" },
+  },
+};
 
 const certifications = [
   {
@@ -43,19 +54,40 @@ const certifications = [
 
 function Certificates() {
   return (
-    <div className="w-full bg-[#fafafa]">
+    <motion.div
+      className="w-full bg-[#fafafa]"
+      initial="hidden"
+      animate="visible"
+      exit="hidden"
+      variants={fadeInUp}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <h1 className="syne-bold text-3xl md:text-4xl font-serif text-[#2d1d1a] text-center mb-12">
+        {/* Page Heading */}
+        <motion.h1
+          className="syne-bold text-3xl md:text-4xl font-serif text-[#2d1d1a] text-center mb-12 relative"
+          variants={fadeInUp}
+        >
           Our Certifications
-        </h1>
+          <span className="absolute left-1/2 -bottom-2 w-16 h-1 bg-[#69a72a] rounded-full transform -translate-x-1/2 animate-expandLine"></span>
+        </motion.h1>
 
-        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
+        {/* Certification Cards */}
+        <motion.section
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-16"
+          variants={fadeInUp}
+        >
           {certifications.map((cert) => (
-            <CertificateCard key={cert.id} cert={cert} />
+            <motion.div key={cert.id} variants={fadeInUp}>
+              <CertificateCard cert={cert} />
+            </motion.div>
           ))}
-        </section>
+        </motion.section>
 
-        <section className="bg-[#e7ce9d]/20 p-8 rounded-lg shadow-inner text-center mb-16">
+        {/* Why Certifications Matter */}
+        <motion.section
+          className="bg-[#e7ce9d]/20 p-8 rounded-lg shadow-inner text-center mb-16"
+          variants={fadeInUp}
+        >
           <h2 className="text-3xl syne-bold text-[#2d1d1a] mb-4">
             Why Certifications Matter
           </h2>
@@ -65,38 +97,40 @@ function Certificates() {
             means no synthetic pesticides, herbicides, GMOs, or artificial
             fertilizers.
           </p>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="space-y-3">
-              <CheckCircle className="h-10 w-10 text-[#69a72a] mx-auto" />
-              <h3 className="text-xl syne-bold text-[#201413]">
-                Guaranteed Purity
-              </h3>
-              <p className="text-sm text-[#613d38] ubuntu-regular">
-                Ensures products are free from harmful chemicals.
-              </p>
-            </div>
-            <div className="space-y-3">
-              <CheckCircle className="h-10 w-10 text-[#69a72a] mx-auto" />
-              <h3 className="text-xl syne-bold text-[#201413]">
-                Environmental Stewardship
-              </h3>
-              <p className="text-sm text-[#613d38] ubuntu-regular">
-                Supports sustainable farming practices.
-              </p>
-            </div>
-            <div className="space-y-3">
-              <CheckCircle className="h-10 w-10 text-[#69a72a] mx-auto" />
-              <h3 className="text-xl syne-bold text-[#201413]">
-                Consumer Trust
-              </h3>
-              <p className="text-sm text-[#613d38] ubuntu-regular">
-                Provides confidence in your organic choices.
-              </p>
-            </div>
+            {[
+              {
+                title: "Guaranteed Purity",
+                desc: "Ensures products are free from harmful chemicals.",
+              },
+              {
+                title: "Environmental Stewardship",
+                desc: "Supports sustainable farming practices.",
+              },
+              {
+                title: "Consumer Trust",
+                desc: "Provides confidence in your organic choices.",
+              },
+            ].map((item, idx) => (
+              <motion.div
+                key={idx}
+                className="space-y-3 p-6"
+                variants={fadeInUp}
+              >
+                <CheckCircle className="h-10 w-10 text-[#69a72a] mx-auto" />
+                <h3 className="text-xl syne-bold text-[#201413]">
+                  {item.title}
+                </h3>
+                <p className="text-sm text-[#613d38] ubuntu-regular">
+                  {item.desc}
+                </p>
+              </motion.div>
+            ))}
           </div>
-        </section>
+        </motion.section>
       </div>
-    </div>
+    </motion.div>
   );
 }
 

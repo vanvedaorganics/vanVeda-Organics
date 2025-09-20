@@ -62,27 +62,30 @@ function Footer() {
           <h3 className="text-lg font-semibold text-[#E7CE9D]">Quick Links</h3>
           <nav className="grid gap-2 text-sm text-white font-semibold">
             <Link
-              href="/about-us"
+              to="/about-us"
               className="hover:text-[#E7CE9D] transition-colors"
             >
               About Us
             </Link>
             <Link
-              href="/products"
+              to="/products"
               className="hover:text-[#E7CE9D] transition-colors"
             >
               Shop Products
             </Link>
-            <Link href="/blog" className="hover:text-[#E7CE9D] transition-colors">
+            <Link to="/blog" className="hover:text-[#E7CE9D] transition-colors">
               Blog
             </Link>
             <Link
-              href="/organic-certificates"
+              to="/certificates"
               className="hover:text-[#E7CE9D] transition-colors"
             >
               Certificates
             </Link>
-            <Link href="/faq" className="hover:text-[#E7CE9D] transition-colors">
+            <Link
+              to="/faq"
+              className="hover:text-[#E7CE9D] transition-colors"
+            >
               FAQ
             </Link>
           </nav>
@@ -93,34 +96,22 @@ function Footer() {
           <h3 className="text-lg font-semibold text-[#E7CE9D]">Policies</h3>
           <nav className="grid gap-2 text-sm text-white font-semibold">
             <Link
-              href="/shipping-policy"
+              to="/shipping-policy"
               className="hover:text-[#E7CE9D] transition-colors"
             >
               Shipping Policy
             </Link>
             <Link
-              href="/return-refund-policy"
+              to="/return-refund-policy"
               className="hover:text-[#E7CE9D] transition-colors"
             >
               Return & Refund Policy
             </Link>
             <Link
-              href="/privacy-policy"
+              to="/privacy-policy"
               className="hover:text-[#E7CE9D] transition-colors"
             >
               Privacy Policy
-            </Link>
-            <Link
-              href="/disclaimer"
-              className="hover:text-[#E7CE9D] transition-colors"
-            >
-              Disclaimer
-            </Link>
-            <Link
-              href="/intermediary-compliance-policy"
-              className="hover:text-[#E7CE9D] transition-colors"
-            >
-              Intermediary Compliance
             </Link>
           </nav>
         </div>

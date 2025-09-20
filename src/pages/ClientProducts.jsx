@@ -1,6 +1,5 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { motion } from "framer-motion";
 import { ProductsGrid } from "../components";
 import { fetchProducts, selectAllProducts } from "../store/productsSlice";
 
@@ -17,20 +16,17 @@ function ClientProducts() {
   }, [dispatch, fetched, loading]);
 
   return (
-    <motion.section
-      className="bg-gray-100 flex items-center justify-center bg-gradient-to-br from-background to-muted py-16 md:py-24"
-      initial={{ opacity: 0, y: 30 }}        // start state
-      animate={{ opacity: 1, y: 0 }}         // animate to
-      exit={{ opacity: 0, y: -30 }}          // when navigating away (if using AnimatePresence)
-      transition={{ duration: 0.6, ease: "easeOut" }}
-    >
+    <section className="bg-gray-100 flex items-center justify-center bg-gradient-to-br from-background to-muted py-16 md:py-12 animate-fadeInUp">
       <div className="container">
-        <h2 className="syne-bold text-center text-5xl mb-10">
+        {/* Heading */}
+        <h1 className="syne-bold text-3xl md:text-4xl font-serif text-[#2d1d1a] text-center mb-12 relative">
           Our Organic Products
-        </h2>
+          <span className="absolute left-1/2 -bottom-2 w-16 h-1 bg-[#69a72a] rounded-full transform -translate-x-1/2 animate-expandLine"></span>
+        </h1>
 
+        {/* Products */}
         {loading ? (
-          <div className="grid gap-6 sm:gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid gap-6 sm:gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 animate-fadeInUp delay-200">
             {Array.from({ length: 4 }).map((_, i) => (
               <div
                 key={i}
@@ -46,10 +42,12 @@ function ClientProducts() {
             ))}
           </div>
         ) : (
-          <ProductsGrid products={products} />
+          <div className="animate-fadeInUp delay-300">
+            <ProductsGrid products={products} />
+          </div>
         )}
       </div>
-    </motion.section>
+    </section>
   );
 }
 
