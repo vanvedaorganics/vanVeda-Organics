@@ -26,8 +26,11 @@ import ClientAuthLayout from "./components/ClientAuthLayout.jsx";
 import ClientSignup from "./pages/ClientSignup.jsx";
 import Profile from "./pages/Profile.jsx";
 import Blog from "./pages/Blog/Blog.jsx";
+import BlogDetail from "./pages/Blog/BlogDetail.jsx"
 import AboutUs from "./pages/AboutUs.jsx";
 import ContactUs from "./pages/ContactUs.jsx";
+import VanVedaPolicies from "./pages/VanVedaPolicies.jsx";
+import ShippingAndDeliveryPolicy from "./pages/ShippingAndDeliveryPolicy.jsx";
 
 initializeAppData();
 
@@ -81,6 +84,10 @@ const router = createBrowserRouter([
         element: <Blog />,
       },
       {
+        path: "/blog/:slug",
+        element: <BlogDetail />
+      },
+      {
         path: "/contact-us",
         element: <ContactUs />
       },
@@ -88,6 +95,14 @@ const router = createBrowserRouter([
         path: "/about-us",
         element: <AboutUs />
       },
+      {
+        path: "/vanveda-policies",
+        element: <VanVedaPolicies />
+      },
+      {
+        path: "/shipping-policy",
+        element: <ShippingAndDeliveryPolicy />
+      }
     ],
   },
   {

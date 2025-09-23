@@ -66,12 +66,12 @@ export function Header() {
       icon: <Info className="h-5 w-5" />,
       active: true,
     },
-    {
-      name: "Contact Us",
-      slug: "/contact-us",
-      icon: <Phone className="h-5 w-5" />,
-      active: true,
-    },
+    // {
+    //   name: "Contact Us",
+    //   slug: "/contact-us",
+    //   icon: <Phone className="h-5 w-5" />,
+    //   active: true,
+    // },
     {
       name: "Profile",
       slug: "/profile",

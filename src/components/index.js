@@ -7,6 +7,7 @@ import VideoShowcase from "./VideoShowcase";
 import Input from "./Input"
 import CertificateCard from "./CertificateCard";
 import CartCard from "./CartCard";
+import BlogCard from "./BlogCard";
 
 export {
     Header,
@@ -18,4 +19,5 @@ export {
     ProductsGrid,
     CertificateCard,
     CartCard,
+    BlogCard,
 }

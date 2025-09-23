@@ -115,14 +115,14 @@ function Certificates() {
             ].map((item, idx) => (
               <motion.div
                 key={idx}
-                className="space-y-3 p-6"
+                className="space-y-3 p-6 rounded-xl bg-white/50 shadow-md hover:shadow-xl hover:-translate-y-2 transform transition duration-500"
                 variants={fadeInUp}
               >
                 <CheckCircle className="h-10 w-10 text-[#69a72a] mx-auto" />
-                <h3 className="text-xl syne-bold text-[#201413]">
+                <h3 className="syne-bold text-xl text-[#201413]">
                   {item.title}
                 </h3>
-                <p className="text-sm text-[#613d38] ubuntu-regular">
+                <p className="ubuntu-regular text-sm text-[#613d38]">
                   {item.desc}
                 </p>
               </motion.div>

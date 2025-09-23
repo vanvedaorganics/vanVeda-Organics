@@ -96,22 +96,16 @@ function Footer() {
           <h3 className="text-lg font-semibold text-[#E7CE9D]">Policies</h3>
           <nav className="grid gap-2 text-sm text-white font-semibold">
             <Link
+              to="/vanveda-policies"
+              className="hover:text-[#E7CE9D] transition-colors"
+            >
+              VanVeda Policies
+            </Link>
+            <Link
               to="/shipping-policy"
               className="hover:text-[#E7CE9D] transition-colors"
             >
-              Shipping Policy
-            </Link>
-            <Link
-              to="/return-refund-policy"
-              className="hover:text-[#E7CE9D] transition-colors"
-            >
-              Return & Refund Policy
-            </Link>
-            <Link
-              to="/privacy-policy"
-              className="hover:text-[#E7CE9D] transition-colors"
-            >
-              Privacy Policy
+              Shipping & Delivery Policy
             </Link>
           </nav>
         </div>
