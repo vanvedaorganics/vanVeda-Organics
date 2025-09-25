@@ -1,43 +1,65 @@
-// src/components/ProductsForm.jsx
 import React, { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Input, Button, Label, Textarea, Select } from "../components";
 import appwriteService from "../../src/appwrite/appwriteConfigService";
 import { useSelector } from "react-redux";
+import { getImageUrl } from "../../utils/getImageUrl";
 
-// Friendly error messages for UX
+// ---- Helpers ----
+const genLocalId = () => crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random());
+const MAX_IMAGES_PER_SIZE = 4;
+
+// Parse incoming packaging_size (array of strings or objects)
+function parsePackagingSizes(raw = []) {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((item) => {
+      let obj = item;
+      if (typeof obj === "string") {
+        try {
+          obj = JSON.parse(obj);
+        } catch {
+          obj = {};
+        }
+      }
+      return {
+        id: genLocalId(),
+        size: obj?.size || "",
+        // store rupees (derived) purely for input convenience; convert later
+        priceRupees: obj?.price_cents
+          ? (Number(obj.price_cents) / 100).toString()
+          : "",
+        images: Array.isArray(obj?.images)
+          ? obj.images
+              .filter((id) => typeof id === "string" && id.trim())
+              .map((fid) => ({
+                id: genLocalId(),
+                type: "existing",
+                fileId: fid,
+                file: null,
+                preview: getImageUrl(fid),
+              }))
+          : [],
+      };
+    })
+    .filter((ps) => ps.size || ps.priceRupees || ps.images.length);
+}
+
 function getFriendlyErrorMessage(error) {
   if (!error) return "";
-  if (error.code === 409 || /already exists|duplicate/i.test(error.message)) {
+  if (error.code === 409 || /already exists|duplicate/i.test(error.message))
     return "A product with this name or slug already exists.";
-  }
-  if (error.code === 0 || /network|connection/i.test(error.message)) {
-    return "Unable to connect to the server. Please check your internet connection.";
-  }
-  if (/invalid/i.test(error.message)) {
-    return "Invalid input. Please check your data.";
-  }
-  return "An unexpected error occurred. Please try again.";
+  if (error.code === 0 || /network|connection/i.test(error.message))
+    return "Unable to connect to the server.";
+  if (/invalid/i.test(error.message)) return "Invalid input data.";
+  return "Unexpected error. Please try again.";
 }
 
 export default function ProductsForm({ onSuccess, initialData = null }) {
   const isEdit = !!initialData;
+  const categories = useSelector((state) => state.categories.items) || [];
 
-  const [submitError, setSubmitError] = useState("");
-  const [imagePreview, setImagePreview] = useState(
-    initialData?.image_file_ids
-      ? `${import.meta.env.VITE_APPWRITE_ENDPOINT}/storage/buckets/${import.meta.env.VITE_APPWRITE_BUCKET_ID}/files/${initialData.image_file_ids}/view?project=${import.meta.env.VITE_APPWRITE_PROJECT_ID}`
-      : null
-  );
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [prevFileId, setPrevFileId] = useState(initialData?.image_file_ids || null);
-
-  // track object URLs we created so we can revoke them
-  const objectUrlRef = useRef(null);
-
-  // Redux categories
-  const categories = useSelector((state) => state.categories.items);
-
+  // ---- React Hook Form (only for top-level fields) ----
   const {
     register,
     handleSubmit,
@@ -53,17 +75,28 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
       slug: initialData?.slug || "",
       sku: initialData?.sku || "",
       description: initialData?.description || "",
-      price_cents: initialData?.price_cents ? (initialData.price_cents / 100).toString() : "",
-      stock: initialData?.stock || "",
-      // category should be a single ID when editing: either initialData.categories (ID) or expanded object
+      discount: initialData?.discount ?? 0,
       category:
-        initialData?.categories?.$id ?? // if appwrite returned expanded relation
-        (typeof initialData?.categories === "string" ? initialData.categories : "") ??
+        initialData?.categories?.$id ??
+        (typeof initialData?.categories === "string"
+          ? initialData.categories
+          : "") ??
         "",
     },
   });
 
-  // Auto-generate slug if adding
+  // ---- Packaging Sizes State ----
+  const [packagingSizes, setPackagingSizes] = useState(() =>
+    parsePackagingSizes(initialData?.packaging_size)
+  );
+
+  // Track files (fileIds) scheduled for deletion AFTER successful submit
+  const filesPendingDeletionRef = useRef(new Set());
+
+  // Track all object URLs to revoke on unmount
+  const objectUrlsRef = useRef([]);
+
+  // Auto slug generation (creation mode only)
   const nameValue = watch("name");
   useEffect(() => {
     if (!isEdit) {
@@ -71,11 +104,11 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/(^-|-$)+/g, "");
-      setValue("slug", slug, { shouldValidate: true });
+      setValue("slug", slug);
     }
-  }, [nameValue, setValue, isEdit]);
+  }, [nameValue, isEdit, setValue]);
 
-  // Reset when editing (pre-fill, including category as ID)
+  // Reset on new initialData
   useEffect(() => {
     if (isEdit && initialData) {
       reset({
@@ -83,193 +116,436 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
         slug: initialData.slug || "",
         sku: initialData.sku || "",
         description: initialData.description || "",
-        price_cents: initialData.price_cents ? (initialData.price_cents / 100).toString() : "",
-        stock: initialData.stock || "",
+        discount: initialData.discount ?? 0,
         category:
-          initialData?.categories?.$id ?? // expanded relation
-          (typeof initialData?.categories === "string" ? initialData.categories : "") ??
+          initialData?.categories?.$id ??
+          (typeof initialData?.categories === "string"
+            ? initialData.categories
+            : "") ??
           "",
       });
-
-      setImagePreview(
-        initialData.image_file_ids
-          ? `${import.meta.env.VITE_APPWRITE_ENDPOINT}/storage/buckets/${import.meta.env.VITE_APPWRITE_BUCKET_ID}/files/${initialData.image_file_ids}/view?project=${import.meta.env.VITE_APPWRITE_PROJECT_ID}`
-          : null
-      );
-      setPrevFileId(initialData.image_file_ids || null);
-      setSelectedFile(null);
+      setPackagingSizes(parsePackagingSizes(initialData.packaging_size));
+      filesPendingDeletionRef.current = new Set();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialData, isEdit, reset]);
 
-  // Cleanup object URL on unmount
-  useEffect(() => {
-    return () => {
-      if (objectUrlRef.current) {
-        URL.revokeObjectURL(objectUrlRef.current);
-        objectUrlRef.current = null;
-      }
-    };
-  }, []);
+  // Cleanup object URLs on unmount
+  useEffect(
+    () => () => {
+      objectUrlsRef.current.forEach((u) => URL.revokeObjectURL(u));
+      objectUrlsRef.current = [];
+    },
+    []
+  );
 
-  // Image preview handling (local state only, NOT registered with react-hook-form)
-  const handleFileChange = (e) => {
-    const file = e.target.files?.[0] ?? null;
-
-    // revoke previous object URL if we created one
-    if (objectUrlRef.current) {
-      URL.revokeObjectURL(objectUrlRef.current);
-      objectUrlRef.current = null;
-    }
-
-    setSelectedFile(file);
-
-    if (file) {
-      const objUrl = URL.createObjectURL(file);
-      objectUrlRef.current = objUrl;
-      setImagePreview(objUrl);
-      // clear any previous image errors
-      clearErrors("image");
-      setSubmitError("");
-    } else {
-      // if user cleared input, revert to previous image (if any) or null
-      setImagePreview(
-        prevFileId
-          ? `${import.meta.env.VITE_APPWRITE_ENDPOINT}/storage/buckets/${import.meta.env.VITE_APPWRITE_BUCKET_ID}/files/${prevFileId}/view?project=${import.meta.env.VITE_APPWRITE_PROJECT_ID}`
-          : null
-      );
-    }
+  // ---- Handlers for Packaging Sizes ----
+  const addPackagingSize = () => {
+    setPackagingSizes((prev) => [
+      ...prev,
+      {
+        id: genLocalId(),
+        size: "",
+        priceRupees: "",
+        images: [], // each entry: {id,type:'existing'|'new', file?, fileId?, preview}
+      },
+    ]);
   };
 
-  // Submit
-  const onSubmit = async (data) => {
-    setSubmitError("");
-    // client-side validations for image presence:
-    if (!isEdit && !selectedFile && !prevFileId) {
-      // new product requires image
-      setError("image", { type: "required", message: "Image is required for new products" });
-      return;
+  const updatePackagingSizeField = (psId, field, value) => {
+    setPackagingSizes((prev) =>
+      prev.map((p) => (p.id === psId ? { ...p, [field]: value } : p))
+    );
+  };
+
+  const removePackagingSize = (psId) => {
+    setPackagingSizes((prev) => {
+      const target = prev.find((p) => p.id === psId);
+      if (target) {
+        // schedule all existing images for deletion
+        target.images.forEach((img) => {
+          if (img.type === "existing" && img.fileId)
+            filesPendingDeletionRef.current.add(img.fileId);
+          if (img.type === "new" && img.preview) {
+            URL.revokeObjectURL(img.preview);
+          }
+        });
+      }
+      return prev.filter((p) => p.id !== psId);
+    });
+  };
+
+  // ---- Image Management ----
+  const addImage = (psId, file) => {
+    if (!file) return;
+    const preview = URL.createObjectURL(file);
+    objectUrlsRef.current.push(preview);
+    setPackagingSizes((prev) =>
+      prev.map((p) =>
+        p.id === psId
+          ? p.images.length >= MAX_IMAGES_PER_SIZE
+            ? p
+            : {
+                ...p,
+                images: [
+                  ...p.images,
+                  {
+                    id: genLocalId(),
+                    type: "new",
+                    file,
+                    fileId: null,
+                    preview,
+                  },
+                ],
+              }
+          : p
+      )
+    );
+  };
+
+  const swapImage = (psId, imageId, file) => {
+    if (!file) return;
+    const preview = URL.createObjectURL(file);
+    objectUrlsRef.current.push(preview);
+    setPackagingSizes((prev) =>
+      prev.map((p) => {
+        if (p.id !== psId) return p;
+        const newImages = p.images.map((img) => {
+          if (img.id !== imageId) return img;
+            // schedule deletion of old if existing
+          if (img.type === "existing" && img.fileId) {
+            filesPendingDeletionRef.current.add(img.fileId);
+          }
+          if (img.type === "new" && img.preview) {
+            URL.revokeObjectURL(img.preview);
+          }
+          return {
+            id: genLocalId(),
+            type: "new",
+            file,
+            fileId: null,
+            preview,
+          };
+        });
+        return { ...p, images: newImages };
+      })
+    );
+  };
+
+  const removeImage = (psId, imageId) => {
+    setPackagingSizes((prev) =>
+      prev.map((p) => {
+        if (p.id !== psId) return p;
+        const img = p.images.find((i) => i.id === imageId);
+        if (!img) return p;
+        if (img.type === "existing" && img.fileId) {
+          filesPendingDeletionRef.current.add(img.fileId);
+        }
+        if (img.type === "new" && img.preview) {
+          URL.revokeObjectURL(img.preview);
+        }
+        return {
+          ...p,
+            images: p.images.filter((i) => i.id !== imageId),
+        };
+      })
+    );
+  };
+
+  // File input refs per action
+  const hiddenInputsRef = useRef({}); // key => callback
+  const triggerFileDialog = (key, cb) => {
+    hiddenInputsRef.current[key] = cb;
+    const el = document.getElementById(key);
+    if (el) el.click();
+  };
+
+  const handleHiddenInputChange = (e, cb, key) => {
+    const file = e.target.files?.[0];
+    if (file) cb(file);
+    e.target.value = "";
+    if (hiddenInputsRef.current[key]) delete hiddenInputsRef.current[key];
+  };
+
+  // ---- Validation before submit ----
+  const validatePackagingSizes = () => {
+    if (packagingSizes.length === 0) {
+      return "At least one packaging size is required.";
     }
-    if (isEdit && !prevFileId && !selectedFile) {
-      // editing a product that currently has no image -> image required
-      setError("image", { type: "required", message: "Image is required (no existing image)" });
+    for (let i = 0; i < packagingSizes.length; i++) {
+      const ps = packagingSizes[i];
+      if (!ps.size.trim()) {
+        return `Packaging size #${i + 1}: size label is required.`;
+      }
+      if (!ps.priceRupees || isNaN(Number(ps.priceRupees)) || Number(ps.priceRupees) <= 0) {
+        return `Packaging size #${i + 1}: price must be a positive number.`;
+      }
+      if (ps.images.length === 0) {
+        return `Packaging size #${i + 1}: at least one image is required.`;
+      }
+      // main photo presence ensured by images[0]
+      if (!ps.images[0]) {
+        return `Packaging size #${i + 1}: main image missing.`;
+      }
+    }
+    return null;
+  };
+
+  // ---- Assemble payload ----
+  const buildPackagingSizePayload = async () => {
+    // Upload all new images first
+    const uploadedMap = new Map(); // local image id => fileId
+    for (const ps of packagingSizes) {
+      for (const img of ps.images) {
+        if (img.type === "new" && img.file && !uploadedMap.has(img.id)) {
+          const res = await appwriteService.uploadFile(img.file);
+            if (!res || !res.$id) throw new Error("Image upload failed.");
+          uploadedMap.set(img.id, res.$id);
+        }
+      }
+    }
+
+    // Construct final array (objects)
+    return packagingSizes.map((ps) => ({
+      size: ps.size.trim(),
+      price_cents: Math.round(Number(ps.priceRupees) * 100).toString(),
+      images: ps.images.map((img) =>
+        img.type === "existing" ? img.fileId : uploadedMap.get(img.id)
+      ),
+    }));
+  };
+
+  // ---- Submit ----
+  const [submitError, setSubmitError] = useState("");
+
+  const onSubmit = async (formData) => {
+    setSubmitError("");
+
+    const validationError = validatePackagingSizes();
+    if (validationError) {
+      setSubmitError(validationError);
       return;
     }
 
     try {
-      let imageFileId = prevFileId;
+      const packaging_size = await buildPackagingSizePayload();
 
-      if (selectedFile) {
-        // if editing and previous exists, attempt delete (best-effort)
-        if (isEdit && prevFileId) {
-          try {
-            await appwriteService.deleteFile(prevFileId);
-          } catch (err) {
-            // don't block - just warn
-            console.warn("Could not delete previous file:", err);
-          }
-        }
-        const uploadRes = await appwriteService.uploadFile(selectedFile);
-        if (!uploadRes || !uploadRes.$id) throw new Error("Image upload failed");
-        imageFileId = uploadRes.$id;
-      }
-
-      const productPayload = {
-        slug: data.slug,
-        name: data.name,
-        description: data.description,
-        price_cents: Math.round(Number(data.price_cents) * 100),
-        image_file_ids: imageFileId || "",
-        stock: Number(data.stock),
-        sku: data.sku,
-        categories: data.category || null, // single ID
+      const payloadBase = {
+        name: formData.name,
+        slug: formData.slug,
+        description: formData.description,
+        sku: formData.sku,
+        categories: formData.category || "",
+        discount: parseInt(formData.discount, 10) || 0,
+        packaging_size,
+        // currency omitted (defaults to "INR" server-side)
       };
 
       if (isEdit) {
-        await appwriteService.updateProduct(data.slug, productPayload);
+        await appwriteService.updateProduct(formData.slug, payloadBase);
       } else {
-        await appwriteService.createProduct(productPayload);
+        await appwriteService.createProduct(payloadBase);
       }
 
-      // cleanup object URL created for preview
-      if (objectUrlRef.current) {
-        URL.revokeObjectURL(objectUrlRef.current);
-        objectUrlRef.current = null;
+      // Best-effort deletion of replaced/removed images
+      const toDelete = Array.from(filesPendingDeletionRef.current);
+      if (toDelete.length) {
+        Promise.allSettled(toDelete.map((fid) => appwriteService.deleteFile(fid))).catch(() => {});
+      }
+      filesPendingDeletionRef.current = new Set();
+
+      // Clear local object URLs for NEW images (existing just remote)
+      objectUrlsRef.current.forEach((u) => URL.revokeObjectURL(u));
+      objectUrlsRef.current = [];
+
+      if (!isEdit) {
+        reset({
+          name: "",
+          slug: "",
+          sku: "",
+          description: "",
+          discount: 0,
+          category: "",
+        });
+        setPackagingSizes([]);
       }
 
-      // reset local file state
-      setSelectedFile(null);
-      setPrevFileId(imageFileId || null);
-      setImagePreview(
-        imageFileId
-          ? `${import.meta.env.VITE_APPWRITE_ENDPOINT}/storage/buckets/${import.meta.env.VITE_APPWRITE_BUCKET_ID}/files/${imageFileId}/view?project=${import.meta.env.VITE_APPWRITE_PROJECT_ID}`
-          : null
-      );
-
-      reset();
       if (onSuccess) onSuccess();
     } catch (err) {
       setSubmitError(getFriendlyErrorMessage(err));
     }
   };
 
+  // ---- Render helpers ----
+  const renderImageSlot = (ps, img, idx) => {
+    const keySwap = `swap-${ps.id}-${img.id}`;
+    return (
+      <div key={img.id} className="flex flex-col items-center gap-1 border rounded p-2 relative">
+        <img
+          src={img.preview}
+          alt="Preview"
+          className="w-24 h-24 object-cover rounded"
+        />
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            variant="secondary"
+            size="xs"
+            onClick={() =>
+              triggerFileDialog(keySwap, (file) => swapImage(ps.id, img.id, file))
+            }
+            disabled={isSubmitting}
+          >
+            Swap
+          </Button>
+          {idx !== 0 && (
+            <Button
+              type="button"
+              variant="danger"
+              size="xs"
+              onClick={() => removeImage(ps.id, img.id)}
+              disabled={isSubmitting}
+            >
+              Remove
+            </Button>
+          )}
+        </div>
+        <input
+          id={keySwap}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => handleHiddenInputChange(e, (file) => swapImage(ps.id, img.id, file), keySwap)}
+        />
+        {idx === 0 && (
+          <span className="text-[10px] text-emerald-700 font-medium mt-1">
+            Main
+          </span>
+        )}
+      </div>
+    );
+  };
+
+  const renderAddImageButton = (ps) => {
+    const keyAdd = `add-${ps.id}`;
+    return (
+      <div className="flex flex-col items-center justify-center border-dashed border-2 rounded p-4 w-28 h-28">
+        <Button
+          type="button"
+          variant="secondary"
+          size="xs"
+          onClick={() =>
+            triggerFileDialog(keyAdd, (file) => addImage(ps.id, file))
+          }
+          disabled={isSubmitting}
+        >
+          Add
+        </Button>
+        <input
+          id={keyAdd}
+            type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => handleHiddenInputChange(e, (file) => addImage(ps.id, file), keyAdd)}
+        />
+        <span className="text-[10px] text-gray-500 mt-1">
+          {ps.images.length}/{MAX_IMAGES_PER_SIZE}
+        </span>
+      </div>
+    );
+  };
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      <h2 className="text-xl font-bold text-[#084629] mb-2">
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="space-y-8"
+      noValidate
+    >
+      <h2 className="text-xl font-bold text-[#084629]">
         {isEdit ? "Edit Product" : "Add New Product"}
       </h2>
 
-      {/* Image Upload — NOT registered with react-hook-form */}
-      <div>
-        <Label htmlFor="image" required={!isEdit || !prevFileId}>
-          Product Image
-        </Label>
-
-        <Input
-          id="image"
-          type="file"
-          accept="image/*"
-          onChange={handleFileChange} // our local handler
-          disabled={isSubmitting}
-          wrapperClassName="!border-0 !bg-transparent"
-        />
-
-        {errors.image && <div className="text-red-600 text-sm mt-1">{errors.image.message}</div>}
-
-        {imagePreview && (
-          <div className="mt-2">
-            <img src={imagePreview} alt="Preview" className="w-32 h-32 object-cover rounded border" />
-          </div>
-        )}
-      </div>
-
-      {/* Name & Slug */}
-      <div className="flex gap-4">
-        <div className="flex-1">
+      <div className="grid md:grid-cols-2 gap-4">
+        {/* Name */}
+        <div>
           <Label htmlFor="name" required>
             Name
           </Label>
           <Input
             id="name"
-            {...register("name", { required: "Name is required" })}
             placeholder="Product Name"
             disabled={isSubmitting}
+            {...register("name", { required: "Name is required" })}
             error={errors.name?.message}
           />
         </div>
 
-        <div className="flex-1">
+        {/* Slug (locked in edit) */}
+        <div>
           <Label htmlFor="slug">Slug</Label>
-          <Input id="slug" {...register("slug")} value={watch("slug")} disabled error={errors.slug?.message} />
+          <Input
+            id="slug"
+            disabled
+            {...register("slug")}
+            error={errors.slug?.message}
+          />
         </div>
-      </div>
 
-      {/* SKU */}
-      <div>
-        <Label htmlFor="sku" required>
-          SKU
-        </Label>
-        <Input id="sku" {...register("sku", { required: "SKU is required" })} placeholder="Stock Keeping Unit" disabled={isSubmitting} error={errors.sku?.message} />
+        {/* SKU */}
+        <div>
+          <Label htmlFor="sku" required>
+            SKU
+          </Label>
+          <Input
+            id="sku"
+            placeholder="SKU"
+            disabled={isSubmitting}
+            {...register("sku", { required: "SKU is required" })}
+            error={errors.sku?.message}
+          />
+        </div>
+
+        {/* Discount */}
+        <div>
+          <Label htmlFor="discount">Discount (%)</Label>
+          <Input
+            id="discount"
+            type="number"
+            min="0"
+            max="99"
+            disabled={isSubmitting}
+            {...register("discount", {
+              min: { value: 0, message: "Min 0" },
+              max: { value: 99, message: "Max 99" },
+            })}
+            error={errors.discount?.message}
+          />
+        </div>
+
+        {/* Category */}
+        <div className="md:col-span-2">
+          <Label htmlFor="category" required>
+            Category
+          </Label>
+          <Select
+            id="category"
+            placeholder="Select category"
+            disabled={isSubmitting}
+            options={categories.map((c) => ({
+              value: c.$id,
+              label: c.name,
+            }))}
+            value={watch("category")}
+            onValueChange={(val) => {
+              setValue("category", val, { shouldValidate: true });
+              clearErrors("category");
+            }}
+          />
+          {errors.category && (
+            <div className="text-red-600 text-sm mt-1">
+              {errors.category.message}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Description */}
@@ -277,49 +553,123 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
         <Label htmlFor="description" required>
           Description
         </Label>
-        <Textarea id="description" {...register("description", { required: "Description is required" })} placeholder="Product Description" disabled={isSubmitting} error={errors.description?.message} />
-      </div>
-
-      {/* Price & Stock */}
-      <div className="flex gap-4">
-        <div className="flex-1">
-          <Label htmlFor="price_cents" required>
-            Price (INR)
-          </Label>
-          <Input id="price_cents" type="number" min="0" step="0.01" {...register("price_cents", { required: "Price is required", min: { value: 0, message: "Price must be positive" } })} placeholder="e.g. 499.99" disabled={isSubmitting} error={errors.price_cents?.message} />
-        </div>
-        <div className="flex-1">
-          <Label htmlFor="stock" required>
-            Stock
-          </Label>
-          <Input id="stock" type="number" min="0" step="1" {...register("stock", { required: "Stock is required", min: { value: 0, message: "Stock must be positive" } })} placeholder="e.g. 100" disabled={isSubmitting} error={errors.stock?.message} />
-        </div>
-      </div>
-
-      {/* Category Select */}
-      <div>
-        <Label htmlFor="category" required>
-          Category
-        </Label>
-        <Select
-          id="category"
-          options={categories.map((cat) => ({ value: cat.$id, label: cat.name }))}
-          value={watch("category")}
-          onValueChange={(val) => {
-            setValue("category", val, { shouldValidate: true });
-            clearErrors("category");
-          }}
-          placeholder="Select Category"
+        <Textarea
+          id="description"
+          rows={5}
+          placeholder="Product description..."
           disabled={isSubmitting}
+          {...register("description", { required: "Description is required" })}
+          error={errors.description?.message}
         />
-        {errors.category && <div className="text-red-600 text-sm font-medium mt-1">{errors.category.message}</div>}
       </div>
 
-      {/* Submit / Error */}
-      {submitError && <div className="text-red-600 text-sm font-medium">{submitError}</div>}
+      {/* Packaging Sizes */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <Label required>Packaging Sizes</Label>
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={addPackagingSize}
+            disabled={isSubmitting}
+          >
+            Add Packaging Size
+          </Button>
+        </div>
 
-      <Button type="submit" variant="primary" size="md" loading={isSubmitting} className="w-full">
-        {isEdit ? "Update Product" : "Add Product"}
+        {packagingSizes.length === 0 && (
+          <div className="text-sm text-gray-500">
+            No packaging sizes added yet.
+          </div>
+        )}
+
+        <div className="space-y-6">
+          {packagingSizes.map((ps, idx) => (
+            <div
+              key={ps.id}
+              className="border rounded-md p-4 space-y-4 bg-white shadow-sm"
+            >
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold text-sm text-[#084629]">
+                  Packaging Size #{idx + 1}
+                </h3>
+                <Button
+                  type="button"
+                  variant="danger"
+                  size="xs"
+                  disabled={isSubmitting || packagingSizes.length === 1}
+                  onClick={() => removePackagingSize(ps.id)}
+                >
+                  Remove
+                </Button>
+              </div>
+
+              <div className="grid md:grid-cols-3 gap-4">
+                <div>
+                  <Label required>Size Label</Label>
+                  <Input
+                    value={ps.size}
+                    placeholder="e.g. 500g"
+                    disabled={isSubmitting}
+                    onChange={(e) =>
+                      updatePackagingSizeField(ps.id, "size", e.target.value)
+                    }
+                  />
+                </div>
+                <div>
+                  <Label required>Price (INR)</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={ps.priceRupees}
+                    placeholder="e.g. 499.00"
+                    disabled={isSubmitting}
+                    onChange={(e) =>
+                      updatePackagingSizeField(
+                        ps.id,
+                        "priceRupees",
+                        e.target.value
+                      )
+                    }
+                  />
+                </div>
+                <div>
+                  <Label>Main Image Note</Label>
+                  <div className="text-[12px] text-gray-600 pt-2">
+                    First image is main photo (swap only).
+                  </div>
+                </div>
+              </div>
+
+              {/* Images */}
+              <div>
+                <Label required>Images (max {MAX_IMAGES_PER_SIZE})</Label>
+                <div className="flex flex-wrap gap-4 mt-2">
+                  {ps.images.map((img, i) => renderImageSlot(ps, img, i))}
+                  {ps.images.length < MAX_IMAGES_PER_SIZE &&
+                    renderAddImageButton(ps)}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {submitError && (
+        <div className="text-red-600 text-sm font-medium">{submitError}</div>
+      )}
+
+      <Button
+        type="submit"
+        variant="primary"
+        size="md"
+        className="w-full"
+        loading={isSubmitting}
+        disabled={isSubmitting}
+      >
+        {isEdit ? "Update Product" : "Create Product"}
       </Button>
     </form>
   );

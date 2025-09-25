@@ -30,79 +30,122 @@ export class appwriteConfigService {
     slug,
     name,
     description,
-    price_cents,
-    image_file_ids,
-    stock,
     sku,
-    categories,
+    categories = "",
+    packaging_size = [], // may be objects or already strings
+    currency = "INR",
+    discount = 0,
   }) {
-    try {
-      return await this.databases.createDocument(
-        conf.appwriteDatabaseId,
-        conf.appwriteProductsCollection,
-        slug,
-        {
-          name,
-          slug,
-          description,
-          price_cents,
-          image_file_ids,
-          stock,
-          sku,
-          categories,
+    const serialized = (
+      Array.isArray(packaging_size) ? packaging_size : []
+    ).map((p) => {
+      if (typeof p === "string") return p;
+      try {
+        const s = JSON.stringify(p);
+        if (s.length > 512) {
+          throw new Error(
+            "packaging_size item exceeds 512 chars (shrink data)"
+          );
         }
-      );
-    } catch (error) {
-      console.log("Appwrite :: createProduct error ::", error);
-      throw error;
-    }
+        return s;
+      } catch {
+        return JSON.stringify({ size: "", price_cents: "", images: [] });
+      }
+    });
+
+    return await this.databases.createDocument(
+      conf.appwriteDatabaseId,
+      conf.appwriteProductsCollection,
+      slug,
+      {
+        name,
+        slug,
+        description,
+        sku,
+        categories,
+        packaging_size: serialized,
+        currency,
+        discount,
+      }
+    );
   }
 
   async updateProduct(
     slug,
-    { name, description, price_cents, image_file_ids, stock, sku, categories }
-  ) {
-    try {
-      return await this.databases.updateDocument(
-        conf.appwriteDatabaseId,
-        conf.appwriteProductsCollection,
-        slug,
-        {
-          name,
-          description,
-          price_cents,
-          image_file_ids,
-          stock,
-          sku,
-          categories,
-        }
-      );
-    } catch (error) {
-      console.log("Appwrite :: updateProduct error ::", error);
-      throw error;
+    {
+      name,
+      description,
+      sku,
+      categories = "",
+      packaging_size = [],
+      currency = "INR",
+      discount = 0,
     }
+  ) {
+    const serialized = (
+      Array.isArray(packaging_size) ? packaging_size : []
+    ).map((p) => {
+      if (typeof p === "string") return p;
+      try {
+        const s = JSON.stringify(p);
+        if (s.length > 512) {
+          throw new Error(
+            "packaging_size item exceeds 512 chars (shrink data)"
+          );
+        }
+        return s;
+      } catch {
+        return JSON.stringify({ size: "", price_cents: "", images: [] });
+      }
+    });
+
+    return await this.databases.updateDocument(
+      conf.appwriteDatabaseId,
+      conf.appwriteProductsCollection,
+      slug,
+      {
+        name,
+        description,
+        sku,
+        categories,
+        packaging_size: serialized,
+        currency,
+        discount,
+      }
+    );
   }
 
   async deleteProduct(slug) {
     try {
-      // 1. Get product doc (to find image_file_ids)
       const product = await this.databases.getDocument(
         conf.appwriteDatabaseId,
         conf.appwriteProductsCollection,
         slug
       );
 
-      // 2. Delete image if exists
-      if (product.image_file_ids) {
-        try {
-          await this.deleteFile(product.image_file_ids);
-          console.log(`Deleted image file ${product.image_file_ids}`);
-        } catch (fileErr) {
-          console.warn("Could not delete image file:", fileErr);
+      // Gather all image fileIds from nested packaging_size
+      const allIds = [];
+      if (Array.isArray(product.packaging_size)) {
+        for (const entry of product.packaging_size) {
+          let obj = entry;
+          if (typeof obj === "string") {
+            try {
+              obj = JSON.parse(obj);
+            } catch {
+              throw new Error("Error Deleting Product");
+            }
+          }
+          if (obj && Array.isArray(obj.images)) {
+            obj.images.forEach((fid) => {
+              if (typeof fid === "string" && fid.trim()) allIds.push(fid);
+            });
+          }
         }
       }
 
-      // 3. Delete the product document
+      // Delete each image (best effort)
+      await Promise.allSettled(allIds.map((id) => this.deleteFile(id)));
+
       return await this.databases.deleteDocument(
         conf.appwriteDatabaseId,
         conf.appwriteProductsCollection,
@@ -116,11 +159,50 @@ export class appwriteConfigService {
 
   async listProducts(queries = []) {
     try {
-      return await this.databases.listDocuments(
+      const res = await this.databases.listDocuments(
         conf.appwriteDatabaseId,
         conf.appwriteProductsCollection,
         queries
       );
+
+      const documents = res.documents.map((doc) => {
+        const parsedDoc = { ...doc };
+        if (Array.isArray(parsedDoc.packaging_size)) {
+          parsedDoc.packaging_size = parsedDoc.packaging_size.map((item) => {
+            if (typeof item === "string") {
+              try {
+                const obj = JSON.parse(item);
+                return {
+                  size: obj?.size || "",
+                  price_cents: obj?.price_cents || "",
+                  images: Array.isArray(obj?.images)
+                    ? obj.images.filter(
+                        (id) => typeof id === "string" && id.trim()
+                      )
+                    : [],
+                };
+              } catch {
+                return { size: "", price_cents: "", images: [] };
+              }
+            }
+            // already object
+            return {
+              size: item?.size || "",
+              price_cents: item?.price_cents || "",
+              images: Array.isArray(item?.images)
+                ? item.images.filter(
+                    (id) => typeof id === "string" && id.trim()
+                  )
+                : [],
+            };
+          });
+        } else {
+          parsedDoc.packaging_size = [];
+        }
+        return parsedDoc;
+      });
+
+      return { ...res, documents };
     } catch (error) {
       console.log("Appwrite :: listProducts error ::", error);
       throw error;
@@ -274,7 +356,7 @@ export class appwriteConfigService {
     }
   }
 
-async createCart({ user_id, items = {} }) {
+  async createCart({ user_id, items = {} }) {
     try {
       const payload = {
         user_id,
@@ -353,7 +435,6 @@ async createCart({ user_id, items = {} }) {
       throw error;
     }
   }
-
 
   async uploadFile(file) {
     try {
