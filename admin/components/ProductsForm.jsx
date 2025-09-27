@@ -6,8 +6,17 @@ import { useSelector } from "react-redux";
 import { getImageUrl } from "../../utils/getImageUrl";
 
 // ---- Helpers ----
-const genLocalId = () => crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random());
+const genLocalId = () =>
+  crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random());
 const MAX_IMAGES_PER_SIZE = 4;
+
+// New: helper to create a default empty packaging size row
+const createEmptyPackagingSize = () => ({
+  id: genLocalId(),
+  size: "",
+  priceRupees: "",
+  images: [],
+});
 
 // Parse incoming packaging_size (array of strings or objects)
 function parsePackagingSizes(raw = []) {
@@ -86,9 +95,11 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
   });
 
   // ---- Packaging Sizes State ----
-  const [packagingSizes, setPackagingSizes] = useState(() =>
-    parsePackagingSizes(initialData?.packaging_size)
-  );
+  const [packagingSizes, setPackagingSizes] = useState(() => {
+    // If editing and have data, parse it; otherwise start with one row by default
+    const parsed = parsePackagingSizes(initialData?.packaging_size);
+    return parsed && parsed.length ? parsed : [createEmptyPackagingSize()];
+  });
 
   // Track files (fileIds) scheduled for deletion AFTER successful submit
   const filesPendingDeletionRef = useRef(new Set());
@@ -140,15 +151,7 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
 
   // ---- Handlers for Packaging Sizes ----
   const addPackagingSize = () => {
-    setPackagingSizes((prev) => [
-      ...prev,
-      {
-        id: genLocalId(),
-        size: "",
-        priceRupees: "",
-        images: [], // each entry: {id,type:'existing'|'new', file?, fileId?, preview}
-      },
-    ]);
+    setPackagingSizes((prev) => [...prev, createEmptyPackagingSize()]);
   };
 
   const updatePackagingSizeField = (psId, field, value) => {
@@ -211,7 +214,7 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
         if (p.id !== psId) return p;
         const newImages = p.images.map((img) => {
           if (img.id !== imageId) return img;
-            // schedule deletion of old if existing
+          // schedule deletion of old if existing
           if (img.type === "existing" && img.fileId) {
             filesPendingDeletionRef.current.add(img.fileId);
           }
@@ -245,7 +248,7 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
         }
         return {
           ...p,
-            images: p.images.filter((i) => i.id !== imageId),
+          images: p.images.filter((i) => i.id !== imageId),
         };
       })
     );
@@ -276,7 +279,11 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
       if (!ps.size.trim()) {
         return `Packaging size #${i + 1}: size label is required.`;
       }
-      if (!ps.priceRupees || isNaN(Number(ps.priceRupees)) || Number(ps.priceRupees) <= 0) {
+      if (
+        !ps.priceRupees ||
+        isNaN(Number(ps.priceRupees)) ||
+        Number(ps.priceRupees) <= 0
+      ) {
         return `Packaging size #${i + 1}: price must be a positive number.`;
       }
       if (ps.images.length === 0) {
@@ -298,7 +305,7 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
       for (const img of ps.images) {
         if (img.type === "new" && img.file && !uploadedMap.has(img.id)) {
           const res = await appwriteService.uploadFile(img.file);
-            if (!res || !res.$id) throw new Error("Image upload failed.");
+          if (!res || !res.$id) throw new Error("Image upload failed.");
           uploadedMap.set(img.id, res.$id);
         }
       }
@@ -349,7 +356,9 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
       // Best-effort deletion of replaced/removed images
       const toDelete = Array.from(filesPendingDeletionRef.current);
       if (toDelete.length) {
-        Promise.allSettled(toDelete.map((fid) => appwriteService.deleteFile(fid))).catch(() => {});
+        Promise.allSettled(
+          toDelete.map((fid) => appwriteService.deleteFile(fid))
+        ).catch(() => {});
       }
       filesPendingDeletionRef.current = new Set();
 
@@ -366,7 +375,8 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
           discount: 0,
           category: "",
         });
-        setPackagingSizes([]);
+        // New: after creating a product, keep one default row instead of empty
+        setPackagingSizes([createEmptyPackagingSize()]);
       }
 
       if (onSuccess) onSuccess();
@@ -379,19 +389,34 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
   const renderImageSlot = (ps, img, idx) => {
     const keySwap = `swap-${ps.id}-${img.id}`;
     return (
-      <div key={img.id} className="flex flex-col items-center gap-1 border rounded p-2 relative">
+      <div
+        key={img.id}
+        className="relative group rounded-lg overflow-hidden border shadow-sm"
+      >
         <img
           src={img.preview}
           alt="Preview"
-          className="w-24 h-24 object-cover rounded"
+          className="w-32 h-32 object-cover block"
         />
-        <div className="flex gap-2">
+
+        {/* Main badge */}
+        {idx === 0 && (
+          <span className="absolute top-1 left-1 text-[10px] px-2 py-0.5 rounded-full bg-emerald-600 text-white shadow">
+            Main
+          </span>
+        )}
+
+        {/* Controls on hover */}
+        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center p-2 gap-2">
           <Button
             type="button"
             variant="secondary"
             size="xs"
+            className="!bg-white !text-gray-800 hover:!bg-gray-100"
             onClick={() =>
-              triggerFileDialog(keySwap, (file) => swapImage(ps.id, img.id, file))
+              triggerFileDialog(keySwap, (file) =>
+                swapImage(ps.id, img.id, file)
+              )
             }
             disabled={isSubmitting}
           >
@@ -402,6 +427,7 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
               type="button"
               variant="danger"
               size="xs"
+              className="!bg-red-600 hover:!bg-red-700"
               onClick={() => removeImage(ps.id, img.id)}
               disabled={isSubmitting}
             >
@@ -409,18 +435,20 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
             </Button>
           )}
         </div>
+
         <input
           id={keySwap}
           type="file"
           accept="image/*"
           className="hidden"
-          onChange={(e) => handleHiddenInputChange(e, (file) => swapImage(ps.id, img.id, file), keySwap)}
+          onChange={(e) =>
+            handleHiddenInputChange(
+              e,
+              (file) => swapImage(ps.id, img.id, file),
+              keySwap
+            )
+          }
         />
-        {idx === 0 && (
-          <span className="text-[10px] text-emerald-700 font-medium mt-1">
-            Main
-          </span>
-        )}
       </div>
     );
   };
@@ -428,26 +456,30 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
   const renderAddImageButton = (ps) => {
     const keyAdd = `add-${ps.id}`;
     return (
-      <div className="flex flex-col items-center justify-center border-dashed border-2 rounded p-4 w-28 h-28">
+      <div className="w-32 h-32 border-2 border-dashed rounded-lg flex flex-col items-center justify-center text-gray-500 hover:text-emerald-700 hover:border-emerald-600 transition-colors">
         <Button
           type="button"
           variant="secondary"
           size="xs"
+          className="!bg-white !text-emerald-700 border border-emerald-600 hover:!bg-emerald-50"
           onClick={() =>
             triggerFileDialog(keyAdd, (file) => addImage(ps.id, file))
           }
           disabled={isSubmitting}
+          title="Add image"
         >
-          Add
+          + Add
         </Button>
         <input
           id={keyAdd}
-            type="file"
+          type="file"
           accept="image/*"
           className="hidden"
-          onChange={(e) => handleHiddenInputChange(e, (file) => addImage(ps.id, file), keyAdd)}
+          onChange={(e) =>
+            handleHiddenInputChange(e, (file) => addImage(ps.id, file), keyAdd)
+          }
         />
-        <span className="text-[10px] text-gray-500 mt-1">
+        <span className="text-[10px] mt-1">
           {ps.images.length}/{MAX_IMAGES_PER_SIZE}
         </span>
       </div>
@@ -455,18 +487,17 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
   };
 
   return (
-    <form
-      onSubmit={handleSubmit(onSubmit)}
-      className="space-y-8"
-      noValidate
-    >
-      <h2 className="text-xl font-bold text-[#084629]">
-        {isEdit ? "Edit Product" : "Add New Product"}
-      </h2>
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8" noValidate>
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-bold text-[#084629]">
+          {isEdit ? "Edit Product" : "Add New Product"}
+        </h2>
+        <span className="text-xs text-gray-500">Currency: INR (default)</span>
+      </div>
 
-      <div className="grid md:grid-cols-2 gap-4">
+      <div className="grid md:grid-cols-2 gap-6 bg-white p-4 rounded-lg border">
         {/* Name */}
-        <div>
+        <div className="space-y-1">
           <Label htmlFor="name" required>
             Name
           </Label>
@@ -480,7 +511,7 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
         </div>
 
         {/* Slug (locked in edit) */}
-        <div>
+        <div className="space-y-1">
           <Label htmlFor="slug">Slug</Label>
           <Input
             id="slug"
@@ -488,10 +519,11 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
             {...register("slug")}
             error={errors.slug?.message}
           />
+          <p className="text-[11px] text-gray-500">Auto-generated from name.</p>
         </div>
 
         {/* SKU */}
-        <div>
+        <div className="space-y-1">
           <Label htmlFor="sku" required>
             SKU
           </Label>
@@ -505,7 +537,7 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
         </div>
 
         {/* Discount */}
-        <div>
+        <div className="space-y-1">
           <Label htmlFor="discount">Discount (%)</Label>
           <Input
             id="discount"
@@ -519,10 +551,11 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
             })}
             error={errors.discount?.message}
           />
+          <p className="text-[11px] text-gray-500">Optional.</p>
         </div>
 
         {/* Category */}
-        <div className="md:col-span-2">
+        <div className="md:col-span-2 space-y-1">
           <Label htmlFor="category" required>
             Category
           </Label>
@@ -549,7 +582,7 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
       </div>
 
       {/* Description */}
-      <div>
+      <div className="bg-white p-4 rounded-lg border space-y-2">
         <Label htmlFor="description" required>
           Description
         </Label>
@@ -561,20 +594,31 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
           {...register("description", { required: "Description is required" })}
           error={errors.description?.message}
         />
+        <p className="text-[11px] text-gray-500">
+          Describe key benefits, ingredients, and usage.
+        </p>
       </div>
 
       {/* Packaging Sizes */}
-      <div className="space-y-4">
+      <div className="bg-white p-4 rounded-lg border space-y-4">
         <div className="flex items-center justify-between">
-          <Label required>Packaging Sizes</Label>
+          <div>
+            <Label required>Packaging Sizes</Label>
+            <p className="text-[12px] text-gray-600">
+              Each size must include at least one image. The first image is the
+              main image (swap only).
+            </p>
+          </div>
           <Button
             type="button"
             variant="secondary"
             size="sm"
+            className="border border-emerald-700 !text-emerald-700 hover:!bg-emerald-50"
             onClick={addPackagingSize}
             disabled={isSubmitting}
+            title="Add Packaging Size"
           >
-            Add Packaging Size
+            + Add Packaging Size
           </Button>
         </div>
 
@@ -588,7 +632,7 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
           {packagingSizes.map((ps, idx) => (
             <div
               key={ps.id}
-              className="border rounded-md p-4 space-y-4 bg-white shadow-sm"
+              className="border rounded-lg p-4 space-y-4 bg-white shadow-sm"
             >
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold text-sm text-[#084629]">
@@ -598,15 +642,25 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
                   type="button"
                   variant="danger"
                   size="xs"
+                  className={`${
+                    isSubmitting || packagingSizes.length === 1
+                      ? "opacity-50 cursor-not-allowed"
+                      : ""
+                  }`}
                   disabled={isSubmitting || packagingSizes.length === 1}
                   onClick={() => removePackagingSize(ps.id)}
+                  title={
+                    packagingSizes.length === 1
+                      ? "At least one size required"
+                      : "Remove this size"
+                  }
                 >
                   Remove
                 </Button>
               </div>
 
               <div className="grid md:grid-cols-3 gap-4">
-                <div>
+                <div className="space-y-1">
                   <Label required>Size Label</Label>
                   <Input
                     value={ps.size}
@@ -617,7 +671,7 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
                     }
                   />
                 </div>
-                <div>
+                <div className="space-y-1">
                   <Label required>Price (INR)</Label>
                   <Input
                     type="number"
@@ -634,19 +688,25 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
                       )
                     }
                   />
+                  <p className="text-[11px] text-gray-500">Stored as cents.</p>
                 </div>
-                <div>
-                  <Label>Main Image Note</Label>
+                <div className="space-y-1">
+                  <Label>Notes</Label>
                   <div className="text-[12px] text-gray-600 pt-2">
-                    First image is main photo (swap only).
+                    Main image is non-deletable; swap to replace it.
                   </div>
                 </div>
               </div>
 
               {/* Images */}
               <div>
-                <Label required>Images (max {MAX_IMAGES_PER_SIZE})</Label>
-                <div className="flex flex-wrap gap-4 mt-2">
+                <div className="flex items-center justify-between">
+                  <Label required>Images</Label>
+                  <span className="text-[12px] text-gray-500">
+                    Max {MAX_IMAGES_PER_SIZE} images
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-3 mt-2">
                   {ps.images.map((img, i) => renderImageSlot(ps, img, i))}
                   {ps.images.length < MAX_IMAGES_PER_SIZE &&
                     renderAddImageButton(ps)}
@@ -661,16 +721,18 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
         <div className="text-red-600 text-sm font-medium">{submitError}</div>
       )}
 
-      <Button
-        type="submit"
-        variant="primary"
-        size="md"
-        className="w-full"
-        loading={isSubmitting}
-        disabled={isSubmitting}
-      >
-        {isEdit ? "Update Product" : "Create Product"}
-      </Button>
+      <div className="sticky bottom-0 left-0 right-0 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60 py-3 border-t">
+        <Button
+          type="submit"
+          variant="primary"
+          size="md"
+          className="w-full"
+          loading={isSubmitting}
+          disabled={isSubmitting}
+        >
+          {isEdit ? "Update Product" : "Create Product"}
+        </Button>
+      </div>
     </form>
   );
 }
