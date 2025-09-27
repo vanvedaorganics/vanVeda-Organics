@@ -3,15 +3,48 @@ import { Modal, Button, Input } from "../components";
 import { useSelector, useDispatch } from "react-redux";
 import { updateProductDiscount } from "../../src/store/productsSlice";
 
+// Helpers to work with new schema
+const parsePackagingSizes = (raw = []) => {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((item) => {
+      try {
+        const obj = typeof item === "string" ? JSON.parse(item) : item || {};
+        return {
+          size: obj?.size || "",
+          price_cents: obj?.price_cents ? Number(obj.price_cents) : undefined,
+          images: Array.isArray(obj?.images) ? obj.images.filter(Boolean) : [],
+        };
+      } catch {
+        return null;
+      }
+    })
+    .filter(Boolean);
+};
+
+const formatINR = (cents) => `₹${(cents / 100).toFixed(2)}`;
+const discountPrice = (cents, discount) => {
+  const d = Number(discount) || 0;
+  if (d <= 0) return cents;
+  return Math.round((cents * (100 - d)) / 100);
+};
+const getMinPriceCents = (raw) => {
+  const p = parsePackagingSizes(raw);
+  const cents = p
+    .map((x) => (typeof x.price_cents === "number" ? x.price_cents : NaN))
+    .filter((n) => !Number.isNaN(n) && n > 0);
+  if (!cents.length) return null;
+  return Math.min(...cents);
+};
+
 /**
  * ProductOfferModal
  * - open, onClose: modal control
  * - initialProduct: optional product object to edit (pre-fill)
  *
- * Behavior:
- * - When adding: shows list of products that currently have discount === 0
- * - When editing: pre-fills selected product and discount; product selection is disabled
- * - Live discounted-price preview shown when a product is selected and discount is valid
+ * Now uses packaging_size prices:
+ * - Dropdown shows "from" price (min of per-size prices)
+ * - Preview shows per-size pricing with discount applied
  */
 export default function ProductOfferModal({ open, onClose, initialProduct = null }) {
   const dispatch = useDispatch();
@@ -32,7 +65,6 @@ export default function ProductOfferModal({ open, onClose, initialProduct = null
     if (initialProduct) {
       const exists = base.some((p) => p.$id === initialProduct.$id);
       if (!exists) {
-        // put initial product first (so user sees it), then rest
         return [initialProduct, ...base];
       }
     }
@@ -51,22 +83,31 @@ export default function ProductOfferModal({ open, onClose, initialProduct = null
   // Derive the selected product object (may be from store or initialProduct)
   const selectedProduct = useMemo(() => {
     if (!selected) return null;
-    // try store first
     const found = products.find((p) => p.$id === selected);
     if (found) return found;
-    // fallback to initialProduct if it matches
     if (initialProduct && initialProduct.$id === selected) return initialProduct;
     return null;
   }, [selected, products, initialProduct]);
 
-  // Live discounted price preview
-  const discountedPrice = useMemo(() => {
-    if (!selectedProduct || discount === "") return null;
-    const base = Number(selectedProduct.price_cents) / 100;
-    const pct = Number(discount);
-    if (Number.isNaN(base) || Number.isNaN(pct) || pct < 0 || pct > 100) return null;
-    return (base * (1 - pct / 100)).toFixed(2);
-  }, [selectedProduct, discount]);
+  // Parsed packaging sizes for selected product
+  const selectedPackaging = useMemo(() => {
+    if (!selectedProduct) return [];
+    return parsePackagingSizes(selectedProduct.packaging_size);
+  }, [selectedProduct]);
+
+  // Live discounted price preview rows (per size)
+  const previewRows = useMemo(() => {
+    if (!selectedPackaging.length) return [];
+    const pct = discount === "" ? null : Number(discount);
+    return selectedPackaging.map((p) => {
+      const cents = typeof p.price_cents === "number" ? p.price_cents : null;
+      if (!cents || cents <= 0) {
+        return { size: p.size || "—", original: null, discounted: null };
+      }
+      const discounted = pct === null || Number.isNaN(pct) ? null : discountPrice(cents, pct);
+      return { size: p.size || "—", original: cents, discounted };
+    });
+  }, [selectedPackaging, discount]);
 
   const validateInputs = () => {
     if (!selected) {
@@ -93,13 +134,11 @@ export default function ProductOfferModal({ open, onClose, initialProduct = null
     try {
       await dispatch(
         updateProductDiscount({ productId: selected, discount: Number(discount) })
-      ).unwrap?.(); // unwrap if using RTK async thunks (optional)
-      // Close & reset (parent should refresh list if needed)
+      ).unwrap?.();
       setSelected("");
       setDiscount("");
       onClose();
     } catch (err) {
-      // User-friendly message
       setError(
         (err && err.message) ||
           "Failed to apply discount. Please try again or check your network."
@@ -136,11 +175,16 @@ export default function ProductOfferModal({ open, onClose, initialProduct = null
             disabled={!!initialProduct || submitting}
           >
             <option value="">-- Select --</option>
-            {productOptions.map((p) => (
-              <option key={p.$id} value={p.$id}>
-                {p.name} — ₹{(p.price_cents / 100).toFixed(2)} ({formatCategory(p)})
-              </option>
-            ))}
+            {productOptions.map((p) => {
+              const minCents = getMinPriceCents(p.packaging_size);
+              const priceLabel = minCents ? ` — from ${formatINR(minCents)}` : "";
+              return (
+                <option key={p.$id} value={p.$id}>
+                  {p.name}
+                  {priceLabel} ({formatCategory(p)})
+                </option>
+              );
+            })}
           </select>
         </div>
 
@@ -158,18 +202,42 @@ export default function ProductOfferModal({ open, onClose, initialProduct = null
           />
         </div>
 
-        {/* Live Preview */}
-        {selectedProduct && discount !== "" && discountedPrice && (
-          <div className="p-4 border rounded bg-gray-50">
-            <p className="text-sm text-gray-600">
-              Original Price:{" "}
-              <span className="line-through">
-                ₹{(selectedProduct.price_cents / 100).toFixed(2)}
-              </span>
-            </p>
-            <p className="text-lg font-bold text-green-700">
-              Discounted Price: ₹{discountedPrice}
-            </p>
+        {/* Live Preview (per size) */}
+        {selectedProduct && previewRows.length > 0 && discount !== "" && (
+          <div className="p-4 border rounded bg-gray-50 space-y-2">
+            <p className="text-sm text-gray-700 font-medium">Price preview per size</p>
+            <div className="space-y-1">
+              {previewRows.map((row, idx) => {
+                if (!row.original) {
+                  return (
+                    <div key={idx} className="text-sm text-gray-500">
+                      {row.size}: —
+                    </div>
+                  );
+                }
+                // If discount number valid, show strikethrough + discounted, else just original
+                const pct = Number(discount);
+                const showDiscount = !Number.isNaN(pct) && pct > 0;
+                return (
+                  <div key={idx} className="flex items-center gap-2 text-sm">
+                    <span className="min-w-[64px] text-gray-600">{row.size}:</span>
+                    {!showDiscount ? (
+                      <span className="text-gray-800">{formatINR(row.original)}</span>
+                    ) : (
+                      <>
+                        <span className="text-gray-400 line-through">
+                          {formatINR(row.original)}
+                        </span>
+                        <span className="text-green-700 font-semibold">
+                          {formatINR(row.discounted)}
+                        </span>
+                        <span className="text-[10px] text-green-700">-{pct}%</span>
+                      </>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
 

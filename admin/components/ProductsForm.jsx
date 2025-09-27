@@ -74,7 +74,6 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
     handleSubmit,
     watch,
     setValue,
-    setError,
     clearErrors,
     formState: { errors, isSubmitting },
     reset,
