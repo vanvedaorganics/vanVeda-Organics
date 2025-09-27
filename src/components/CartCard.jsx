@@ -11,21 +11,45 @@ import {
   selectCartItems,
 } from "../store/cartsSlice";
 
-function CartCard({ product, qty: propQty }) {
+const discountPrice = (cents, discount) => {
+  const d = Number(discount) || 0;
+  if (!cents || d <= 0) return cents || 0;
+  return Math.round((cents * (100 - d)) / 100);
+};
+
+function CartCard({
+  product,
+  qty: propQty,
+  cartKey, // composite key: `${slug}::${sizeIdx}` (legacy: `${slug}`)
+  sizeIdx = null,
+  sizeLabel = null,
+  unitCents, // precomputed in Header for accuracy
+  imageFileId = null,
+}) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const items = useSelector(selectCartItems);
   const authStatus = useSelector((s) => s.auth?.status);
 
   const quantity =
-    typeof propQty === "number" ? propQty : Number(items[product.slug] || 0);
+    typeof propQty === "number"
+      ? propQty
+      : Number(items?.[cartKey] ?? items?.[product.slug] ?? 0);
 
-  const basePrice = product.price_cents / 100;
-  const hasDiscount = product?.discount > 0;
-  const unitPrice = hasDiscount
-    ? basePrice - basePrice * (product.discount / 100)
-    : basePrice;
-  const lineTotal = Number((unitPrice * (quantity || 0)).toFixed(2));
+  // Prices
+  const baseCents =
+    typeof unitCents === "number" && unitCents > 0
+      ? (product.discount > 0
+          ? Math.round((unitCents * 100) / (100 - Number(product.discount)))
+          : unitCents)
+      : typeof product.price_cents === "number"
+      ? discountPrice(product.price_cents, 0)
+      : 0;
+
+  const hasDiscount = Number(product?.discount) > 0;
+  const displayUnit = unitCents / 100;
+  const displayBase = hasDiscount ? baseCents / 100 : null;
+  const lineTotal = Number((displayUnit * (quantity || 0)).toFixed(2));
 
   const ensureLoggedInThen = useCallback(
     (cb) => {
@@ -42,27 +66,30 @@ function CartCard({ product, qty: propQty }) {
     (newQty) => {
       const normalized = Math.max(0, Math.floor(Number(newQty) || 0));
       ensureLoggedInThen(() => {
-        dispatch(changeItemQuantity({ slug: product.slug, qty: normalized }));
+        // Use composite cartKey so each packaging size is independent in the cart
+        dispatch(changeItemQuantity({ slug: cartKey || product.slug, qty: normalized }));
       });
     },
-    [dispatch, ensureLoggedInThen, product.slug]
+    [dispatch, ensureLoggedInThen, cartKey, product.slug]
   );
 
   const handleRemove = useCallback(() => {
     ensureLoggedInThen(() => {
-      dispatch(removeItemCompletely(product.slug));
+      dispatch(removeItemCompletely(cartKey || product.slug));
     });
-  }, [dispatch, ensureLoggedInThen, product.slug]);
+  }, [dispatch, ensureLoggedInThen, cartKey, product.slug]);
+
+  const imageUrl = imageFileId ? getImageUrl(imageFileId) : "/placeholder.svg";
 
   return (
     <div className="flex gap-4 border-2 border-[#2D1D1A] rounded-md p-4 shadow-md bg-white hover:shadow-lg transition-all duration-200">
       {/* Image */}
       <div className="w-24 h-24 flex-shrink-0 overflow-hidden border-r-2 border-[#2D1D1A] pr-2">
         <img
-          src={getImageUrl(product.image_file_ids)}
+          src={imageUrl}
           alt={product.name}
           className="w-full h-full object-cover rounded-sm shadow-sm"
-          onError={(e) => (e.target.src = "/placeholder.svg")}
+          onError={(e) => (e.currentTarget.src = "/placeholder.svg")}
         />
       </div>
 
@@ -80,27 +107,33 @@ function CartCard({ product, qty: propQty }) {
             </Link>
           </div>
 
+          {/* Size pill (when available) */}
+          {sizeLabel !== null && (
+            <span className="px-2 py-0.5 w-fit text-[11px] rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+              {sizeLabel || `Size ${typeof sizeIdx === "number" ? sizeIdx + 1 : ""}`}
+            </span>
+          )}
+
           <div>
             <div className="roboto-bold text-lg text-[#2D1D1A]">
-              ₹{unitPrice.toFixed(2)}
-              {hasDiscount && (
+              ₹{displayUnit.toFixed(2)}
+              {hasDiscount && displayBase !== null && (
                 <span className="ml-2 text-sm text-[#613D38] line-through">
-                  ₹{basePrice.toFixed(2)}
+                  ₹{displayBase.toFixed(2)}
                 </span>
               )}
             </div>
             <div className="text-xs flex items-center justify-between gap-2 text-gray-600">
               Total: ₹{lineTotal.toFixed(2)}
-               <button
-              onClick={handleRemove}
-              className="ubuntu-medium text-sm text-[#2D1D1A] hover:text-[#2D1D1A]/80 cursor-pointer p-1"
-              aria-label={`Remove ${product.name} from cart`}
-              title="Remove"
-            >
-              Remove Item
-            </button>
+              <button
+                onClick={handleRemove}
+                className="ubuntu-medium text-sm text-[#2D1D1A] hover:text-[#2D1D1A]/80 cursor-pointer p-1"
+                aria-label={`Remove ${product.name} from cart`}
+                title="Remove"
+              >
+                Remove Item
+              </button>
             </div>
-            
           </div>
         </div>
 

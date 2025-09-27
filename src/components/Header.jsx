@@ -10,7 +10,7 @@ import {
   Award,
   BookOpen,
   Info,
-  Phone,
+  // Phone,
 } from "lucide-react";
 import { Input } from "./index";
 import { motion, AnimatePresence } from "framer-motion";
@@ -27,6 +27,46 @@ import {
 } from "../store/cartsSlice";
 import { CartCard } from "./index";
 
+// ---- Helpers for new schema + cart keys ----
+const parsePackagingSizes = (raw = []) => {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((item) => {
+      try {
+        const obj = typeof item === "string" ? JSON.parse(item) : item || {};
+        return {
+          size: obj?.size || "",
+          price_cents:
+            typeof obj?.price_cents !== "undefined"
+              ? Number(obj.price_cents)
+              : undefined,
+          images: Array.isArray(obj?.images) ? obj.images.filter(Boolean) : [],
+        };
+      } catch {
+        return null;
+      }
+    })
+    .filter(Boolean);
+};
+
+const discountPrice = (cents, discount) => {
+  const d = Number(discount) || 0;
+  if (!cents || d <= 0) return cents || 0;
+  return Math.round((cents * (100 - d)) / 100);
+};
+
+// cart key helpers: `${slug}::${sizeIdx}`
+const CART_KEY_SEP = "::";
+const parseCartKey = (key) => {
+  if (!key || typeof key !== "string") return null;
+  const idx = key.indexOf(CART_KEY_SEP);
+  if (idx === -1) return { slug: key, sizeIdx: null }; // legacy key
+  const slug = key.slice(0, idx);
+  const sizeIdxStr = key.slice(idx + CART_KEY_SEP.length);
+  const sizeIdx = Number.isNaN(Number(sizeIdxStr)) ? null : Number(sizeIdxStr);
+  return { slug, sizeIdx };
+};
+
 export function Header() {
   const cartItemCount = useSelector(selectCartTotalCount);
   const cartItems = useSelector(selectCartItems);
@@ -42,54 +82,17 @@ export function Header() {
   const authStatus = useSelector((state) => state.auth.status);
 
   const navItems = [
-    {
-      name: "Products",
-      slug: "/products",
-      icon: <Package className="h-5 w-5" />,
-      active: true,
-    },
-    {
-      name: "Certificates",
-      slug: "/certificates",
-      icon: <Award className="h-5 w-5" />,
-      active: true,
-    },
-    {
-      name: "Blog",
-      slug: "/blog",
-      icon: <BookOpen className="h-5 w-5" />,
-      active: true,
-    },
-    {
-      name: "About Us",
-      slug: "/about-us",
-      icon: <Info className="h-5 w-5" />,
-      active: true,
-    },
-    // {
-    //   name: "Contact Us",
-    //   slug: "/contact-us",
-    //   icon: <Phone className="h-5 w-5" />,
-    //   active: true,
-    // },
-    {
-      name: "Profile",
-      slug: "/profile",
-      icon: <User className="h-5 w-5" />,
-      active: authStatus,
-    },
-    {
-      name: "Login",
-      slug: "/login",
-      icon: <User className="h-5 w-5" />,
-      active: !authStatus,
-    },
+    { name: "Products", slug: "/products", icon: <Package className="h-5 w-5" />, active: true },
+    { name: "Certificates", slug: "/certificates", icon: <Award className="h-5 w-5" />, active: true },
+    { name: "Blog", slug: "/blog", icon: <BookOpen className="h-5 w-5" />, active: true },
+    { name: "About Us", slug: "/about-us", icon: <Info className="h-5 w-5" />, active: true },
+    // { name: "Contact Us", slug: "/contact-us", icon: <Phone className="h-5 w-5" />, active: true },
+    { name: "Profile", slug: "/profile", icon: <User className="h-5 w-5" />, active: authStatus },
+    { name: "Login", slug: "/login", icon: <User className="h-5 w-5" />, active: !authStatus },
   ];
 
   const navLinkClasses = ({ isActive }) =>
-    `transition-colors hover:text-[#69A72A] ${
-      isActive ? "text-green-900 font-semibold" : "text-gray-900"
-    }`;
+    `transition-colors hover:text-[#69A72A] ${isActive ? "text-green-900 font-semibold" : "text-gray-900"}`;
 
   useEffect(() => {
     setOfferLoading(true);
@@ -99,9 +102,7 @@ export function Header() {
         if (!res?.activeAdId) return;
         appwriteService
           .listAds([Query.equal("$id", [res.activeAdId])])
-          .then((res2) => {
-            setOffer(res2.documents[0]?.description ?? null);
-          })
+          .then((res2) => setOffer(res2.documents[0]?.description ?? null))
           .catch(() => setOffer(null));
       })
       .catch(() => setOffer(null))
@@ -119,28 +120,53 @@ export function Header() {
     }
   };
 
-  // Build cartProducts array: [{ product, qty }]
+  // Build cartProducts: per packaging size using composite keys
+  // [{ cartKey, product, qty, sizeIdx, sizeLabel, unitCents, imageFileId }]
   const cartProducts = useMemo(() => {
     if (!cartItems || !products) return [];
     return Object.entries(cartItems)
-      .map(([slug, qty]) => {
-        const product = products.find((p) => p.slug === slug);
+      .map(([key, qty]) => {
+        const parsed = parseCartKey(key);
+        if (!parsed) return null;
+        const product = products.find((p) => p.slug === parsed.slug);
         if (!product) return null;
-        return { product, qty: Number(qty || 0) };
+
+        const packaging = parsePackagingSizes(product.packaging_size);
+        const sizeObj =
+          typeof parsed.sizeIdx === "number" && packaging[parsed.sizeIdx]
+            ? packaging[parsed.sizeIdx]
+            : null;
+
+        const baseCents =
+          typeof sizeObj?.price_cents === "number"
+            ? sizeObj.price_cents
+            : typeof product.price_cents === "number"
+            ? product.price_cents
+            : 0;
+
+        const unitCents = discountPrice(baseCents, product.discount || 0);
+
+        const imageFileId =
+          Array.isArray(sizeObj?.images) && sizeObj.images.length > 0
+            ? sizeObj.images[0]
+            : null;
+
+        return {
+          cartKey: key,
+          product,
+          qty: Number(qty || 0),
+          sizeIdx: typeof parsed.sizeIdx === "number" ? parsed.sizeIdx : null,
+          sizeLabel: sizeObj?.size || null,
+          unitCents,
+          imageFileId,
+        };
       })
       .filter(Boolean);
   }, [cartItems, products]);
 
-  // Subtotal calculation
+  // Subtotal calculation (per-size)
   const subtotal = useMemo(() => {
-    return cartProducts.reduce((acc, { product, qty }) => {
-      const price =
-        product.discount > 0
-          ? product.price_cents / 100 -
-            (product.price_cents / 100) * (product.discount / 100)
-          : product.price_cents / 100;
-      return acc + price * qty;
-    }, 0);
+    return cartProducts.reduce((acc, row) => acc + (row.unitCents / 100) * (row.qty || 0), 0);
   }, [cartProducts]);
 
   return (
@@ -167,10 +193,7 @@ export function Header() {
         transition={{ duration: 0.5 }}
       >
         {/* Logo */}
-        <Link
-          to="/"
-          className="flex items-center gap-2 font-semibold text-xl text-[#2D1D1A]"
-        >
+        <Link to="/" className="flex items-center gap-2 font-semibold text-xl text-[#2D1D1A]">
           Van Veda Organics
         </Link>
 
@@ -185,20 +208,13 @@ export function Header() {
             {navItems.map(
               (item) =>
                 item.active && (
-                  <NavLink
-                    key={item.slug}
-                    to={item.slug}
-                    className={navLinkClasses}
-                  >
+                  <NavLink key={item.slug} to={item.slug} className={navLinkClasses}>
                     {item.name}
                   </NavLink>
                 )
             )}
             {authStatus && (
-              <button
-                onClick={handleLogout}
-                className="text-sm font-medium text-gray-900 hover:text-green-900"
-              >
+              <button onClick={handleLogout} className="text-sm font-medium text-gray-900 hover:text-green-900">
                 Sign Out
               </button>
             )}
@@ -236,11 +252,7 @@ export function Header() {
             className="lg:hidden hover:bg-gray-100 p-2 rounded-full"
             aria-label="Toggle navigation menu"
           >
-            {mobileMenuOpen ? (
-              <X className="h-5 w-5 text-gray-900" />
-            ) : (
-              <Menu className="h-5 w-5 text-gray-900" />
-            )}
+            {mobileMenuOpen ? <X className="h-5 w-5 text-gray-900" /> : <Menu className="h-5 w-5 text-gray-900" />}
             <span className="sr-only">Toggle navigation menu</span>
           </button>
         </div>
@@ -257,7 +269,6 @@ export function Header() {
               exit={{ opacity: 0 }}
               onClick={() => setMobileMenuOpen(false)}
             />
-
             <motion.div
               className="fixed top-0 right-0 bottom-0 w-72 bg-white z-50 p-6 shadow-lg flex flex-col"
               initial={{ x: "100%" }}
@@ -279,9 +290,7 @@ export function Header() {
                         to={item.slug}
                         className={({ isActive }) =>
                           `flex items-center gap-2 rounded-md px-3 py-2 text-lg transition-colors ${
-                            isActive
-                              ? "bg-green-100 text-green-900 font-semibold"
-                              : "text-gray-900 hover:text-green-900"
+                            isActive ? "bg-green-100 text-green-900 font-semibold" : "text-gray-900 hover:text-green-900"
                           }`
                         }
                         onClick={() => setMobileMenuOpen(false)}
@@ -330,19 +339,22 @@ export function Header() {
             >
               {/* Scrollable Cart Content */}
               <div className="flex-1 overflow-y-auto p-6">
-                <h2 className="text-xl syne-bold mb-4 text-[#2D2D1A]">
-                  Your Cart
-                </h2>
+                <h2 className="text-xl syne-bold mb-4 text-[#2D2D1A]">Your Cart</h2>
 
                 <div className="space-y-4">
                   {cartProducts.length === 0 ? (
                     <p className="text-gray-500">Cart items go here...</p>
                   ) : (
-                    cartProducts.map(({ product, qty }) => (
+                    cartProducts.map((row) => (
                       <CartCard
-                        key={product.slug}
-                        product={product}
-                        qty={qty}
+                        key={row.cartKey}
+                        product={row.product}
+                        qty={row.qty}
+                        cartKey={row.cartKey}
+                        sizeIdx={row.sizeIdx}
+                        sizeLabel={row.sizeLabel}
+                        unitCents={row.unitCents}
+                        imageFileId={row.imageFileId}
                       />
                     ))
                   )}
@@ -367,7 +379,6 @@ export function Header() {
                   </button>
                   <button
                     onClick={() => {
-                      // navigate to checkout or handle checkout flow
                       navigate("/checkout");
                       setCartOpen(false);
                     }}
@@ -400,8 +411,17 @@ export function Header() {
                 {cartProducts.length === 0 ? (
                   <p className="text-gray-500">Cart items go here...</p>
                 ) : (
-                  cartProducts.map(({ product, qty }) => (
-                    <CartCard key={product.slug} product={product} qty={qty} />
+                  cartProducts.map((row) => (
+                    <CartCard
+                      key={row.cartKey}
+                      product={row.product}
+                      qty={row.qty}
+                      cartKey={row.cartKey}
+                      sizeIdx={row.sizeIdx}
+                      sizeLabel={row.sizeLabel}
+                      unitCents={row.unitCents}
+                      imageFileId={row.imageFileId}
+                    />
                   ))
                 )}
               </div>

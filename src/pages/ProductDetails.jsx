@@ -12,7 +12,7 @@ import {
   selectCartItems,
 } from "../store/cartsSlice";
 
-// Parse packaging_size (array of stringified objects or objects)
+// Helpers for new schema
 const parsePackagingSizes = (raw = []) => {
   if (!Array.isArray(raw)) return [];
   return raw
@@ -33,12 +33,15 @@ const parsePackagingSizes = (raw = []) => {
     })
     .filter(Boolean);
 };
-
 const discountPrice = (cents, discount) => {
   const d = Number(discount) || 0;
   if (!cents || d <= 0) return cents || 0;
   return Math.round((cents * (100 - d)) / 100);
 };
+
+// cart key helpers: `${slug}::${sizeIdx}`
+const CART_KEY_SEP = "::";
+const makeCartKey = (slug, sizeIdx) => `${slug}${CART_KEY_SEP}${sizeIdx}`;
 
 function ProductDetails() {
   const { slug } = useParams();
@@ -51,13 +54,11 @@ function ProductDetails() {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // New: gallery + size selection state
+  // Gallery + size selection state
   const [selectedSizeIdx, setSelectedSizeIdx] = useState(0);
   const [activeImageIdx, setActiveImageIdx] = useState(0);
 
-  const quantity = Number(items[slug] || 0);
-
-  // Resolve product by slug (unchanged logic)
+  // Resolve product by slug (kept same)
   useEffect(() => {
     if (products?.length > 0) {
       const found = products.find((p) => p.slug === slug);
@@ -76,7 +77,25 @@ function ProductDetails() {
   );
   const hasSizes = sizes.length > 0;
 
-  const selectedSize = hasSizes ? sizes[Math.min(selectedSizeIdx, sizes.length - 1)] : null;
+  const selectedSize = hasSizes
+    ? sizes[Math.min(selectedSizeIdx, sizes.length - 1)]
+    : null;
+
+  // Per-size cart key and current quantity
+  const cartKeyForSelected = useMemo(() => {
+    if (!product) return null;
+    return makeCartKey(
+      product.slug,
+      Math.min(selectedSizeIdx, Math.max(0, sizes.length - 1))
+    );
+  }, [product, selectedSizeIdx, sizes.length]);
+
+  const quantity = useMemo(() => {
+    if (!items) return 0;
+    const legacy = Number(items?.[product?.slug] || 0);
+    if (!cartKeyForSelected) return legacy;
+    return Number(items?.[cartKeyForSelected] ?? legacy ?? 0);
+  }, [items, product?.slug, cartKeyForSelected]);
 
   // Images for selected size
   const images = useMemo(() => {
@@ -84,16 +103,18 @@ function ProductDetails() {
     return list;
   }, [selectedSize]);
 
-  // Main display image (from gallery, defaults to first image if available)
+  // Main display image
   const mainImageUrl = useMemo(() => {
     const fid = images?.[activeImageIdx] || images?.[0];
     return fid ? getImageUrl(fid) : "/placeholder.svg";
   }, [images, activeImageIdx]);
 
-  // Price (per selected size, fallback to legacy product.price_cents)
+  // Price (per selected size, fallback to legacy)
   const baseCents = useMemo(() => {
     const centsFromSize =
-      typeof selectedSize?.price_cents === "number" ? selectedSize.price_cents : undefined;
+      typeof selectedSize?.price_cents === "number"
+        ? selectedSize.price_cents
+        : undefined;
     if (typeof centsFromSize === "number" && centsFromSize > 0) return centsFromSize;
     const legacy = typeof product?.price_cents === "number" ? product.price_cents : 0;
     return legacy;
@@ -104,7 +125,7 @@ function ProductDetails() {
     [baseCents, product?.discount]
   );
 
-  // When size changes, reset active image
+  // Reset gallery when size changes
   useEffect(() => {
     setActiveImageIdx(0);
   }, [selectedSizeIdx]);
@@ -117,18 +138,23 @@ function ProductDetails() {
     cb();
   };
 
+  // Update qty for selected size using composite cart key
   const updateQty = (newQty) => {
     ensureLoggedInThen(() => {
-      dispatch(changeItemQuantity({ slug, qty: Math.max(0, newQty) }));
+      const key = cartKeyForSelected || product.slug;
+      const n = Math.max(0, Math.floor(Number(newQty) || 0));
+      dispatch(changeItemQuantity({ slug: key, qty: n }));
     });
   };
 
+  // Add/Remove for selected size
   const onAddToCartClick = () => {
     ensureLoggedInThen(() => {
+      const key = cartKeyForSelected || product.slug;
       if (quantity > 0) {
-        dispatch(removeItemCompletely(slug));
+        dispatch(removeItemCompletely(key));
       } else {
-        dispatch(addItemOne(slug));
+        dispatch(addItemOne(key));
       }
     });
   };
@@ -190,7 +216,9 @@ function ProductDetails() {
                         type="button"
                         key={fid + i}
                         className={`relative h-20 rounded overflow-hidden border ${
-                          isActive ? "ring-2 ring-emerald-600 border-transparent" : "border-gray-200 hover:border-emerald-300"
+                          isActive
+                            ? "ring-2 ring-emerald-600 border-transparent"
+                            : "border-gray-200 hover:border-emerald-300"
                         }`}
                         onClick={() => onThumbClick(i)}
                         title="View image"
@@ -251,11 +279,14 @@ function ProductDetails() {
                 <div className="flex flex-wrap gap-2">
                   {sizes.map((s, idx) => {
                     const selected = idx === selectedSizeIdx;
+                    // Quantity badge for this size from cart
+                    const perSizeKey = makeCartKey(product.slug, idx);
+                    const perSizeQty = Number(items?.[perSizeKey] || 0);
                     return (
                       <button
                         key={`${s.size}-${idx}`}
                         type="button"
-                        className={`px-3 py-1.5 rounded border-2 text-sm font-bold transition ${
+                        className={`relative px-3 py-1.5 rounded border-2 text-sm font-bold transition ${
                           selected
                             ? "bg-[#2D2D1A] text-white border-[#2D2D1A]"
                             : "bg-white text-[#2D2D1A] border-[#2D2D1A] hover:bg-[#2D2D1A]/10"
@@ -265,14 +296,22 @@ function ProductDetails() {
                         title={`Select size ${s.size || idx + 1}`}
                       >
                         {s.size || `Size ${idx + 1}`}
+                        {perSizeQty > 0 && (
+                          <span className="absolute -top-2 -right-2 h-5 min-w-[20px] px-1 rounded-full bg-[#E7CE9D] text-[#2D1D1A] text-[11px] flex items-center justify-center">
+                            {perSizeQty}
+                          </span>
+                        )}
                       </button>
                     );
                   })}
                 </div>
+                <p className="text-[12px] text-gray-500">
+                  Images and price update for the selected size.
+                </p>
               </div>
             )}
 
-            {/* Quantity selector (unchanged logic) */}
+            {/* Quantity selector (per selected size) */}
             <div className="grid gap-2 mt-2">
               <h2 className="text-base font-semibold">Quantity:</h2>
               <div className="flex items-center gap-2">
@@ -288,11 +327,10 @@ function ProductDetails() {
                 <Input
                   type="number"
                   value={quantity}
-                  onChange={(e) =>
-                    updateQty(
-                      Number.isNaN(Number(e.target.value)) ? 0 : e.target.value
-                    )
-                  }
+                  onChange={(e) => {
+                    const v = parseInt(e.target.value, 10);
+                    updateQty(Number.isNaN(v) ? 0 : v);
+                  }}
                   className="w-20 text-center text-[#201413] border focus:border-[#201413] focus:ring-[#201413]"
                   min="0"
                 />
@@ -307,7 +345,7 @@ function ProductDetails() {
               </div>
             </div>
 
-            {/* Actions (unchanged behavior) */}
+            {/* Actions */}
             <div className="flex gap-4 mt-4">
               <Button
                 size="lg"
