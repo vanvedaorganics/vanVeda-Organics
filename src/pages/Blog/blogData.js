@@ -2,7 +2,7 @@ const blogData = [
   {
     title: "Vanveda Gir Kesar Mango – The Queen of Mango",
     slug: "vanveda-gir-kesar-mango",
-    image: null, // Replace with actual uploaded image id
+    image: "/Mangoes.jpg",
     excerpt:
       "Discover the authentic taste of Vanveda Gir Kesar Mango, India’s first GI-tagged fruit. Handpicked from Gir farms, naturally ripened, and packed with care for a premium mango experience.",
     author: "VanVeda Team",

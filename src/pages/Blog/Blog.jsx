@@ -34,7 +34,7 @@ function Blog() {
            <BlogCard 
           title={blog.title}
           slug={blog.slug}
-          image_file_ids={blog.image_file_ids}
+          image={blog.image}
           excerpt={blog.excerpt}
           author={blog.author}
           publishDate={blog.publishDate}

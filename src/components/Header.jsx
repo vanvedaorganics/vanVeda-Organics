@@ -194,7 +194,7 @@ export function Header() {
       >
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2 font-semibold text-xl text-[#2D1D1A]">
-          <img src="VanVedaLogo1.png" alt="VanVeda Organics" className="h-10 md:h-14 w-auto object-contain" />
+          <img src="/VanVedaLogo1.png" alt="VanVeda Organics" className="h-10 md:h-14 w-auto object-contain" />
         </Link>
 
         {/* Desktop Nav */}

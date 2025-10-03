@@ -9,6 +9,7 @@ const BlogDetail = () => {
 
   // Find the blog post by slug
   const post = blogData.find((b) => b.slug === slug);
+  const image = post.image;
 
   if (!post) {
     return (
@@ -47,7 +48,7 @@ const BlogDetail = () => {
         {/* Image */}
         <div className="relative w-full h-64 md:h-96 rounded-lg overflow-hidden mb-8 shadow-md">
           <img
-            src={post.image || "/placeholder.svg"}
+            src={image}
             alt={post.title}
             className="w-full h-full object-cover"
           />
