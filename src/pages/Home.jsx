@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Button, ProductsGrid, VideoShowcase } from "../components";
+import { Button, ProductsGrid, ImageShowcase } from "../components";
 import { Link } from "react-router-dom";
 import { fetchProducts, selectAllProducts } from "../store/productsSlice";
 
@@ -15,23 +15,23 @@ function Home() {
 
   // Pick a few hardcoded featured products for now
   const featuredProducts = products.filter((p) =>
-    ["test3", "test2"].includes(p.slug)
+    ["test"].includes(p.slug)
   );
 
   return (
     <>
       {/* ---------------- Hero Section ---------------- */}
       <section className="relative flex h-[600px] w-full items-center justify-center overflow-hidden px-4 text-center">
-        <div className="relative h-full w-full overflow-hidden bg-amber-950">
+        <div className="relative h-full w-full overflow-hidden">
           <img
-            src={null}
+            src="HeroImage.jpg"
             alt="Van Veda Organics Hero"
             className="absolute inset-0 z-0 h-full w-full animate-fade-in object-cover"
             loading="lazy"
           />
         </div>
 
-        <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60 backdrop-blur-sm">
+        <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/20 backdrop-blur-xs">
           <div className="max-w-4xl space-y-6 text-white animate-slide-up">
             <h1 className="syne-medium text-5xl font-bold md:text-7xl">
               Cultivating{" "}
@@ -98,8 +98,8 @@ function Home() {
       </section>
 
       {/* ---------------- Video Showcase ---------------- */}
-      <VideoShowcase
-        src="/videos/organic-farm.mp4"
+      <ImageShowcase
+        src=""
         title="From Farm to Your Table"
         description="Witness the journey of our organic produce, grown with care and commitment to nature."
       />

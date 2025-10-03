@@ -3,7 +3,7 @@ import Footer from "./Footer";
 import Button  from "./Button";
 import ProductCard from "./ProductCard";
 import ProductsGrid from "./ProductsGrid"
-import VideoShowcase from "./VideoShowcase";
+import ImageShowcase from "./ImageShowcase";
 import Input from "./Input"
 import CertificateCard from "./CertificateCard";
 import CartCard from "./CartCard";
@@ -15,7 +15,7 @@ export {
     Button,
     Input,
     ProductCard,
-    VideoShowcase,
+    ImageShowcase,
     ProductsGrid,
     CertificateCard,
     CartCard,

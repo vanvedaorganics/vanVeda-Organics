@@ -188,9 +188,6 @@ const ProductCard = ({
                 );
               })}
             </div>
-            <p className="mt-1 text-[10px] text-gray-500">
-              Image updates to the main photo of the selected size.
-            </p>
           </div>
         )}
       </div>
