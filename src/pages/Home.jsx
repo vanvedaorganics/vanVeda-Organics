@@ -15,7 +15,7 @@ function Home() {
 
   // Pick a few hardcoded featured products for now
   const featuredProducts = products.filter((p) =>
-    ["test"].includes(p.slug)
+    ["gir-kesar-mango","shudh-desi-ghee"].includes(p.slug)
   );
 
   return (
@@ -33,13 +33,11 @@ function Home() {
 
         <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/20 backdrop-blur-xs">
           <div className="max-w-4xl space-y-6 text-white animate-slide-up">
-            <h1 className="syne-medium text-5xl font-bold md:text-7xl">
-              Cultivating{" "}
-              <span className="sacramento-semibold text-[#69A72A]">Health</span>
-              , Nurturing{" "}
-              <span className="sacramento-semibold text-[#69A72A]">Earth</span>
+            <h1 className="syne-medium text-5xl font-bold md:text-7xl text-neutral-950">
+              Cultivating Health
+              , Nurturing Earth
             </h1>
-            <p className="text-lg opacity-90 md:text-xl">
+            <p className="text-lg opacity-90 md:text-xl text-[#2D2D1A]">
               Your journey to pure, wholesome, and sustainable living with Van
               Veda Organics starts here.
             </p>
