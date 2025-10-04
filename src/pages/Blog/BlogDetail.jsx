@@ -20,8 +20,8 @@ const BlogDetail = () => {
   }
 
   return (
-    <div className="container py-8 md:py-12 font-sans">
-      <article className="max-w-3xl mx-auto bg-white p-6 md:p-8 rounded-lg shadow-lg">
+    <div className="w-full min-h-screen flex flex-col items-center py-8 md:py-12 font-sans px-4">
+      <article className="w-full max-w-3xl mx-auto bg-white p-6 md:p-8 rounded-lg shadow-lg">
         {/* Breadcrumb */}
         <div className="ubuntu-regular text-sm text-[#2D2D1A]/70 mb-4">
           <Link to="/blog" className="hover:underline">
@@ -31,7 +31,7 @@ const BlogDetail = () => {
         </div>
 
         {/* Title */}
-        <h1 className="text-4xl md:text-5xl syne-bold mb-4 text-[#2D2D1A] leading-tight">
+        <h1 className="text-4xl md:text-4xl syne-bold mb-4 text-[#2D2D1A] leading-tight">
           {post.title}
         </h1>
 

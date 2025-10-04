@@ -11,7 +11,7 @@ const fadeInUp = {
 function AboutUs() {
   return (
     <motion.div
-      className="container py-8 md:py-12 font-sans"
+      className="max-w-7xl mx-auto py-8 lg:py-12 font-sans px-4 sm:px-6"
       initial="hidden"
       animate="visible"
       exit="hidden"
@@ -19,7 +19,7 @@ function AboutUs() {
     >
       {/* Page Heading */}
       <motion.h1
-        className="syne-bold text-3xl md:text-4xl font-serif text-[#2d1d1a] text-center mb-12 relative"
+        className="syne-bold text-3xl lg:text-4xl font-serif text-[#2d1d1a] text-center mb-12 relative"
         variants={fadeInUp}
       >
         About Van Veda Organics
@@ -28,10 +28,10 @@ function AboutUs() {
 
       {/* Section 1 */}
       <motion.section
-        className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center mb-16 px-10"
+        className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-16 px-4 sm:px-6 lg:px-10"
         variants={fadeInUp}
       >
-        <div className="relative h-80 md:h-96 w-full rounded-xl overflow-hidden shadow-xl group">
+        <div className="relative h-56 lg:h-96 w-full rounded-xl lg:rounded-xl overflow-hidden shadow-xl group">
           <img
             src="/ImageShowcase.jpg"
             alt="Photo Here"
@@ -65,10 +65,10 @@ function AboutUs() {
 
       {/* Section 2 */}
       <motion.section
-        className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center mb-16 px-10"
+        className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-16 px-4 sm:px-6 lg:px-10"
         variants={fadeInUp}
       >
-        <div className="space-y-6 text-foreground order-2 md:order-1">
+        <div className="space-y-6 text-foreground order-2 lg:order-1">
           <h2 className="syne-bold text-3xl leading-tight text-primary hover:underline underline-offset-4 decoration-[#69a72a] transition duration-300">
             The Lands Of Gir
           </h2>
@@ -95,7 +95,7 @@ function AboutUs() {
             philosophy.
           </p>
         </div>
-        <div className="relative h-80 md:h-96 w-full rounded-xl overflow-hidden shadow-xl group order-1 md:order-2">
+        <div className="relative h-56 lg:h-96 w-full rounded-xl lg:rounded-xl overflow-hidden shadow-xl group order-1 lg:order-2">
           <img
             src="/Farm.jpg"
             alt="Photo Here"
@@ -106,7 +106,7 @@ function AboutUs() {
 
       {/* Our Promise */}
       <motion.section
-        className="bg-[#e7ce9d]/20 p-10 rounded-xl shadow-inner text-center m-16"
+        className="bg-[#e7ce9d]/20 p-6 sm:p-8 lg:p-10 rounded-xl shadow-inner text-center mt-16 mx-3 sm:mx-6 lg:mx-16"
         variants={fadeInUp}
       >
         <h2 className="syne-bold text-3xl text-[#2d1d1a] mb-4 relative inline-block">

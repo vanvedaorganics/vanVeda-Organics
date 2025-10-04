@@ -12,7 +12,7 @@ const fadeInUp = {
 function Blog() {
   return (
     <motion.div
-      className="container py-8 md:py-12 font-sans"
+      className="max-w-7xl mx-auto w-full py-8 md:py-12 font-sans px-4 sm:px-6"
       initial="hidden"
       animate="visible"
       exit="hidden"
@@ -27,20 +27,21 @@ function Blog() {
         <span className="absolute left-1/2 -bottom-2 w-16 h-1 bg-[#69a72a] rounded-full transform -translate-x-1/2 animate-expandLine"></span>
       </motion.h1>
 
-
-      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        
+      <section
+        aria-label="Blog articles"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6 sm:gap-8"
+      >
         {blogData.map((blog) => (
-           <BlogCard 
-          title={blog.title}
-          slug={blog.slug}
-          image={blog.image}
-          excerpt={blog.excerpt}
-          author={blog.author}
-          publishDate={blog.publishDate}
-        />
-        ))
-       }
+          <BlogCard
+            key={blog.slug}
+            title={blog.title}
+            slug={blog.slug}
+            image={blog.image}
+            excerpt={blog.excerpt}
+            author={blog.author}
+            publishDate={blog.publishDate}
+          />
+        ))}
       </section>
     </motion.div>
   );
