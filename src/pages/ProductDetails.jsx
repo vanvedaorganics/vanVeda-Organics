@@ -372,9 +372,9 @@ function ProductDetails() {
               <h2 className="syne-bold text-lg font-semibold mb-2">
                 {product.name} Overview
               </h2>
-              <p className="text-gray-600 text-sm leading-relaxed">
+              <div className="text-gray-600 text-sm leading-relaxed whitespace-pre-wrap">
                 {product.description}
-              </p>
+              </div>
             </div>
           </div>
         </div>

@@ -19,10 +19,8 @@ function Footer() {
           <Link href="/" className="flex items-center gap-2 font-semibold">
             <img
               src="/VanVedaFooterLogo.jpg"
-              width={150} /* Resized logo width */
-              height={40} /* Resized logo height */
               alt="Van Veda Organics Logo"
-              className="h-auto w-auto filter brightness-150" /* Adjust filter for visibility on dark background */
+              className="filter brightness-150 w-24 sm:w-28 md:w-32 lg:w-36 xl:w-40 h-auto object-contain transform scale-105 sm:scale-100 transition-transform duration-300"
             />
           </Link>
           <p className="text-sm text-white/80">
