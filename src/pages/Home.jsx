@@ -33,7 +33,7 @@ function Home() {
 
         <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/20 backdrop-blur-xs">
           <div className="max-w-4xl space-y-6 text-white animate-slide-up">
-            <h1 className="syne-medium text-5xl font-bold md:text-7xl text-neutral-950">
+            <h1 className="syne-medium text-4xl font-bold md:text-7xl text-neutral-950">
               Cultivating Health
               , Nurturing Earth
             </h1>

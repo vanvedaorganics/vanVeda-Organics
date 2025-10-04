@@ -33,7 +33,7 @@ function AboutUs() {
       >
         <div className="relative h-80 md:h-96 w-full rounded-xl overflow-hidden shadow-xl group">
           <img
-            src="/images/about-us-banner.png"
+            src="/ImageShowcase.jpg"
             alt="Photo Here"
             className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110 group-hover:rotate-1"
           />
@@ -46,14 +46,14 @@ function AboutUs() {
             At Vanveda, we believe that real taste comes straight from the soil.
             For years, our family has been cultivating Gir Kesar Mangoes in the
             fertile lands of Gir. What started as a traditional farming practice
-            has now grown into a vision—to deliver the same authentic farm-fresh
+            has now grown into a vision to deliver the same authentic farm-fresh
             goodness to homes across India.
           </p>
           <h2 className="syne-bold text-3xl leading-tight text-primary hover:underline underline-offset-4 decoration-[#69a72a] transition duration-300">
             Celebrating Farmer's Life
           </h2>
           <p className="ubuntu-regular text-lg leading-relaxed text-[#613d38]">
-            We are not just a brand—we are farmers first. Behind every mango,
+            We are not just a brand, we are farmers first. Behind every mango,
             every organic product, there's a story of early mornings in the
             orchards, careful nurturing of trees, and a deep respect for the
             land. By choosing Vanveda, you're not only enjoying premium produce,
@@ -73,10 +73,10 @@ function AboutUs() {
             The Lands Of Gir
           </h2>
           <p className="ubuntu-regular text-lg leading-relaxed text-[#613d38]">
-            Our mangoes are grown in the unique ecosystem of Gir, Gujarat—home
-            to the Asiatic Lion and famous for its GI-tagged Kesar Mango. The
+            Our mangoes are grown in the unique ecosystem of Gir, Gujarat home
+            to the Asiatic Lion and famous for its GI tagged Kesar Mango. The
             red soil, perfect sunlight, and pure water of this region give the
-            mango its saffron-like pulp, unmatched aroma, and natural sweetness.
+            mango its saffron like pulp, unmatched aroma, and natural sweetness.
             This is why the Gir Kesar Mango cannot be replicated anywhere else
             in the world.
           </p>
@@ -86,18 +86,18 @@ function AboutUs() {
           <p className="ubuntu-regular text-lg leading-relaxed text-[#613d38]">
             For years, we sold our mangoes offline to loyal customers who
             trusted our quality. Now, with Vanveda, we are bringing this
-            experience online—so whether you're in Ahmedabad, Mumbai, Delhi, or
+            experience online so whether you're in Ahmedabad, Mumbai, Delhi, or
             Bangalore, you can enjoy the taste of authentic Gir Kesar Mangoes,
             delivered right to your doorstep in just 2-4 days. And this is just
             the beginning. Along with mangoes, we will soon introduce organic
-            jaggery, honey, ghee, atta, millets, spices, and sauces—all
+            jaggery, honey, ghee, atta, millets, spices, and sauces all
             carefully sourced and produced, staying true to our farm-to-home
             philosophy.
           </p>
         </div>
         <div className="relative h-80 md:h-96 w-full rounded-xl overflow-hidden shadow-xl group order-1 md:order-2">
           <img
-            src="/images/about-us-banner.png"
+            src="/Farm.jpg"
             alt="Photo Here"
             className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110 group-hover:-rotate-1"
           />
