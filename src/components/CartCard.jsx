@@ -82,7 +82,7 @@ function CartCard({
   const imageUrl = imageFileId ? getImageUrl(imageFileId) : "/placeholder.svg";
 
   return (
-    <div className="flex gap-4 border-2 border-[#2D1D1A] rounded-md p-4 shadow-md bg-white hover:shadow-lg transition-all duration-200">
+    <div className="flex flex-col sm:flex-row gap-4 border-2 border-[#2D1D1A] rounded-md p-4 shadow-md bg-white hover:shadow-lg transition-all duration-200">
       {/* Image */}
       <div className="w-24 h-24 flex-shrink-0 overflow-hidden border-r-2 border-[#2D1D1A] pr-2">
         <img
@@ -94,7 +94,7 @@ function CartCard({
       </div>
 
       {/* Details + Quantity */}
-      <div className="flex-1 flex justify-between items-center">
+      <div className="flex-1 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         {/* Left side: title + price */}
         <div className="flex flex-col justify-between gap-2">
           <div className="flex justify-between items-start gap-2">
@@ -137,8 +137,8 @@ function CartCard({
           </div>
         </div>
 
-        {/* Right side: Quantity controls */}
-        <div className="flex ml-4 shadow-sm rounded-md overflow-hidden border border-gray-400 h-10">
+        {/* Quantity controls */}
+        <div className="inline-flex shadow-sm rounded-md overflow-hidden border border-gray-400 h-10 w-fit sm:w-auto sm:ml-4">
           {/* Minus */}
           <button
             onClick={() => updateQty(quantity - 1)}
@@ -157,7 +157,7 @@ function CartCard({
               const v = parseInt(e.target.value, 10);
               updateQty(Number.isNaN(v) ? 0 : v);
             }}
-            className="w-16 text-center text-sm border-0 focus:ring-0 focus:outline-none h-full"
+            className="w-12 sm:w-16 text-center text-sm border-0 focus:ring-0 focus:outline-none h-full"
             min="0"
             aria-label={`Quantity for ${product.name}`}
           />
@@ -165,7 +165,7 @@ function CartCard({
           {/* Plus */}
           <button
             onClick={() => updateQty(quantity + 1)}
-            className="bg-[#e7ce9d] w-10 h-full flex items-center justify-center cursor-pointer"
+            className="bg-[#E7CE9D] w-10 h-full flex items-center justify-center cursor-pointer"
             aria-label={`Increase quantity of ${product.name}`}
           >
             <Plus className="h-4 w-4" />

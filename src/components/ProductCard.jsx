@@ -2,8 +2,15 @@ import React, { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Star } from "lucide-react";
 import { cn } from "../../utils/lib";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { getImageUrl } from "../../utils/getImageUrl";
+import { Button } from "./index";
+import {
+  addItemOne,
+  removeItemCompletely,
+  changeItemQuantity,
+  selectCartItems,
+} from "../store/cartsSlice";
 
 // Parse packaging_size that may contain stringified objects
 const parsePackagingSizes = (raw = []) => {
@@ -36,6 +43,9 @@ const getMainImageId = (sizeObj) =>
     : "";
 
 const currencyLabel = (currency = "INR") => (currency === "INR" ? "₹" : currency);
+
+const CART_KEY_SEP = "::";
+const makeCartKey = (slug, sizeIdx) => `${slug}${CART_KEY_SEP}${sizeIdx}`;
 
 const ProductCard = ({
   // New schema fields
@@ -96,11 +106,34 @@ const ProductCard = ({
     e.stopPropagation();
   };
 
+  const dispatch = useDispatch();
+  const items = useSelector(selectCartItems);
+
+  // Build cart key for active size
+  const cartKey = makeCartKey(slug, activeIdx);
+  const quantity = Number(items?.[cartKey] ?? items?.[slug] ?? 0);
+  const inCart = quantity > 0;
+
+  const handleToggleCart = (e) => {
+    stopNav(e);
+    if (inCart) {
+      dispatch(removeItemCompletely(cartKey));
+    } else {
+      dispatch(addItemOne(cartKey));
+    }
+  };
+
+  const adjustQty = (e, delta) => {
+    stopNav(e);
+    const newQty = Math.max(0, quantity + delta);
+    dispatch(changeItemQuantity({ slug: cartKey, qty: newQty }));
+  };
+
   return (
     <Link
       to={`/products/${slug}`}
       className={cn(
-        "group relative max-w-sm mx-auto overflow-hidden rounded-xl border border-gray-100 bg-white text-gray-900 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 cursor-pointer",
+        "group relative max-w-sm mx-auto overflow-hidden rounded-xl border border-[#E7CE9D]/40 bg-white text-[#2D1D1A] shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 flex flex-col",
         className
       )}
       aria-label={`View product ${name}`}
@@ -121,18 +154,19 @@ const ProductCard = ({
         )}
       </div>
 
-      {/* Content */}
-      <div className="p-3 border-t border-t-gray-100">
-        <h3 className="text-base font-semibold line-clamp-1">{name}</h3>
-
-        {categoryName ? (
-          <span className="mt-1 inline-block px-2 py-0.5 text-[11px] rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
-            {categoryName}
-          </span>
-        ) : null}
+      <div className="p-3 border-t border-[#E7CE9D]/40 flex flex-col flex-1">
+        {/* Title + Category pill combined */}
+        <div className="flex items-start gap-2">
+          <h3 className="text-base font-semibold line-clamp-1 flex-1">{name}</h3>
+          {categoryName && (
+            <span className="shrink-0 px-2 py-0.5 rounded-md bg-[#E7CE9D] text-[#2D1D1A] text-[10px] font-semibold tracking-wide">
+              {categoryName}
+            </span>
+          )}
+        </div>
 
         {description ? (
-          <p className="text-xs text-gray-500 line-clamp-2 mt-1">{description}</p>
+          <p className="text-xs text-[#613D38] line-clamp-2 mt-1">{description}</p>
         ) : null}
 
         {/* Rating */}
@@ -152,15 +186,15 @@ const ProductCard = ({
           <span>({reviews})</span>
         </div>
 
-        {/* Price (updates per selected packaging size) */}
+        {/* Price */}
         <div className="mt-3 flex items-center gap-2">
-          <span className="text-lg font-bold text-gray-900">{formattedFinal}</span>
+          <span className="text-lg font-bold text-[#2D1D1A]">{formattedFinal}</span>
           {hasDiscount && baseCents > 0 && (
-            <span className="text-xs line-through text-gray-500">{formattedBase}</span>
+            <span className="text-xs line-through text-[#613D38]">{formattedBase}</span>
           )}
         </div>
 
-        {/* Packaging size selector (updates image + price). Displays only main image per size */}
+        {/* Size selector */}
         {sizes.length > 0 && (
           <div className="mt-3">
             <div className="flex flex-wrap gap-2">
@@ -175,10 +209,10 @@ const ProductCard = ({
                       setActiveIdx(idx);
                     }}
                     className={cn(
-                      "px-2 py-1 rounded border text-xs transition",
+                      "px-2 py-1 rounded border-2 text-xs font-semibold transition tracking-wide",
                       selected
-                        ? "bg-emerald-600 text-white border-emerald-600"
-                        : "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
+                        ? "bg-[#2D1D1A] text-white border-[#2D1D1A]"
+                        : "bg-white text-[#2D1D1A] border-[#2D1D1A] hover:bg-[#2D1D1A]/10"
                     )}
                     aria-pressed={selected}
                     aria-label={`Select size ${s.size || idx + 1}`}
@@ -190,6 +224,41 @@ const ProductCard = ({
             </div>
           </div>
         )}
+
+        {/* Cart Actions */}
+        <div className="mt-4 flex items-center gap-2">
+          <Button
+            onClick={handleToggleCart}
+            size="sm"
+            className={cn(
+              "flex-1 text-xs font-semibold shadow-sm transition bg-[#2D1D1A] hover:bg-[#2D1D1A]/90 text-white"
+            )}
+          >
+            {inCart ? "Remove" : "Add To Cart"}
+          </Button>
+
+          {inCart && (
+            <div className="flex items-center gap-1">
+              <button
+                onClick={(e) => adjustQty(e, -1)}
+                aria-label="Decrease quantity"
+                className="h-8 w-8 flex items-center justify-center rounded bg-[#E7CE9D]/40 hover:bg-[#E7CE9D]/60 text-[#2D1D1A] text-sm font-bold"
+              >
+                -
+              </button>
+              <span className="min-w-[1.5rem] text-center text-sm font-semibold">
+                {quantity}
+              </span>
+              <button
+                onClick={(e) => adjustQty(e, 1)}
+                aria-label="Increase quantity"
+                className="h-8 w-8 flex items-center justify-center rounded bg-[#E7CE9D]/40 hover:bg-[#E7CE9D]/60 text-[#2D1D1A] text-sm font-bold"
+              >
+                +
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </Link>
   );
