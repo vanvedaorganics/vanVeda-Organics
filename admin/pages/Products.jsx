@@ -15,6 +15,7 @@ import {
   Loader2,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
 } from "lucide-react";
 import appwriteService from "../../src/appwrite/appwriteConfigService";
 import { fetchProducts } from "../../src/store/productsSlice";
@@ -55,6 +56,37 @@ const discountPrice = (cents, discount) => {
   return Math.round((cents * (100 - d)) / 100);
 };
 
+// NEW: batch helper for numbering
+const pad2 = (n) => String(n).padStart(2, "0");
+
+// NEW: robust batch parser to handle both array and stringified JSON
+const parseBatches = (raw) => {
+  if (!raw) return [];
+  if (Array.isArray(raw)) {
+    return raw
+      .map((b) => ({
+        name: String(b?.name ?? "").trim(),
+        delivery_date: String(b?.delivery_date ?? "").trim(),
+      }))
+      .filter((b) => b.name || b.delivery_date);
+  }
+  if (typeof raw === "string" && raw.trim()) {
+    try {
+      const arr = JSON.parse(raw);
+      if (!Array.isArray(arr)) return [];
+      return arr
+        .map((b) => ({
+          name: String(b?.name ?? "").trim(),
+          delivery_date: String(b?.delivery_date ?? "").trim(),
+        }))
+        .filter((b) => b.name || b.delivery_date);
+    } catch {
+      return [];
+    }
+  }
+  return [];
+};
+
 export default function ProductsPage() {
   const dispatch = useDispatch();
   const {
@@ -63,6 +95,16 @@ export default function ProductsPage() {
     error,
     fetched,
   } = useSelector((state) => state.products);
+
+  // NEW: Build categories map to resolve category ID -> name
+  const categoriesList = useSelector((state) => state.categories?.items || []);
+  const categoriesMap = React.useMemo(() => {
+    const map = new Map();
+    categoriesList.forEach((c) => {
+      if (c?.$id && c?.name) map.set(c.$id, c.name);
+    });
+    return map;
+  }, [categoriesList]);
 
   // Modal state
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
@@ -76,6 +118,29 @@ export default function ProductsPage() {
   const [galleryItems, setGalleryItems] = useState([]); // [{ size, images: [{fileId, url}] }]
   const [activeSizeIdx, setActiveSizeIdx] = useState(0);
   const [activeImageIdx, setActiveImageIdx] = useState(0);
+
+  // NEW: track which row's batch dropdown is open
+  const [openBatchRowId, setOpenBatchRowId] = useState(null);
+
+  // Close batch dropdown on outside click
+  useEffect(() => {
+    const onClick = (e) => {
+      if (!e.target.closest?.("[data-batch-cell]")) {
+        setOpenBatchRowId(null);
+      }
+    };
+    if (openBatchRowId) window.addEventListener("click", onClick);
+    return () => window.removeEventListener("click", onClick);
+  }, [openBatchRowId]);
+
+  // Close batch dropdown on Escape
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === "Escape") setOpenBatchRowId(null);
+    };
+    if (openBatchRowId) window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [openBatchRowId]);
 
   const buildGalleryFromRow = (row) => {
     const packaging = parsePackagingSizes(row.packaging_size);
@@ -243,18 +308,90 @@ export default function ProductsPage() {
           ? `${row.discount}%`
           : "0%",
     },
+    // NEW: Batch column with dropdown viewer
+    {
+      header: "Batch",
+      accessor: "batch",
+      render: (row) => {
+        const idKey = row.$id || row.slug;
+        const batches = parseBatches(row.batch);
+        if (!batches.length) return "—";
+        const first = batches[0] || {};
+        const titleText = `Batch 00 ${first.name || "Unnamed"}${
+          first.delivery_date ? ` delivery by ${first.delivery_date}` : ""
+        }`;
+        const isOpen = openBatchRowId === idKey;
+
+        return (
+          <div
+            className="relative"
+            data-batch-cell
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() =>
+                setOpenBatchRowId((cur) => (cur === idKey ? null : idKey))
+              }
+              className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs border transition ${
+                isOpen
+                  ? "bg-emerald-600 text-white border-emerald-600"
+                  : "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
+              }`}
+              title="View all batches"
+            >
+              {titleText}
+              <ChevronDown
+                className={`w-3 h-3 ${isOpen ? "rotate-180" : ""} transition-transform`}
+              />
+            </button>
+
+            {isOpen && (
+              <div className="absolute z-20 mt-2 w-72 right-0 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden">
+                <div className="px-3 py-2 bg-gray-50 border-b text-xs text-gray-600">
+                  All Batches
+                </div>
+                <ul className="max-h-64 overflow-auto">
+                  {batches.map((b, idx) => {
+                    const line = `${b.name || "Unnamed"}${
+                      b.delivery_date ? ` • delivery by ${b.delivery_date}` : ""
+                    }`;
+                    return (
+                      <li
+                        key={`${idKey}-batch-${idx}`}
+                        className="px-3 py-2 text-sm hover:bg-gray-50"
+                      >
+                        <div className="flex items-start gap-2">
+                          <span className="shrink-0 px-2 py-0.5 text-[10px] rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            Batch {pad2(idx)}
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-gray-800 whitespace-normal break-words">
+                              {line}
+                            </div>
+                          </div>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
+          </div>
+        );
+      },
+    },
     {
       header: "Category",
       accessor: "categories",
       render: (row) => {
-        if (!row.categories) return "—";
-        if (typeof row.categories === "string") {
-          return (
-            row.categories.charAt(0).toUpperCase() + row.categories.slice(1)
-          );
-        }
-        if (typeof row.categories === "object") {
+        if (row?.categories && typeof row.categories === "object") {
           return row.categories.name || "—";
+        }
+        if (typeof row?.categories === "string" && row.categories.trim()) {
+          const resolved = categoriesMap.get(row.categories);
+          if (resolved) return resolved;
+          return row.categories.charAt(0).toUpperCase() + row.categories.slice(1);
         }
         return "—";
       },
@@ -350,6 +487,7 @@ export default function ProductsPage() {
       >
         <ProductsForm
           onSuccess={() => {
+            dispatch(fetchProducts());
             setProductModalOpen(false);
             setEditProduct(null);
           }}

@@ -10,6 +10,51 @@ const genLocalId = () =>
   crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random());
 const MAX_IMAGES_PER_SIZE = 4;
 
+// NEW: Batch helpers
+const pad2 = (n) => String(n).padStart(2, "0");
+
+const toInputDate = (value) => {
+  const val = String(value ?? "").trim();
+  if (!val) return "";
+  const parts = val.split("-");
+  if (parts.length !== 3) return "";
+  const [a, b, c] = parts;
+  if (a.length === 4) return `${a}-${pad2(b)}-${pad2(c)}`; // already yyyy-mm-dd
+  if (c.length === 4) return `${c}-${pad2(b)}-${pad2(a)}`; // dd-mm-yyyy -> yyyy-mm-dd
+  return "";
+};
+
+const toStoredDate = (value) => {
+  const val = String(value ?? "").trim();
+  if (!val) return "";
+  const parts = val.split("-");
+  if (parts.length !== 3) return "";
+  const [a, b, c] = parts;
+  if (a.length === 4) return `${pad2(c)}-${pad2(b)}-${a}`; // yyyy-mm-dd -> dd-mm-yyyy
+  if (c.length === 4) return `${pad2(a)}-${pad2(b)}-${c}`; // already dd-mm-yyyy
+  return "";
+};
+
+const parseBatches = (raw) => {
+  if (!raw) return [];
+  let arr = raw;
+  if (typeof raw === "string") {
+    try {
+      arr = JSON.parse(raw);
+    } catch {
+      arr = [];
+    }
+  }
+  if (!Array.isArray(arr)) return [];
+  return arr
+    .map((b) => ({
+      id: genLocalId(),
+      name: String(b?.name ?? "").trim(),
+      delivery_date: toInputDate(b?.delivery_date),
+    }))
+    .filter((b) => b.name || b.delivery_date);
+};
+
 // New: helper to create a default empty packaging size row
 const createEmptyPackagingSize = () => ({
   id: genLocalId(),
@@ -100,6 +145,9 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
     return parsed && parsed.length ? parsed : [createEmptyPackagingSize()];
   });
 
+  // NEW: Batches State (optional)
+  const [batches, setBatches] = useState(() => parseBatches(initialData?.batch));
+
   // Track files (fileIds) scheduled for deletion AFTER successful submit
   const filesPendingDeletionRef = useRef(new Set());
 
@@ -135,6 +183,8 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
           "",
       });
       setPackagingSizes(parsePackagingSizes(initialData.packaging_size));
+      // NEW: reset batches from initial data
+      setBatches(parseBatches(initialData.batch));
       filesPendingDeletionRef.current = new Set();
     }
   }, [initialData, isEdit, reset]);
@@ -335,6 +385,15 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
     try {
       const packaging_size = await buildPackagingSizePayload();
 
+      // NEW: sanitize batches; optional -> null if none valid
+      const sanitizedBatches = (Array.isArray(batches) ? batches : [])
+        .map((b) => ({
+          name: String(b?.name ?? "").trim(),
+          delivery_date: toStoredDate(b?.delivery_date),
+        }))
+        .filter((b) => b.name && b.delivery_date);
+      const batch = sanitizedBatches.length ? sanitizedBatches : null;
+
       const payloadBase = {
         name: formData.name,
         slug: formData.slug,
@@ -344,6 +403,7 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
         discount: parseInt(formData.discount, 10) || 0,
         packaging_size,
         // currency omitted (defaults to "INR" server-side)
+        batch, // NEW
       };
 
       if (isEdit) {
@@ -376,6 +436,8 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
         });
         // New: after creating a product, keep one default row instead of empty
         setPackagingSizes([createEmptyPackagingSize()]);
+        // NEW: clear batches on fresh create
+        setBatches([]);
       }
 
       if (onSuccess) onSuccess();
@@ -596,6 +658,103 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
         <p className="text-[11px] text-gray-500">
           Describe key benefits, ingredients, and usage.
         </p>
+      </div>
+
+      {/* NEW: Batches (Optional) */}
+      <div className="bg-white p-4 rounded-lg border space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <Label>Batches (optional)</Label>
+            <p className="text-[12px] text-gray-600">
+              Manage upcoming batches. Labels like “Batch 00, Batch 01” are for display only.
+            </p>
+          </div>
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            className="border border-emerald-700 !text-emerald-700 hover:!bg-emerald-50"
+            onClick={() =>
+              setBatches((prev) => [
+                ...prev,
+                { id: genLocalId(), name: "", delivery_date: "" },
+              ])
+            }
+            disabled={isSubmitting}
+            title="Add Batch"
+          >
+            + Add Batch
+          </Button>
+        </div>
+
+        {batches.length === 0 && (
+          <div className="text-sm text-gray-500">No batches added.</div>
+        )}
+
+        <div className="space-y-4">
+          {batches.map((b, idx) => (
+            <div key={b.id} className="border rounded-lg p-4 bg-white shadow-sm">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-0.5 text-xs rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    Batch {pad2(idx)}
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    Provide name and delivery date.
+                  </span>
+                </div>
+                <Button
+                  type="button"
+                  variant="danger"
+                  size="xs"
+                  className={`${isSubmitting ? "opacity-50 cursor-not-allowed" : ""}`}
+                  disabled={isSubmitting}
+                  onClick={() =>
+                    setBatches((prev) => prev.filter((x) => x.id !== b.id))
+                  }
+                  title="Remove Batch"
+                >
+                  Remove
+                </Button>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <Label>Batch Name</Label>
+                  <Input
+                    placeholder="e.g. Monsoon Harvest"
+                    value={b.name}
+                    disabled={isSubmitting}
+                    onChange={(e) =>
+                      setBatches((prev) =>
+                        prev.map((x) =>
+                          x.id === b.id ? { ...x, name: e.target.value } : x
+                        )
+                      )
+                    }
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label>Delivery Date</Label>
+                  <Input
+                    type="date"
+                    value={b.delivery_date}
+                    disabled={isSubmitting}
+                    onChange={(e) =>
+                      setBatches((prev) =>
+                        prev.map((x) =>
+                          x.id === b.id
+                            ? { ...x, delivery_date: e.target.value }
+                            : x
+                        )
+                      )
+                    }
+                  />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Packaging Sizes */}

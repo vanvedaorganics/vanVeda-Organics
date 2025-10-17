@@ -35,6 +35,7 @@ export class appwriteConfigService {
     packaging_size = [], // may be objects or already strings
     currency = "INR",
     discount = 0,
+    batch = null,
   }) {
     const serialized = (
       Array.isArray(packaging_size) ? packaging_size : []
@@ -53,6 +54,18 @@ export class appwriteConfigService {
       }
     });
 
+    // NEW: sanitize + serialize batch array -> string or null
+    const batchArray = Array.isArray(batch) ? batch : [];
+    const sanitizedBatch = batchArray
+      .map((b) => ({
+        name: String(b?.name ?? "").trim(),
+        delivery_date: String(b?.delivery_date ?? "").trim(),
+      }))
+      .filter((b) => b.name || b.delivery_date);
+    const batchPayload = sanitizedBatch.length
+      ? JSON.stringify(sanitizedBatch)
+      : null;
+
     return await this.databases.createDocument(
       conf.appwriteDatabaseId,
       conf.appwriteProductsCollection,
@@ -66,6 +79,7 @@ export class appwriteConfigService {
         packaging_size: serialized,
         currency,
         discount,
+        batch: batchPayload, // NEW
       }
     );
   }
@@ -80,6 +94,7 @@ export class appwriteConfigService {
       packaging_size = [],
       currency = "INR",
       discount = 0,
+      batch,
     }
   ) {
     const serialized = (
@@ -99,6 +114,18 @@ export class appwriteConfigService {
       }
     });
 
+    // NEW: sanitize + serialize batch array -> string or null
+    const batchArray = Array.isArray(batch) ? batch : [];
+    const sanitizedBatch = batchArray
+      .map((b) => ({
+        name: String(b?.name ?? "").trim(),
+        delivery_date: String(b?.delivery_date ?? "").trim(),
+      }))
+      .filter((b) => b.name || b.delivery_date);
+    const batchPayload = sanitizedBatch.length
+      ? JSON.stringify(sanitizedBatch)
+      : null;
+
     return await this.databases.updateDocument(
       conf.appwriteDatabaseId,
       conf.appwriteProductsCollection,
@@ -111,6 +138,7 @@ export class appwriteConfigService {
         packaging_size: serialized,
         currency,
         discount,
+        batch: batchPayload, // NEW
       }
     );
   }
@@ -199,6 +227,26 @@ export class appwriteConfigService {
         } else {
           parsedDoc.packaging_size = [];
         }
+
+        // NEW: parse batch string -> array for UI
+        if (typeof parsedDoc.batch === "string" && parsedDoc.batch.trim()) {
+          try {
+            const arr = JSON.parse(parsedDoc.batch);
+            parsedDoc.batch = Array.isArray(arr)
+              ? arr
+                  .map((b) => ({
+                    name: String(b?.name ?? "").trim(),
+                    delivery_date: String(b?.delivery_date ?? "").trim(),
+                  }))
+                  .filter((b) => b.name || b.delivery_date)
+              : [];
+          } catch {
+            parsedDoc.batch = [];
+          }
+        } else if (!Array.isArray(parsedDoc.batch)) {
+          parsedDoc.batch = [];
+        }
+
         return parsedDoc;
       });
 
