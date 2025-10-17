@@ -56,10 +56,8 @@ const ProductCard = ({
   discount = 0,
   currency = "INR",
   categories, // string id/slug or related object
-
-  // Optional extras (not from schema, safe defaults)
-  rating = 0,
-  reviews = 0,
+  average_rating ,
+  review_count,
 
   // Styling
   className,
@@ -176,14 +174,14 @@ const ProductCard = ({
               <Star
                 key={i}
                 className={`h-3.5 w-3.5 ${
-                  i < Math.floor(rating)
-                    ? "fill-green-900 text-green-900"
+                  i < Math.floor(average_rating)
+                    ? "fill-[#2D1D1A] text-[#2D1D1A]"
                     : "fill-gray-200 stroke-gray-400"
                 }`}
               />
             ))}
           </div>
-          <span>({reviews})</span>
+          <span>({review_count})</span>
         </div>
 
         {/* Price */}

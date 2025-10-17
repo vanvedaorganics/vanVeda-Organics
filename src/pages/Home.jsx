@@ -97,7 +97,7 @@ function Home() {
 
       {/* ---------------- Video Showcase ---------------- */}
       <ImageShowcase
-        src=""
+        src={null}
         title="From Farm to Your Table"
         description="Witness the journey of our organic produce, grown with care and commitment to nature."
       />

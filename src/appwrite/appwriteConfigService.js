@@ -223,6 +223,44 @@ export class appwriteConfigService {
     }
   }
 
+  // 🟢 Update average rating and review count for a product
+  async updateProductReviewStats(productId) {
+    try {
+      // 1️⃣ Get all reviews for this product (indexed using productID string)
+      const reviewsRes = await this.databases.listDocuments(
+        conf.appwriteDatabaseId,
+        conf.appwriteReviewCollection,
+        [Query.equal("productID", productId)]
+      );
+
+      const reviews = reviewsRes.documents;
+      const count = reviews.length;
+
+      let avgRating = 0;
+      if (count > 0) {
+        const total = reviews.reduce(
+          (sum, r) => sum + Number(r?.rating || 0),
+          0
+        );
+        avgRating = parseFloat((total / count).toFixed(2));
+      }
+
+      // 2️⃣ Update product document with new stats
+      return await this.databases.updateDocument(
+        conf.appwriteDatabaseId,
+        conf.appwriteProductsCollection,
+        productId,
+        {
+          average_rating: avgRating,
+          review_count: count,
+        }
+      );
+    } catch (error) {
+      console.error("Appwrite :: updateProductReviewStats error ::", error);
+      throw error;
+    }
+  }
+
   async createCategory({ name, slug }) {
     try {
       return await this.databases.createDocument(
@@ -651,6 +689,88 @@ export class appwriteConfigService {
       }
     } catch (error) {
       console.log("Appwrite :: clearActiveAd error ::", error);
+      throw error;
+    }
+  }
+
+  //Products Reviews
+  async createReview({ product_id, user_id, rating }) {
+    const docId = `${user_id}_${product_id}`; // composite key ensures uniqueness
+    const payload = { product_id, user_id, rating, productID: product_id };
+    const permissions = [
+      Permission.read(Role.any()),
+      Permission.update(Role.user(user_id)),
+    ];
+
+    try {
+      // Try to create; if doc exists, handle 409 and update instead
+      return await this.databases.createDocument(
+        conf.appwriteDatabaseId,
+        conf.appwriteReviewCollection,
+        docId,
+        payload,
+        permissions
+      );
+    } catch (error) {
+      // Duplicate document -> update the rating
+      if (error?.code === 409 || error?.response?.code === 409) {
+        return await this.updateReview(docId, { rating });
+      }
+      console.error("Appwrite :: createReview error ::", error);
+      throw error;
+    }
+  }
+
+  async updateReview(review_id, { rating }) {
+    try {
+      return await this.databases.updateDocument(
+        conf.appwriteDatabaseId,
+        conf.appwriteReviewCollection,
+        review_id,
+        { rating }
+      );
+    } catch (error) {
+      console.log("Appwrite :: updateReview error ::", error);
+      throw error;
+    }
+  }
+
+  async listReview(productId) {
+    try {
+      return await this.databases.listDocuments(
+        conf.appwriteDatabaseId,
+        conf.appwriteReviewCollection,
+        [Query.equal("productID", productId)]
+      );
+    } catch (error) {
+      console.log("Appwrite :: listReview error ::", error);
+      throw error;
+    }
+  }
+
+  // 🔎 Get a single user's review for a product (by composite id)
+  async getUserReview(product_id, user_id) {
+    const docId = `${user_id}_${product_id}`;
+    try {
+      return await this.databases.getDocument(
+        conf.appwriteDatabaseId,
+        conf.appwriteReviewCollection,
+        docId
+      );
+    } catch (error) {
+      if (error?.code === 404) return null;
+      console.log("Appwrite :: getUserReview error ::", error);
+      throw error;
+    }
+  }
+
+  // ⭐ One-call helper: upsert review and refresh product stats
+  async rateProduct({ product_id, user_id, rating }) {
+    try {
+      await this.createReview({ product_id, user_id, rating });
+      return await this.updateProductReviewStats(product_id);
+    } catch (error) {
+      console.log("Appwrite :: rateProduct error ::", error);
       throw error;
     }
   }

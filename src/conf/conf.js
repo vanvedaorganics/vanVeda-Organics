@@ -10,6 +10,7 @@ const conf = {
     appwriteOrdersCollection: String(import.meta.env.VITE_APPWRITE_ORDERS_COLLECTION_ID),
     appwriteAdsCollection: String(import.meta.env.VITE_APPWRITE_ADS_COLLECTION_ID),
     appwriteActiveAdsCollection: String(import.meta.env.VITE_APPWRITE_ACTIVE_ADS_COLLECTION_ID),
+    appwriteReviewCollection: String(import.meta.env.VITE_APPWRITE_REVIEW_COLLECTION_ID),
     appwriteBucketId: String(import.meta.env.VITE_APPWRITE_BUCKET_ID),
     appwriteTeamsId: String(import.meta.env.VITE_APPWRITE_TEAMS_ID),
 }

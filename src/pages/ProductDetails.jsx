@@ -11,6 +11,7 @@ import {
   removeItemCompletely,
   selectCartItems,
 } from "../store/cartsSlice";
+import appwriteService from "../appwrite/appwriteConfigService";
 
 // Helpers for new schema
 const parsePackagingSizes = (raw = []) => {
@@ -47,6 +48,7 @@ function ProductDetails() {
   const { slug } = useParams();
   const products = useSelector((state) => state.products.items);
   const authStatus = useSelector((state) => state.auth.status);
+  const userData = useSelector((state) => state.auth.userData);
   const items = useSelector(selectCartItems);
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -57,6 +59,11 @@ function ProductDetails() {
   // Gallery + size selection state
   const [selectedSizeIdx, setSelectedSizeIdx] = useState(0);
   const [activeImageIdx, setActiveImageIdx] = useState(0);
+
+  // ⭐ Rating UI state
+  const [userRating, setUserRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [submittingRating, setSubmittingRating] = useState(false);
 
   // Resolve product by slug (kept same)
   useEffect(() => {
@@ -69,6 +76,30 @@ function ProductDetails() {
       setActiveImageIdx(0);
     }
   }, [products, slug]);
+
+  // Load current user's rating for this product
+  useEffect(() => {
+    let active = true;
+    const load = async () => {
+      try {
+        if (!product || !authStatus || !userData) {
+          setUserRating(0);
+          return;
+        }
+        const uid = userData?.$id || userData?.user_id || userData?.id;
+        if (!uid) return;
+        const review = await appwriteService.getUserReview(product.slug, uid);
+        if (!active) return;
+        setUserRating(Number(review?.rating || 0));
+      } catch (e) {
+        console.warn("Failed to load user review", e);
+      }
+    };
+    load();
+    return () => {
+      active = false;
+    };
+  }, [product, authStatus, userData]);
 
   // Derived data from new schema
   const sizes = useMemo(
@@ -159,6 +190,43 @@ function ProductDetails() {
     });
   };
 
+  // ⭐ Rate handler
+  const onRate = async (value) => {
+    if (value < 1 || value > 5 || !product) return;
+    ensureLoggedInThen(async () => {
+      try {
+        const uid = userData?.$id || userData?.user_id || userData?.id;
+        if (!uid) {
+          navigate(`/login?returnTo=/product/${slug}`);
+          return;
+        }
+        setSubmittingRating(true);
+        setUserRating(value); // optimistic
+        const updated = await appwriteService.rateProduct({
+          product_id: product.slug,
+          user_id: uid,
+          rating: value,
+        });
+        // Refresh local product stats
+        if (updated?.average_rating !== undefined) {
+          setProduct((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  average_rating: updated.average_rating,
+                  review_count: updated.review_count,
+                }
+              : prev
+          );
+        }
+      } catch (e) {
+        console.error("Rating submission failed", e);
+      } finally {
+        setSubmittingRating(false);
+      }
+    });
+  };
+
   const inCart = quantity > 0;
 
   const onThumbClick = useCallback((idx) => {
@@ -184,8 +252,19 @@ function ProductDetails() {
   const hasDiscount = Number(product.discount) > 0;
 
   return (
-    <div className="w-full px-4 sm:px-6 lg:px-12 xl:px-20 py-8 md:py-12 font-sans">
-      <div className="mx-auto max-w-7xl">
+    <div
+      className="relative w-full px-4 sm:px-6 lg:px-12 xl:px-20 py-8 md:py-12 font-sans"
+      aria-busy={submittingRating ? "true" : "false"}
+    >
+      {submittingRating && (
+        <div className="absolute inset-0 z-50 bg-white/60 backdrop-blur-sm flex items-center justify-center pointer-events-auto">
+          <div className="flex flex-col items-center gap-3">
+            <div className="h-12 w-12 rounded-full border-4 border-[#2D1D1A]/20 border-t-[#2D1D1A] animate-spin" />
+            <span className="text-sm text-[#2D1D1A]">Submitting rating…</span>
+          </div>
+        </div>
+      )}
+      <div className={`mx-auto max-w-7xl ${submittingRating ? "pointer-events-none" : ""}`}>
         <div className="grid gap-8 md:grid-cols-2 lg:gap-16">
           {/* Image + Gallery */}
           <div className="flex flex-col items-center">
@@ -261,14 +340,63 @@ function ProductDetails() {
                     <Star
                       key={i}
                       className={`h-5 w-5 ${
-                        i < Math.floor(product.rating || 0)
+                        i < Math.floor(product.average_rating || 0)
                           ? "fill-[#2D1D1A] text-[#2D1D1A]"
                           : "fill-gray-300 stroke-gray-400"
                       }`}
                     />
                   ))}
                 </div>
-                <span>({product.reviews || 0} reviews)</span>
+                <span>({product.review_count || 0} reviews)</span>
+              </div>
+
+              {/* ⭐ Your Rating (interactive) */}
+              <div className="mt-3">
+                <div className="text-xs font-semibold text-[#2D1D1A] mb-1">
+                  Your Rating
+                </div>
+                <div
+                  className={`flex items-center gap-2 p-2 rounded-md border border-[#2D1D1A]/20 bg-white/70 ${
+                    submittingRating ? "opacity-60 pointer-events-none" : ""
+                  }`}
+                >
+                  <div className="flex items-center">
+                    {[1, 2, 3, 4, 5].map((val) => {
+                      const active = (hoverRating || userRating) >= val;
+                      return (
+                        <button
+                          key={val}
+                          type="button"
+                          aria-label={`Rate ${val} star${val > 1 ? "s" : ""}`}
+                          className="p-1"
+                          onMouseEnter={() => setHoverRating(val)}
+                          onMouseLeave={() => setHoverRating(0)}
+                          onFocus={() => setHoverRating(val)}
+                          onBlur={() => setHoverRating(0)}
+                          onClick={() => onRate(val)}
+                          title={
+                            authStatus
+                              ? `Click to rate ${val} star${val > 1 ? "s" : ""}`
+                              : "Login to rate"
+                          }
+                        >
+                          <Star
+                            className={`h-6 w-6 transition ${
+                              active
+                                ? "fill-[#2D1D1A] text-[#2D1D1A]"
+                                : "fill-gray-200 stroke-gray-400 hover:fill-[#E7CE9D] hover:stroke-[#2D1D1A]"
+                            }`}
+                          />
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className="text-[12px] text-gray-600">
+                    {userRating > 0
+                      ? `You rated ${userRating}/5`
+                      : "Tap a star to rate"}
+                  </div>
+                </div>
               </div>
             </div>
 
