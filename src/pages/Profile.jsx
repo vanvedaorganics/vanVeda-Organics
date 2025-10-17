@@ -31,6 +31,11 @@ function Profile() {
     formState: { errors },
   } = useForm();
 
+  // Scroll to top on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   // Fetch Profile
   useEffect(() => {
     if (!authUser) {

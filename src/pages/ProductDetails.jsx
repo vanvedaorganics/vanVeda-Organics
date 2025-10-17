@@ -98,6 +98,11 @@ function ProductDetails() {
   const [batchDropdownOpen, setBatchDropdownOpen] = useState(false);
   const [batchWarning, setBatchWarning] = useState("");
 
+  // Scroll to top on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   // Resolve product by slug (kept same)
   useEffect(() => {
     if (products?.length > 0) {

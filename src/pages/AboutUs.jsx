@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { CheckCircle } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -9,6 +9,11 @@ const fadeInUp = {
 };
 
 function AboutUs() {
+  // Scroll to top on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   return (
     <motion.div
       className="max-w-7xl mx-auto py-8 lg:py-12 font-sans px-4 sm:px-6"

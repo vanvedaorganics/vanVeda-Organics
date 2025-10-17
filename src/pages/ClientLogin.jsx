@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { Eye, EyeOff, Loader2 } from "lucide-react"; // Added Loader2 icon
 import { Button, Input } from "../components";
@@ -17,6 +17,11 @@ export default function ClientLogin() {
   // UI state
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Scroll to top on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const handleSubmit = async (e) => {
   e.preventDefault();

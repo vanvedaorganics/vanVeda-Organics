@@ -9,6 +9,11 @@ function Home() {
   const products = useSelector(selectAllProducts);
   const loading = useSelector((state) => state.products.loading);
 
+  // Scroll to top on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   useEffect(() => {
     dispatch(fetchProducts()); // later: replace with featured query
   }, [dispatch]);
@@ -54,7 +59,7 @@ function Home() {
                 asChild
                 size="lg"
                 variant="outline"
-                className="rounded-xl border border-white text-white hover:scale-105 hover:bg-white hover:text-[#2D1D1A]"
+                className="rounded-xl border border-[#2D2D1A]/20 text-[#2D2D1A] bg-white/35 hover:scale-105 hover:bg-white hover:text-[#2D1D1A]"
               >
                 <Link to="/about-us">Our Story</Link>
               </Button>

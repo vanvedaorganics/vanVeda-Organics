@@ -1,7 +1,7 @@
-import React from "react";
+import React, {useEffect} from "react";
 import { CertificateCard } from "../components";
 import { CheckCircle } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, } from "framer-motion";
 
 // Reusable fade-in-up variant
 const fadeInUp = {
@@ -53,6 +53,11 @@ const certifications = [
 ];
 
 function Certificates() {
+  // Scroll to top on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   return (
     <motion.div
       className="w-full bg-[#fafafa]"

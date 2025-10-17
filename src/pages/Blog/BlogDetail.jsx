@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import blogData from "./blogData";
 import { Calendar, User } from "lucide-react";
@@ -7,9 +7,14 @@ import { Button } from "../../components";
 const BlogDetail = () => {
   const { slug } = useParams();
 
+  // Scroll to top on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   // Find the blog post by slug
   const post = blogData.find((b) => b.slug === slug);
-  const image = post.image;
+  const image = post?.image;
 
   if (!post) {
     return (

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { motion } from "framer-motion";
 import { BlogCard } from "../../components";
 import blogData from "./blogData";
@@ -10,6 +10,11 @@ const fadeInUp = {
 };
 
 function Blog() {
+  // Scroll to top on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   return (
     <motion.div
       className="max-w-7xl mx-auto w-full py-8 md:py-12 font-sans px-4 sm:px-6"

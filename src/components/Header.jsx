@@ -6,7 +6,6 @@ import {
   Menu,
   User,
   X,
-  Package,
   Award,
   BookOpen,
   Info,
@@ -82,7 +81,6 @@ export function Header() {
   const authStatus = useSelector((state) => state.auth.status);
 
   const navItems = [
-    { name: "Products", slug: "/products", icon: <Package className="h-5 w-5" />, active: true },
     { name: "Certificates", slug: "/certificates", icon: <Award className="h-5 w-5" />, active: true },
     { name: "Blog", slug: "/blog", icon: <BookOpen className="h-5 w-5" />, active: true },
     { name: "About Us", slug: "/about-us", icon: <Info className="h-5 w-5" />, active: true },
@@ -286,7 +284,38 @@ export function Header() {
                 placeholder="Search products..."
                 className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-green-900 focus:ring-1 focus:ring-green-900"
               />
-              <nav className="mt-6 flex flex-col gap-2 font-semibold">
+              
+              {/* Product Category Icons */}
+              <div className="mt-6 mb-4">
+                <h3 className="text-sm font-semibold text-gray-700 mb-3">Shop by Category</h3>
+                <div className="flex items-center justify-around gap-4">
+                  <Link
+                    to="/products?category=mango"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex flex-col items-center gap-2 hover:opacity-80 transition-opacity"
+                  >
+                    <img src="/mango.png" alt="Mango" className="w-14 h-14 object-contain" />
+                    <span className="text-xs text-gray-700">Mango</span>
+                  </Link>
+                  <Link
+                    to="/products?category=ghee"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex flex-col items-center gap-2 hover:opacity-80 transition-opacity"
+                  >
+                    <img src="/ghee.png" alt="Ghee" className="w-14 h-14 object-contain" />
+                    <span className="text-xs text-gray-700">Ghee</span>
+                  </Link>
+                </div>
+                <Link
+                  to="/products"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="mt-4 w-full flex items-center justify-center gap-2 rounded-md px-3 py-2.5 text-sm font-medium bg-[#69a72a] text-white hover:bg-[#5a8f23] transition-colors"
+                >
+                  Shop All Products
+                </Link>
+              </div>
+
+              <nav className="mt-2 flex flex-col gap-2 font-semibold">
                 {navItems.map(
                   (item) =>
                     item.active && (

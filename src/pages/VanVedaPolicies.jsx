@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { motion } from "framer-motion";
 
 // Variants for reusable fade-in-up animation
@@ -8,6 +8,11 @@ const fadeInUp = {
 };
 
 function VanVedaPolicies() {
+  // Scroll to top on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   const policies = [
     {
       title: "1. Product Authenticity",

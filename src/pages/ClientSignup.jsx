@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import appwriteAuthService from "../appwrite/authService";
 import appwriteConfigService from "../appwrite/appwriteConfigService";
 import { Link, useNavigate } from "react-router-dom";
@@ -18,6 +18,11 @@ function ClientSignup() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { register, handleSubmit, reset } = useForm();
+
+  // Scroll to top on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const create = async (data) => {
     setError("");
