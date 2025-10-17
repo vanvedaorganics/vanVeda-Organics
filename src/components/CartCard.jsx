@@ -25,16 +25,20 @@ function CartCard({
   sizeLabel = null,
   unitCents, // precomputed in Header for accuracy
   imageFileId = null,
+  batch = null, // NEW: batch data
 }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const items = useSelector(selectCartItems);
   const authStatus = useSelector((s) => s.auth?.status);
 
+  const cartItem = items?.[cartKey] || items?.[product.slug];
   const quantity =
     typeof propQty === "number"
       ? propQty
-      : Number(items?.[cartKey] ?? items?.[product.slug] ?? 0);
+      : typeof cartItem === "number"
+      ? cartItem
+      : (cartItem?.qty ?? 0);
 
   // Prices
   const baseCents =
@@ -112,6 +116,20 @@ function CartCard({
             <span className="px-2 py-0.5 w-fit text-[11px] rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
               {sizeLabel || `Size ${typeof sizeIdx === "number" ? sizeIdx + 1 : ""}`}
             </span>
+          )}
+
+          {/* NEW: Batch pill */}
+          {batch && (batch.name || batch.delivery_date) && (
+            <div className="flex flex-col gap-1">
+              <span className="px-2 py-0.5 w-fit text-[11px] rounded bg-[#E7CE9D] text-[#2D1D1A] border border-[#2D1D1A]/20 font-semibold">
+                Batch: {batch.name || "Unnamed"}
+              </span>
+              {batch.delivery_date && (
+                <span className="text-[10px] text-gray-600">
+                  Delivery by: {batch.delivery_date}
+                </span>
+              )}
+            </div>
           )}
 
           <div>

@@ -23,23 +23,43 @@ function normalizeItems(items) {
         .join("");
       try {
         return JSON.parse(ordered);
-      } catch (e) {
+      } catch (parseError) {
+        console.warn("Failed to parse numeric-key items:", parseError);
         return {};
       }
     }
 
-    // Already a slug->qty object
-    return items;
+    // Already a slug->data object - normalize values
+    const normalized = {};
+    for (const key of keys) {
+      const val = items[key];
+      // Handle legacy format (number) vs new format (object with qty + batch)
+      if (typeof val === "number") {
+        normalized[key] = { qty: val, batch: null };
+      } else if (typeof val === "object" && val !== null) {
+        normalized[key] = {
+          qty: Number(val.qty) || 0,
+          batch: val.batch || null,
+        };
+      } else {
+        normalized[key] = { qty: 0, batch: null };
+      }
+    }
+    return normalized;
   }
 
   if (typeof items === "string") {
     try {
-      return JSON.parse(items);
-    } catch (err) {
+      const parsed = JSON.parse(items);
+      return normalizeItems(parsed); // recursive normalization
+    } catch (firstError) {
+      console.warn("First JSON parse attempt failed:", firstError);
       try {
         const stripped = items.trim();
-        return JSON.parse(stripped);
-      } catch (e2) {
+        const parsed = JSON.parse(stripped);
+        return normalizeItems(parsed);
+      } catch (secondError) {
+        console.warn("Second JSON parse attempt failed:", secondError);
         return {};
       }
     }
@@ -137,13 +157,16 @@ const cartsSlice = createSlice({
       state.cart.items = normalizeItems(action.payload);
     },
     setItemQuantityLocal: (state, action) => {
-      const { slug, qty } = action.payload;
+      const { slug, qty, batch } = action.payload;
       if (!state.cart) state.cart = { items: {} };
       const items = { ...(state.cart.items || {}) };
       if (qty <= 0) {
         delete items[slug];
       } else {
-        items[slug] = Number(qty);
+        items[slug] = {
+          qty: Number(qty),
+          batch: batch || items[slug]?.batch || null,
+        };
       }
       state.cart.items = items;
       state.error = null;
@@ -207,21 +230,22 @@ export const {
 /* ---------- Thunk action creators for optimistic updates + scheduled sync ---------- */
 
 export const changeItemQuantity =
-  ({ slug, qty }) =>
+  ({ slug, qty, batch = null }) =>
   (dispatch, getState) => {
     const state = getState();
     const prevCartSnapshot = state.carts.cart
       ? { ...state.carts.cart, items: { ...(state.carts.cart.items ?? {}) } }
       : null;
 
-    dispatch(setItemQuantityLocal({ slug, qty }));
+    dispatch(setItemQuantityLocal({ slug, qty, batch }));
     scheduleSync(dispatch, getState, prevCartSnapshot);
   };
 
-export const addItemOne = (slug) => (dispatch, getState) => {
+export const addItemOne = (slug, batch = null) => (dispatch, getState) => {
   const state = getState();
-  const currentQty = state.carts.cart?.items?.[slug] ?? 0;
-  return dispatch(changeItemQuantity({ slug, qty: currentQty + 1 }));
+  const currentItem = state.carts.cart?.items?.[slug];
+  const currentQty = typeof currentItem === "number" ? currentItem : (currentItem?.qty ?? 0);
+  return dispatch(changeItemQuantity({ slug, qty: currentQty + 1, batch }));
 };
 
 export const removeItemCompletely = (slug) => (dispatch) => {
@@ -234,7 +258,10 @@ export const selectCartItems = (state) =>
   normalizeItems(state.carts.cart?.items ?? {});
 export const selectCartTotalCount = (state) => {
   const items = selectCartItems(state);
-  return Object.values(items).reduce((acc, v) => acc + Number(v || 0), 0);
+  return Object.values(items).reduce((acc, v) => {
+    const qty = typeof v === "number" ? v : (v?.qty ?? 0);
+    return acc + Number(qty || 0);
+  }, 0);
 };
 
 export default cartsSlice.reducer;

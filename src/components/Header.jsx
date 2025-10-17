@@ -121,15 +121,19 @@ export function Header() {
   };
 
   // Build cartProducts: per packaging size using composite keys
-  // [{ cartKey, product, qty, sizeIdx, sizeLabel, unitCents, imageFileId }]
+  // [{ cartKey, product, qty, sizeIdx, sizeLabel, unitCents, imageFileId, batch }]
   const cartProducts = useMemo(() => {
     if (!cartItems || !products) return [];
     return Object.entries(cartItems)
-      .map(([key, qty]) => {
+      .map(([key, itemData]) => {
         const parsed = parseCartKey(key);
         if (!parsed) return null;
         const product = products.find((p) => p.slug === parsed.slug);
         if (!product) return null;
+
+        // Extract qty and batch from itemData (handle both legacy number and new object format)
+        const qty = typeof itemData === "number" ? itemData : (itemData?.qty ?? 0);
+        const batchData = typeof itemData === "object" ? itemData?.batch : null;
 
         const packaging = parsePackagingSizes(product.packaging_size);
         const sizeObj =
@@ -154,11 +158,12 @@ export function Header() {
         return {
           cartKey: key,
           product,
-          qty: Number(qty || 0),
+          qty,
           sizeIdx: typeof parsed.sizeIdx === "number" ? parsed.sizeIdx : null,
           sizeLabel: sizeObj?.size || null,
           unitCents,
           imageFileId,
+          batch: batchData, // NEW: pass batch data
         };
       })
       .filter(Boolean);
@@ -355,6 +360,7 @@ export function Header() {
                         sizeLabel={row.sizeLabel}
                         unitCents={row.unitCents}
                         imageFileId={row.imageFileId}
+                        batch={row.batch}
                       />
                     ))
                   )}
@@ -421,6 +427,7 @@ export function Header() {
                       sizeLabel={row.sizeLabel}
                       unitCents={row.unitCents}
                       imageFileId={row.imageFileId}
+                      batch={row.batch}
                     />
                   ))
                 )}

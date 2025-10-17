@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { Button, Input } from "../components";
-import { Star, Minus, Plus } from "lucide-react";
+import { Star, Minus, Plus, ChevronDown } from "lucide-react";
 import { getImageUrl } from "../../utils/getImageUrl";
 import {
   changeItemQuantity,
@@ -44,6 +44,34 @@ const discountPrice = (cents, discount) => {
 const CART_KEY_SEP = "::";
 const makeCartKey = (slug, sizeIdx) => `${slug}${CART_KEY_SEP}${sizeIdx}`;
 
+// NEW: Parse batches helper
+const parseBatches = (raw) => {
+  if (!raw) return [];
+  if (Array.isArray(raw)) {
+    return raw
+      .map((b) => ({
+        name: String(b?.name ?? "").trim(),
+        delivery_date: String(b?.delivery_date ?? "").trim(),
+      }))
+      .filter((b) => b.name || b.delivery_date);
+  }
+  if (typeof raw === "string" && raw.trim()) {
+    try {
+      const arr = JSON.parse(raw);
+      if (!Array.isArray(arr)) return [];
+      return arr
+        .map((b) => ({
+          name: String(b?.name ?? "").trim(),
+          delivery_date: String(b?.delivery_date ?? "").trim(),
+        }))
+        .filter((b) => b.name || b.delivery_date);
+    } catch {
+      return [];
+    }
+  }
+  return [];
+};
+
 function ProductDetails() {
   const { slug } = useParams();
   const products = useSelector((state) => state.products.items);
@@ -64,6 +92,11 @@ function ProductDetails() {
   const [userRating, setUserRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [submittingRating, setSubmittingRating] = useState(false);
+
+  // NEW: Batch state
+  const [selectedBatchIdx, setSelectedBatchIdx] = useState(0);
+  const [batchDropdownOpen, setBatchDropdownOpen] = useState(false);
+  const [batchWarning, setBatchWarning] = useState("");
 
   // Resolve product by slug (kept same)
   useEffect(() => {
@@ -108,6 +141,14 @@ function ProductDetails() {
   );
   const hasSizes = sizes.length > 0;
 
+  // NEW: Move batches useMemo here (before early returns)
+  const batches = useMemo(
+    () => (product ? parseBatches(product.batch) : []),
+    [product]
+  );
+  const hasBatches = batches.length > 0;
+  const selectedBatch = hasBatches ? batches[selectedBatchIdx] : null;
+
   const selectedSize = hasSizes
     ? sizes[Math.min(selectedSizeIdx, sizes.length - 1)]
     : null;
@@ -121,12 +162,22 @@ function ProductDetails() {
     );
   }, [product, selectedSizeIdx, sizes.length]);
 
-  const quantity = useMemo(() => {
-    if (!items) return 0;
-    const legacy = Number(items?.[product?.slug] || 0);
+  const cartItem = useMemo(() => {
+    if (!items || !product) return null;
+    const legacy = items?.[product.slug];
     if (!cartKeyForSelected) return legacy;
-    return Number(items?.[cartKeyForSelected] ?? legacy ?? 0);
-  }, [items, product?.slug, cartKeyForSelected]);
+    return items?.[cartKeyForSelected] ?? legacy;
+  }, [items, product, cartKeyForSelected]);
+
+  const quantity = useMemo(() => {
+    if (!cartItem) return 0;
+    return typeof cartItem === "number" ? cartItem : (cartItem?.qty ?? 0);
+  }, [cartItem]);
+
+  const cartBatch = useMemo(() => {
+    if (!cartItem || typeof cartItem !== "object") return null;
+    return cartItem?.batch || null;
+  }, [cartItem]);
 
   // Images for selected size
   const images = useMemo(() => {
@@ -146,8 +197,10 @@ function ProductDetails() {
       typeof selectedSize?.price_cents === "number"
         ? selectedSize.price_cents
         : undefined;
-    if (typeof centsFromSize === "number" && centsFromSize > 0) return centsFromSize;
-    const legacy = typeof product?.price_cents === "number" ? product.price_cents : 0;
+    if (typeof centsFromSize === "number" && centsFromSize > 0)
+      return centsFromSize;
+    const legacy =
+      typeof product?.price_cents === "number" ? product.price_cents : 0;
     return legacy;
   }, [selectedSize, product]);
 
@@ -160,6 +213,20 @@ function ProductDetails() {
   useEffect(() => {
     setActiveImageIdx(0);
   }, [selectedSizeIdx]);
+
+  // Check if product already exists in cart with different batch (across all sizes)
+  const getProductBatchInCart = useCallback(() => {
+    if (!items || !product) return null;
+    const allKeys = Object.keys(items);
+    for (const key of allKeys) {
+      if (key.startsWith(`${product.slug}${CART_KEY_SEP}`) || key === product.slug) {
+        const item = items[key];
+        const itemBatch = typeof item === "object" ? item?.batch : null;
+        if (itemBatch) return itemBatch;
+      }
+    }
+    return null;
+  }, [items, product]);
 
   const ensureLoggedInThen = (cb) => {
     if (!authStatus || authStatus === false) {
@@ -174,18 +241,42 @@ function ProductDetails() {
     ensureLoggedInThen(() => {
       const key = cartKeyForSelected || product.slug;
       const n = Math.max(0, Math.floor(Number(newQty) || 0));
-      dispatch(changeItemQuantity({ slug: key, qty: n }));
+      dispatch(changeItemQuantity({ slug: key, qty: n, batch: cartBatch || selectedBatch }));
     });
   };
 
   // Add/Remove for selected size
   const onAddToCartClick = () => {
+    setBatchWarning("");
+
     ensureLoggedInThen(() => {
       const key = cartKeyForSelected || product.slug;
+
+      // Require batch selection if product has batches
+      if (hasBatches && !selectedBatch && quantity === 0) {
+        setBatchWarning("Please select a batch before adding to cart");
+        return;
+      }
+
       if (quantity > 0) {
         dispatch(removeItemCompletely(key));
       } else {
-        dispatch(addItemOne(key));
+        // Check if product already in cart with different batch
+        const existingBatch = getProductBatchInCart();
+        if (existingBatch && selectedBatch) {
+          const isSameBatch =
+            existingBatch.name === selectedBatch.name &&
+            existingBatch.delivery_date === selectedBatch.delivery_date;
+          
+          if (!isSameBatch) {
+            setBatchWarning(
+              `This product is already in your cart with batch "${existingBatch.name}". Please remove existing items first or select the same batch.`
+            );
+            return;
+          }
+        }
+
+        dispatch(addItemOne(key, selectedBatch));
       }
     });
   };
@@ -233,6 +324,28 @@ function ProductDetails() {
     setActiveImageIdx(idx);
   }, []);
 
+  // Close batch dropdown on outside click
+  useEffect(() => {
+    if (!batchDropdownOpen) return;
+    const handleClick = (e) => {
+      if (!e.target.closest?.("[data-batch-dropdown-detail]")) {
+        setBatchDropdownOpen(false);
+      }
+    };
+    document.addEventListener("click", handleClick);
+    return () => document.removeEventListener("click", handleClick);
+  }, [batchDropdownOpen]);
+
+  // Close batch dropdown on Escape
+  useEffect(() => {
+    if (!batchDropdownOpen) return;
+    const onKey = (e) => {
+      if (e.key === "Escape") setBatchDropdownOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [batchDropdownOpen]);
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -264,7 +377,11 @@ function ProductDetails() {
           </div>
         </div>
       )}
-      <div className={`mx-auto max-w-7xl ${submittingRating ? "pointer-events-none" : ""}`}>
+      <div
+        className={`mx-auto max-w-7xl ${
+          submittingRating ? "pointer-events-none" : ""
+        }`}
+      >
         <div className="grid gap-8 md:grid-cols-2 lg:gap-16">
           {/* Image + Gallery */}
           <div className="flex flex-col items-center">
@@ -306,7 +423,9 @@ function ProductDetails() {
                           src={url}
                           alt={`${product.name} ${i + 1}`}
                           className="h-full w-full object-cover"
-                          onError={(e) => (e.currentTarget.src = "/placeholder.svg")}
+                          onError={(e) =>
+                            (e.currentTarget.src = "/placeholder.svg")
+                          }
                         />
                       </button>
                     );
@@ -407,9 +526,9 @@ function ProductDetails() {
                 <div className="flex flex-wrap gap-2">
                   {sizes.map((s, idx) => {
                     const selected = idx === selectedSizeIdx;
-                    // Quantity badge for this size from cart
                     const perSizeKey = makeCartKey(product.slug, idx);
-                    const perSizeQty = Number(items?.[perSizeKey] || 0);
+                    const perSizeItem = items?.[perSizeKey];
+                    const perSizeQty = typeof perSizeItem === "number" ? perSizeItem : (perSizeItem?.qty ?? 0);
                     return (
                       <button
                         key={`${s.size}-${idx}`}
@@ -419,7 +538,10 @@ function ProductDetails() {
                             ? "bg-[#2D2D1A] text-white border-[#2D2D1A]"
                             : "bg-white text-[#2D2D1A] border-[#2D2D1A] hover:bg-[#2D2D1A]/10"
                         }`}
-                        onClick={() => setSelectedSizeIdx(idx)}
+                        onClick={() => {
+                          setSelectedSizeIdx(idx);
+                          setBatchWarning("");
+                        }}
                         aria-pressed={selected}
                         title={`Select size ${s.size || idx + 1}`}
                       >
@@ -433,8 +555,100 @@ function ProductDetails() {
                     );
                   })}
                 </div>
+              </div>
+            )}
+
+            {/* NEW: Batch dropdown selector */}
+            {hasBatches && (
+              <div className="grid gap-2 relative" data-batch-dropdown-detail>
+                <h2 className="text-base font-semibold">
+                  Available Batches:
+                  {inCart && cartBatch && (
+                    <span className="ml-2 text-sm text-emerald-600 font-normal">
+                      (Selected: {cartBatch.name})
+                    </span>
+                  )}
+                </h2>
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!inCart) {
+                        setBatchDropdownOpen((prev) => !prev);
+                      }
+                    }}
+                    disabled={inCart}
+                    className={`w-full px-3 py-2.5 rounded-lg border-2 text-left transition text-sm flex items-center justify-between gap-2 ${
+                      inCart
+                        ? "bg-gray-100 border-gray-300 text-gray-500 cursor-not-allowed"
+                        : batchDropdownOpen
+                        ? "bg-[#E7CE9D] border-[#2D1D1A] text-[#2D1D1A]"
+                        : "bg-white border-[#2D1D1A]/20 text-[#2D1D1A] hover:border-[#2D1D1A]/40 hover:bg-[#E7CE9D]/10"
+                    }`}
+                  >
+                    <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+                      <span className="font-bold text-sm truncate">
+                        {inCart && cartBatch
+                          ? cartBatch.name || "Unnamed Batch"
+                          : selectedBatch?.name || "Select a batch"}
+                      </span>
+                      {((inCart && cartBatch?.delivery_date) || (!inCart && selectedBatch?.delivery_date)) && (
+                        <span className="text-xs opacity-75">
+                          Delivery by: {inCart ? cartBatch.delivery_date : selectedBatch.delivery_date}
+                        </span>
+                      )}
+                    </div>
+                    {!inCart && (
+                      <ChevronDown
+                        className={`w-5 h-5 shrink-0 transition-transform ${
+                          batchDropdownOpen ? "rotate-180" : ""
+                        }`}
+                      />
+                    )}
+                  </button>
+
+                  {batchDropdownOpen && !inCart && (
+                    <div className="absolute z-50 mt-2 left-0 right-0 bg-white border-2 border-[#2D1D1A]/20 rounded-lg shadow-xl max-h-64 overflow-y-auto">
+                      <div className="px-3 py-2 bg-[#E7CE9D]/20 border-b border-[#2D1D1A]/10 text-xs font-semibold text-[#2D1D1A]">
+                        Select a batch
+                      </div>
+                      {batches.map((b, idx) => (
+                        <button
+                          key={`batch-${idx}`}
+                          type="button"
+                          onClick={() => {
+                            setSelectedBatchIdx(idx);
+                            setBatchDropdownOpen(false);
+                            setBatchWarning("");
+                          }}
+                          className={`w-full px-3 py-2.5 text-left text-sm hover:bg-[#E7CE9D]/20 transition border-b border-[#E7CE9D]/20 last:border-0 ${
+                            idx === selectedBatchIdx ? "bg-[#E7CE9D]/30" : ""
+                          }`}
+                        >
+                          <div className="flex flex-col gap-0.5">
+                            <span className="font-bold text-[#2D1D1A]">
+                              {b.name || "Unnamed Batch"}
+                            </span>
+                            {b.delivery_date && (
+                              <span className="text-xs text-[#613D38] opacity-75">
+                                Delivery by: {b.delivery_date}
+                              </span>
+                            )}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {batchWarning && (
+                  <div className="text-sm text-red-600 font-medium bg-red-50 border border-red-200 rounded-md p-2">
+                    {batchWarning}
+                  </div>
+                )}
                 <p className="text-[12px] text-gray-500">
-                  Images and price update for the selected size.
+                  {inCart
+                    ? "Batch is locked once added to cart. Remove from cart to change batch."
+                    : "Choose your preferred batch for delivery."}
                 </p>
               </div>
             )}

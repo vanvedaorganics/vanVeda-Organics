@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { Star } from "lucide-react";
+import { Star, ChevronDown } from "lucide-react";
 import { cn } from "../../utils/lib";
 import { useSelector, useDispatch } from "react-redux";
 import { getImageUrl } from "../../utils/getImageUrl";
@@ -47,6 +47,34 @@ const currencyLabel = (currency = "INR") => (currency === "INR" ? "₹" : curren
 const CART_KEY_SEP = "::";
 const makeCartKey = (slug, sizeIdx) => `${slug}${CART_KEY_SEP}${sizeIdx}`;
 
+// NEW: Parse batches helper
+const parseBatches = (raw) => {
+  if (!raw) return [];
+  if (Array.isArray(raw)) {
+    return raw
+      .map((b) => ({
+        name: String(b?.name ?? "").trim(),
+        delivery_date: String(b?.delivery_date ?? "").trim(),
+      }))
+      .filter((b) => b.name || b.delivery_date);
+  }
+  if (typeof raw === "string" && raw.trim()) {
+    try {
+      const arr = JSON.parse(raw);
+      if (!Array.isArray(arr)) return [];
+      return arr
+        .map((b) => ({
+          name: String(b?.name ?? "").trim(),
+          delivery_date: String(b?.delivery_date ?? "").trim(),
+        }))
+        .filter((b) => b.name || b.delivery_date);
+    } catch {
+      return [];
+    }
+  }
+  return [];
+};
+
 const ProductCard = ({
   // New schema fields
   name,
@@ -58,6 +86,7 @@ const ProductCard = ({
   categories, // string id/slug or related object
   average_rating ,
   review_count,
+  batch, // NEW
 
   // Styling
   className,
@@ -109,22 +138,81 @@ const ProductCard = ({
 
   // Build cart key for active size
   const cartKey = makeCartKey(slug, activeIdx);
-  const quantity = Number(items?.[cartKey] ?? items?.[slug] ?? 0);
+  const cartItem = items?.[cartKey] || items?.[slug];
+  const quantity = typeof cartItem === "number" ? cartItem : (cartItem?.qty ?? 0);
+  const cartBatch = typeof cartItem === "object" ? cartItem?.batch : null;
   const inCart = quantity > 0;
+
+  // NEW: Batch state with dropdown control
+  const batches = useMemo(() => parseBatches(batch), [batch]);
+  const hasBatches = batches.length > 0;
+  const [selectedBatchIdx, setSelectedBatchIdx] = useState(0);
+  const [batchDropdownOpen, setBatchDropdownOpen] = useState(false);
+  const [batchWarning, setBatchWarning] = useState("");
+
+  // Close batch dropdown on outside click
+  React.useEffect(() => {
+    if (!batchDropdownOpen) return;
+    const handleClick = (e) => {
+      if (!e.target.closest?.("[data-batch-dropdown]")) {
+        setBatchDropdownOpen(false);
+      }
+    };
+    document.addEventListener("click", handleClick);
+    return () => document.removeEventListener("click", handleClick);
+  }, [batchDropdownOpen]);
+
+  const selectedBatch = hasBatches ? batches[selectedBatchIdx] : null;
+
+  // Check if product already exists in cart with different batch (across all sizes)
+  const getProductBatchInCart = () => {
+    const allKeys = Object.keys(items);
+    for (const key of allKeys) {
+      if (key.startsWith(`${slug}${CART_KEY_SEP}`) || key === slug) {
+        const item = items[key];
+        const itemBatch = typeof item === "object" ? item?.batch : null;
+        if (itemBatch) return itemBatch;
+      }
+    }
+    return null;
+  };
 
   const handleToggleCart = (e) => {
     stopNav(e);
+    setBatchWarning("");
+
+    // Require batch selection if product has batches
+    if (hasBatches && !selectedBatch) {
+      setBatchWarning("Please select a batch before adding to cart");
+      return;
+    }
+
     if (inCart) {
       dispatch(removeItemCompletely(cartKey));
     } else {
-      dispatch(addItemOne(cartKey));
+      // Check if product already in cart with different batch
+      const existingBatch = getProductBatchInCart();
+      if (existingBatch && selectedBatch) {
+        const isSameBatch =
+          existingBatch.name === selectedBatch.name &&
+          existingBatch.delivery_date === selectedBatch.delivery_date;
+        
+        if (!isSameBatch) {
+          setBatchWarning(
+            `This product is already in cart with batch "${existingBatch.name}". Please remove it first or select the same batch.`
+          );
+          return;
+        }
+      }
+
+      dispatch(addItemOne(cartKey, selectedBatch));
     }
   };
 
   const adjustQty = (e, delta) => {
     stopNav(e);
     const newQty = Math.max(0, quantity + delta);
-    dispatch(changeItemQuantity({ slug: cartKey, qty: newQty }));
+    dispatch(changeItemQuantity({ slug: cartKey, qty: newQty, batch: cartBatch || selectedBatch }));
   };
 
   return (
@@ -132,6 +220,8 @@ const ProductCard = ({
       to={`/products/${slug}`}
       className={cn(
         "group relative max-w-sm mx-auto overflow-hidden rounded-xl border border-[#E7CE9D]/40 bg-white text-[#2D1D1A] shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 flex flex-col",
+        // NEW: ensure dropdown can overflow parent when open
+        batchDropdownOpen && "overflow-visible",
         className
       )}
       aria-label={`View product ${name}`}
@@ -222,6 +312,90 @@ const ProductCard = ({
             </div>
           </div>
         )}
+
+        {/* NEW: Batch dropdown selector */}
+        {hasBatches && (
+          <div className="mt-3 relative z-10" data-batch-dropdown>
+            <div className="text-[10px] font-semibold text-[#2D1D1A] mb-1.5 uppercase tracking-wide">
+              Select Batch {inCart && cartBatch && (
+                <span className="text-emerald-600 normal-case">
+                  (Selected: {cartBatch.name})
+                </span>
+              )}
+            </div>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={(e) => {
+                  stopNav(e);
+                  if (!inCart) {
+                    setBatchDropdownOpen((prev) => !prev);
+                  }
+                }}
+                disabled={inCart}
+                className={cn(
+                  "w-full px-2 py-1.5 rounded-md border text-left transition text-xs flex items-center justify-between gap-1",
+                  inCart
+                    ? "bg-gray-100 border-gray-300 text-gray-500 cursor-not-allowed"
+                    : batchDropdownOpen
+                    ? "bg-[#E7CE9D] border-[#2D1D1A] text-[#2D1D1A]"
+                    : "bg-white border-[#E7CE9D]/60 text-[#613D38] hover:border-[#E7CE9D] hover:bg-[#E7CE9D]/10"
+                )}
+              >
+                <span className="font-semibold truncate">
+                  {inCart && cartBatch
+                    ? cartBatch.name || "Unnamed"
+                    : selectedBatch?.name || "Select a batch"}
+                </span>
+                {!inCart && (
+                  <ChevronDown
+                    className={`w-3 h-3 shrink-0 transition-transform ${
+                      batchDropdownOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                )}
+              </button>
+
+              {batchDropdownOpen && !inCart && (
+                <div className="absolute z-50 mt-1 left-0 right-0 bg-white border border-[#E7CE9D] rounded-md shadow-xl max-h-40 overflow-y-auto overflow-x-hidden">
+                  {batches.map((b, idx) => (
+                    <button
+                      key={`batch-${idx}`}
+                      type="button"
+                      onClick={(e) => {
+                        stopNav(e);
+                        setSelectedBatchIdx(idx);
+                        setBatchDropdownOpen(false);
+                        setBatchWarning("");
+                      }}
+                      className={cn(
+                        "w-full px-2 py-1.5 text-left text-xs hover:bg-[#E7CE9D]/20 transition",
+                        idx === selectedBatchIdx ? "bg-[#E7CE9D]/30" : ""
+                      )}
+                    >
+                      <div className="flex flex-col gap-0.5">
+                        <span className="font-semibold">{b.name || "Unnamed"}</span>
+                        {b.delivery_date && (
+                          <span className="text-[9px] opacity-75">
+                            Delivery: {b.delivery_date}
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            {batchWarning && (
+              <div className="mt-1 text-[10px] text-red-600 font-medium">
+                {batchWarning}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* NEW: Spacer to push cart actions to bottom */}
+        <div className="flex-1" />
 
         {/* Cart Actions */}
         <div className="mt-4 flex items-center gap-2">
