@@ -26,11 +26,12 @@ import ClientAuthLayout from "./components/ClientAuthLayout.jsx";
 import ClientSignup from "./pages/ClientSignup.jsx";
 import Profile from "./pages/Profile.jsx";
 import Blog from "./pages/Blog/Blog.jsx";
-import BlogDetail from "./pages/Blog/BlogDetail.jsx"
+import BlogDetail from "./pages/Blog/BlogDetail.jsx";
 import AboutUs from "./pages/AboutUs.jsx";
 import ContactUs from "./pages/ContactUs.jsx";
 import VanVedaPolicies from "./pages/VanVedaPolicies.jsx";
 import ShippingAndDeliveryPolicy from "./pages/ShippingAndDeliveryPolicy.jsx";
+import Checkout from "./pages/Checkout.jsx";
 
 initializeAppData();
 
@@ -75,7 +76,7 @@ const router = createBrowserRouter([
         path: "/profile",
         element: (
           <ClientAuthLayout>
-            <Profile/>
+            <Profile />
           </ClientAuthLayout>
         ),
       },
@@ -85,24 +86,32 @@ const router = createBrowserRouter([
       },
       {
         path: "/blog/:slug",
-        element: <BlogDetail />
+        element: <BlogDetail />,
       },
       {
         path: "/contact-us",
-        element: <ContactUs />
+        element: <ContactUs />,
       },
       {
         path: "/about-us",
-        element: <AboutUs />
+        element: <AboutUs />,
       },
       {
         path: "/vanveda-policies",
-        element: <VanVedaPolicies />
+        element: <VanVedaPolicies />,
       },
       {
         path: "/shipping-policy",
-        element: <ShippingAndDeliveryPolicy />
-      }
+        element: <ShippingAndDeliveryPolicy />,
+      },
+      {
+        path: "/checkout",
+        element: (
+          <ClientAuthLayout>
+            <Checkout />
+          </ClientAuthLayout>
+        ),
+      },
     ],
   },
   {

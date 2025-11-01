@@ -369,29 +369,36 @@ export class appwriteConfigService {
   }
 
   async createOrder({
-    userId,
+    user_id,
+    userName,
     items,
     shippingAddress,
-    totalCents,
+    total_cents,
     paymentStatus,
     fulfillmentStatus,
+    delivery_date,
     paymentMode,
   }) {
     try {
+      // Build payload without undefined fields to respect backend defaults
+      const payload = {
+        user_id,
+        userName,
+        items,
+        shippingAddress,
+        total_cents,
+      };
+      if (typeof delivery_date !== "undefined") payload.delivery_date = delivery_date;
+      if (typeof paymentMode !== "undefined") payload.paymentMode = paymentMode;
+      if (typeof paymentStatus !== "undefined") payload.paymentStatus = paymentStatus;
+      if (typeof fulfillmentStatus !== "undefined") payload.fulfillmentStatus = fulfillmentStatus;
+
       return await this.databases.createDocument(
         conf.appwriteDatabaseId,
         conf.appwriteOrdersCollection,
         ID.unique(),
-        {
-          orderNumber: ID.unique(),
-          userId,
-          items,
-          shippingAddress,
-          totalCents,
-          paymentStatus,
-          fulfillmentStatus,
-          paymentMode,
-        }
+        payload,
+        [Permission.read(Role.user(user_id))]
       );
     } catch (error) {
       console.log("Appwrite :: createOrder error ::", error);

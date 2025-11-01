@@ -18,7 +18,7 @@ function Footer() {
         <div className="space-y-4">
           <Link href="/" className="flex items-center gap-2 font-semibold">
             <img
-              src="/VanVedaFooterLogo.jpg"
+              src="/VanVedaHeaderLogo.png"
               alt="Van Veda Organics Logo"
               className="filter brightness-150 w-24 sm:w-28 md:w-32 lg:w-36 xl:w-40 h-auto object-contain transform scale-105 sm:scale-100 transition-transform duration-300"
             />
