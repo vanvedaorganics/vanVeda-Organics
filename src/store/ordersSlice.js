@@ -15,7 +15,13 @@ const ordersSlice = createSlice({
     },
     updateOrder: (state, action) => {
       const idx = state.items.findIndex((o) => o.$id === action.payload.$id);
-      if (idx !== -1) state.items[idx] = action.payload;
+      if (idx !== -1) {
+        // Merge with existing order to preserve user_id and other fields
+        state.items[idx] = {
+          ...state.items[idx],
+          ...action.payload,
+        };
+      }
     },
   },
   extraReducers: (builder) => {

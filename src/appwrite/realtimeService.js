@@ -53,13 +53,18 @@ export const initRealtimeSubscriptions = () => {
       `databases.${conf.appwriteDatabaseId}.collections.${collectionId}.documents`,
       (res) => {
         const handler = collectionHandlers[collectionId];
-        if (res.events.some((e) => e.includes(".create")))
+
+        if (res.events.some((e) => e.includes(".create"))) {
           handler.create?.(res.payload);
-        if (res.events.some((e) => e.includes(".update")))
+        }
+        if (res.events.some((e) => e.includes(".update"))) {
           handler.update?.(res.payload);
-        if (res.events.some((e) => e.includes(".delete")))
+        }
+        if (res.events.some((e) => e.includes(".delete"))) {
           handler.delete?.(res.payload.$id);
+        }
       }
     );
   });
+  console.log("[Realtime] Subscriptions initialized for collections:", Object.keys(collectionHandlers));
 };

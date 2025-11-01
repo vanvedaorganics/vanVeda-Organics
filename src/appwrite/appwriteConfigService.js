@@ -423,12 +423,11 @@ export class appwriteConfigService {
     }
   }
 
-  async listOrders(queries = []) {
+  async listOrders() {
     try {
       return await this.databases.listDocuments(
         conf.appwriteDatabaseId,
         conf.appwriteOrdersCollection,
-        queries
       );
     } catch (error) {
       console.log("Appwrite :: listOrders error ::", error);

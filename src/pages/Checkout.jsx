@@ -3,9 +3,25 @@ import { useDispatch, useSelector } from "react-redux";
 import { Button, Input } from "../components";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Wallet, CreditCard, Truck, User, MapPin, Package, CalendarDays, IndianRupee, AlertCircle, CheckCircle, X } from "lucide-react";
+import {
+  Wallet,
+  CreditCard,
+  Truck,
+  User,
+  MapPin,
+  Package,
+  CalendarDays,
+  IndianRupee,
+  AlertCircle,
+  CheckCircle,
+  X,
+} from "lucide-react";
 import appwriteService from "../appwrite/appwriteConfigService";
-import { selectCartItems, emptyUserCart, setEmptyCart } from "../store/cartsSlice";
+import {
+  selectCartItems,
+  emptyUserCart,
+  setEmptyCart,
+} from "../store/cartsSlice";
 
 // Helpers copied to keep in sync with cart structure
 const CART_KEY_SEP = "::";
@@ -75,7 +91,9 @@ const Toast = ({ message, type = "error", onClose }) => {
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: -20, scale: 0.9 }}
       className={`fixed top-4 right-4 z-[100] max-w-md w-full ${
-        type === "error" ? "bg-red-50 border-red-200" : "bg-green-50 border-green-200"
+        type === "error"
+          ? "bg-red-50 border-red-200"
+          : "bg-green-50 border-green-200"
       } border-2 rounded-xl shadow-xl p-4 flex items-start gap-3`}
     >
       {type === "error" ? (
@@ -84,16 +102,28 @@ const Toast = ({ message, type = "error", onClose }) => {
         <CheckCircle className="w-6 h-6 text-green-600 flex-shrink-0 mt-0.5" />
       )}
       <div className="flex-1">
-        <p className={`text-sm font-semibold ${type === "error" ? "text-red-900" : "text-green-900"}`}>
+        <p
+          className={`text-sm font-semibold ${
+            type === "error" ? "text-red-900" : "text-green-900"
+          }`}
+        >
           {type === "error" ? "Order Failed" : "Success"}
         </p>
-        <p className={`text-sm mt-1 ${type === "error" ? "text-red-700" : "text-green-700"}`}>
+        <p
+          className={`text-sm mt-1 ${
+            type === "error" ? "text-red-700" : "text-green-700"
+          }`}
+        >
           {message}
         </p>
       </div>
       <button
         onClick={onClose}
-        className={`flex-shrink-0 ${type === "error" ? "text-red-400 hover:text-red-600" : "text-green-400 hover:text-green-600"}`}
+        className={`flex-shrink-0 ${
+          type === "error"
+            ? "text-red-400 hover:text-red-600"
+            : "text-green-400 hover:text-green-600"
+        }`}
       >
         <X className="w-5 h-5" />
       </button>
@@ -107,27 +137,47 @@ const getUserFriendlyError = (error) => {
   const code = error?.code || error?.response?.code;
 
   // Network errors
-  if (message.includes("network") || message.includes("fetch") || code === "ECONNREFUSED") {
+  if (
+    message.includes("network") ||
+    message.includes("fetch") ||
+    code === "ECONNREFUSED"
+  ) {
     return "Unable to connect to the server. Please check your internet connection and try again.";
   }
 
   // Authentication errors
-  if (code === 401 || message.includes("unauthorized") || message.includes("not authenticated")) {
+  if (
+    code === 401 ||
+    message.includes("unauthorized") ||
+    message.includes("not authenticated")
+  ) {
     return "Your session has expired. Please log in again to continue.";
   }
 
   // Permission errors
-  if (code === 403 || message.includes("permission") || message.includes("forbidden")) {
+  if (
+    code === 403 ||
+    message.includes("permission") ||
+    message.includes("forbidden")
+  ) {
     return "You don't have permission to place this order. Please contact support.";
   }
 
   // Validation errors
-  if (code === 400 || message.includes("validation") || message.includes("invalid")) {
+  if (
+    code === 400 ||
+    message.includes("validation") ||
+    message.includes("invalid")
+  ) {
     return "Some information is missing or incorrect. Please check your details and try again.";
   }
 
   // Server errors
-  if (code >= 500 || message.includes("server error") || message.includes("internal")) {
+  if (
+    code >= 500 ||
+    message.includes("server error") ||
+    message.includes("internal")
+  ) {
     return "Our server is experiencing issues. Please try again in a few moments.";
   }
 
@@ -225,7 +275,8 @@ function Checkout() {
         const product = products.find((p) => p.slug === parsed.slug);
         if (!product) return null;
 
-        const qty = typeof itemData === "number" ? itemData : (itemData?.qty ?? 0);
+        const qty =
+          typeof itemData === "number" ? itemData : itemData?.qty ?? 0;
         if (!qty) return null;
 
         const packaging = parsePackagingSizes(product.packaging_size);
@@ -243,24 +294,17 @@ function Checkout() {
 
         const unitCents = discountPrice(baseCents, product.discount || 0);
 
-        const imageFileId =
-          Array.isArray(sizeObj?.images) && sizeObj.images.length > 0
-            ? sizeObj.images[0]
-            : null;
-
         return {
           cartKey: key,
           slug: product.slug,
           name: product.name,
-          currency: product.currency || "INR",
           discountPercent: product.discount || 0,
           qty,
-          sizeIdx: typeof parsed.sizeIdx === "number" ? parsed.sizeIdx : null,
           sizeLabel: sizeObj?.size || null,
           unitCents,
           baseCents,
-          imageFileId,
           batch: typeof itemData === "object" ? itemData?.batch : null,
+          categories: product?.categories || null, // reuse later
         };
       })
       .filter(Boolean);
@@ -327,17 +371,23 @@ function Checkout() {
 
       // Validate cart has items
       if (cartRows.length === 0) {
-        throw new Error("Your cart is empty. Please add items before placing an order.");
+        throw new Error(
+          "Your cart is empty. Please add items before placing an order."
+        );
       }
 
       // Validate profile exists
       if (!profile?.$id) {
-        throw new Error("Unable to load your profile. Please refresh and try again.");
+        throw new Error(
+          "Unable to load your profile. Please refresh and try again."
+        );
       }
 
       // Validate address
       if (!selectedAddress) {
-        throw new Error("Please select a shipping address before placing your order.");
+        throw new Error(
+          "Please select a shipping address before placing your order."
+        );
       }
 
       const addressValidation = [
@@ -349,34 +399,32 @@ function Checkout() {
 
       for (const { field, name } of addressValidation) {
         if (!String(field || "").trim()) {
-          throw new Error(`${name} is required. Please complete your shipping address.`);
+          throw new Error(
+            `${name} is required. Please complete your shipping address.`
+          );
         }
       }
 
       // Build items payload for order with new structure
-      const orderItems = cartRows.map((r) => {
-        const product = products.find((p) => p.slug === r.slug);
-
-        return {
-          slug: r.slug,
-          name: r.name,
-          packaging_size: {
-            sizeLabel: r.sizeLabel || null,
-            price_cents: r.baseCents, // base price before discount
-          },
-          qty: r.qty,
-          discount: r.discountPercent,
-          price_cents: r.unitCents, // discounted unit price
-          item_total_cents: r.unitCents * r.qty,
-          categories: product?.categories || null,
-          batch: r.batch
-            ? {
-                name: r.batch.name || "",
-                delivery_date: r.batch.delivery_date || "",
-              }
-            : null,
-        };
-      });
+      const orderItems = cartRows.map((r) => ({
+        slug: r.slug,
+        name: r.name,
+        packaging_size: {
+          sizeLabel: r.sizeLabel || null,
+          price_cents: r.baseCents, // base price before discount
+        },
+        qty: r.qty,
+        discount: r.discountPercent,
+        price_cents: r.unitCents, // discounted unit price
+        item_total_cents: r.unitCents * r.qty,
+        categories: r.categories || null, // reused, no extra find()
+        batch: r.batch
+          ? {
+              name: r.batch.name || "",
+              delivery_date: r.batch.delivery_date || "",
+            }
+          : null,
+      }));
 
       const itemsPayload = {
         items: orderItems,
@@ -387,11 +435,13 @@ function Checkout() {
         },
       };
 
-      // Determine payment mode
-      let paymentMode = "COD";
-      if (paymentChoice === "RAZORPAY") {
-        paymentMode = Math.random() < 0.5 ? "UPI" : "Card";
-      }
+      // Simplified payment mode selection
+      const paymentMode =
+        paymentChoice === "RAZORPAY"
+          ? Math.random() < 0.5
+            ? "UPI"
+            : "Card"
+          : "COD";
 
       const shippingAddress = JSON.stringify(selectedAddress);
 
@@ -407,16 +457,18 @@ function Checkout() {
       });
 
       // Success: empty cart and redirect
-      await dispatch(emptyUserCart());
-      await dispatch(setEmptyCart());
-      
-      // Show success message briefly before redirect
-      setError({ type: "success", message: "Order placed successfully! Redirecting to your profile..." });
-      
-      setTimeout(() => {
-        navigate("/profile");
-      }, 1500);
+      dispatch(emptyUserCart());
+      dispatch(setEmptyCart());
 
+      // Show success message briefly before redirect
+      setError({
+        type: "success",
+        message: "Order placed successfully! Redirecting to your profile...",
+      });
+
+      setTimeout(() => {
+        navigate("/profile/orders"); // CHANGED: go to Orders tab route
+      }, 1500);
     } catch (e) {
       console.error("Failed to place order", e);
       setError({ type: "error", message: getUserFriendlyError(e) });
@@ -470,7 +522,9 @@ function Checkout() {
               <div className="bg-white rounded-2xl shadow-lg p-6 space-y-4 border">
                 <div className="flex items-center gap-2">
                   <MapPin className="w-5 h-5 text-[#2D1D1A]" />
-                  <h2 className="text-xl font-bold text-[#201413]">Shipping Address</h2>
+                  <h2 className="text-xl font-bold text-[#201413]">
+                    Shipping Address
+                  </h2>
                 </div>
 
                 {addresses.length === 0 && !useNewAddress && (
@@ -480,7 +534,9 @@ function Checkout() {
                     className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-md p-3 flex items-center gap-2"
                   >
                     <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                    <span>No saved address found. Please add one to continue.</span>
+                    <span>
+                      No saved address found. Please add one to continue.
+                    </span>
                   </motion.div>
                 )}
 
@@ -510,8 +566,12 @@ function Checkout() {
                           }}
                         />
                         <div>
-                          <div className="font-semibold">{addr.residencyAddress}</div>
-                          {addr.landmark ? <div className="text-sm">{addr.landmark}</div> : null}
+                          <div className="font-semibold">
+                            {addr.residencyAddress}
+                          </div>
+                          {addr.landmark ? (
+                            <div className="text-sm">{addr.landmark}</div>
+                          ) : null}
                           <div className="text-sm">{addr.street}</div>
                           <div className="text-sm">
                             {addr.pincode}, {addr.city}, {addr.state}
@@ -550,7 +610,10 @@ function Checkout() {
                         className="text-sm font-semibold text-[#2D1D1A] bg-[#E7CE9D]/20 border border-[#2D1D1A]/20 rounded-md p-3 flex items-center gap-2"
                       >
                         <MapPin className="w-4 h-4 flex-shrink-0" />
-                        <span>All fields marked with * are required to place your order</span>
+                        <span>
+                          All fields marked with * are required to place your
+                          order
+                        </span>
                       </motion.div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <Input
@@ -558,7 +621,10 @@ function Checkout() {
                           placeholder="House/Flat, Building, Area"
                           value={newAddress.residencyAddress}
                           onChange={(e) =>
-                            setNewAddress((s) => ({ ...s, residencyAddress: e.target.value }))
+                            setNewAddress((s) => ({
+                              ...s,
+                              residencyAddress: e.target.value,
+                            }))
                           }
                           required
                         />
@@ -567,7 +633,10 @@ function Checkout() {
                           placeholder="Nearby landmark (optional)"
                           value={newAddress.landmark}
                           onChange={(e) =>
-                            setNewAddress((s) => ({ ...s, landmark: e.target.value }))
+                            setNewAddress((s) => ({
+                              ...s,
+                              landmark: e.target.value,
+                            }))
                           }
                         />
                         <Input
@@ -575,7 +644,10 @@ function Checkout() {
                           placeholder="Street / Locality"
                           value={newAddress.street}
                           onChange={(e) =>
-                            setNewAddress((s) => ({ ...s, street: e.target.value }))
+                            setNewAddress((s) => ({
+                              ...s,
+                              street: e.target.value,
+                            }))
                           }
                           required
                         />
@@ -584,7 +656,10 @@ function Checkout() {
                           placeholder="6-digit pincode"
                           value={newAddress.pincode}
                           onChange={(e) =>
-                            setNewAddress((s) => ({ ...s, pincode: e.target.value }))
+                            setNewAddress((s) => ({
+                              ...s,
+                              pincode: e.target.value,
+                            }))
                           }
                           required
                         />
@@ -592,7 +667,11 @@ function Checkout() {
                           label="City *"
                           placeholder="City"
                           value={newAddress.city}
-                          onChange={(e) => setNewAddress((s) => ({ ...s, city: e.target.value }))
+                          onChange={(e) =>
+                            setNewAddress((s) => ({
+                              ...s,
+                              city: e.target.value,
+                            }))
                           }
                           required
                         />
@@ -600,7 +679,11 @@ function Checkout() {
                           label="State *"
                           placeholder="State"
                           value={newAddress.state}
-                          onChange={(e) => setNewAddress((s) => ({ ...s, state: e.target.value }))
+                          onChange={(e) =>
+                            setNewAddress((s) => ({
+                              ...s,
+                              state: e.target.value,
+                            }))
                           }
                           required
                         />
@@ -629,7 +712,9 @@ function Checkout() {
                     <Wallet className="w-6 h-6 text-[#2D1D1A]" />
                     <div className="text-left">
                       <div className="font-semibold">Cash on Delivery</div>
-                      <div className="text-xs text-gray-600">Pay when the order arrives</div>
+                      <div className="text-xs text-gray-600">
+                        Pay when the order arrives
+                      </div>
                     </div>
                   </button>
 
@@ -644,7 +729,9 @@ function Checkout() {
                     <CreditCard className="w-6 h-6 text-[#2D1D1A]" />
                     <div className="text-left">
                       <div className="font-semibold">Razor Pay</div>
-                      <div className="text-xs text-gray-600">UPI/Card will be chosen at random</div>
+                      <div className="text-xs text-gray-600">
+                        UPI/Card will be chosen at random
+                      </div>
                     </div>
                   </button>
                 </div>
@@ -656,7 +743,9 @@ function Checkout() {
               <div className="bg-white rounded-2xl shadow-lg p-6 border">
                 <div className="flex items-center gap-2 mb-4">
                   <Package className="w-5 h-5 text-[#2D1D1A]" />
-                  <h2 className="text-xl font-bold text-[#201413]">Order Summary</h2>
+                  <h2 className="text-xl font-bold text-[#201413]">
+                    Order Summary
+                  </h2>
                 </div>
 
                 {/* Cart items (read-only) */}
@@ -669,15 +758,22 @@ function Checkout() {
                       <div className="flex flex-col">
                         <div className="font-semibold">{row.name}</div>
                         {row.sizeLabel && (
-                          <div className="text-xs text-gray-600">Size: {row.sizeLabel}</div>
+                          <div className="text-xs text-gray-600">
+                            Size: {row.sizeLabel}
+                          </div>
                         )}
-                        {row.batch && (row.batch.name || row.batch.delivery_date) ? (
+                        {row.batch &&
+                        (row.batch.name || row.batch.delivery_date) ? (
                           <div className="text-xs text-[#2D1D1A]">
                             Batch: {row.batch.name}
-                            {row.batch.delivery_date ? ` • Delivery: ${row.batch.delivery_date}` : ""}
+                            {row.batch.delivery_date
+                              ? ` • Delivery: ${row.batch.delivery_date}`
+                              : ""}
                           </div>
                         ) : null}
-                        <div className="text-xs text-gray-600">Qty: {row.qty}</div>
+                        <div className="text-xs text-gray-600">
+                          Qty: {row.qty}
+                        </div>
                       </div>
                       <div className="text-right">
                         <div className="text-sm text-[#2D1D1A] font-semibold">
@@ -736,7 +832,9 @@ function Checkout() {
                     className="text-xs text-red-600 mt-2 flex items-center gap-1"
                   >
                     <AlertCircle className="w-3 h-3" />
-                    <span>Please select or add a shipping address to continue.</span>
+                    <span>
+                      Please select or add a shipping address to continue.
+                    </span>
                   </motion.div>
                 )}
               </div>

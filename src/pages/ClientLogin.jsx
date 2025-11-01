@@ -5,6 +5,7 @@ import { Button, Input } from "../components";
 import appwriteAuthService from "../appwrite/authService";
 import { login } from "../store/authSlice";
 import { fetchCart } from "../store/cartsSlice";
+import { fetchUsers } from "../store/usersSlice"; // NEW: hydrate users slice post-login
 
 export default function ClientLogin() {
   const dispatch = useDispatch();
@@ -24,40 +25,45 @@ export default function ClientLogin() {
   }, []);
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  setError("");
-  setLoading(true);
+    e.preventDefault();
+    setError("");
+    setLoading(true);
 
-  try {
-    // 1️⃣ Login
-    const session = await appwriteAuthService.login({ email, password });
-
-    // 2️⃣ Get current user
-    const user = await appwriteAuthService.getUser();
-
-    // 3️⃣ Dispatch login to Redux
-    dispatch(login({ user, session }));
-
-    // 4️⃣ Fetch user's cart immediately
     try {
-      await dispatch(fetchCart()).unwrap(); // unwrap to catch errors
-    } catch (cartErr) {
-      console.error("Failed to fetch cart:", cartErr);
-      setError("Logged in but failed to fetch cart.");
+      // 1️⃣ Login
+      const session = await appwriteAuthService.login({ email, password });
+
+      // 2️⃣ Get current user
+      const user = await appwriteAuthService.getUser();
+
+      // 3️⃣ Dispatch login to Redux
+      dispatch(login({ user, session }));
+
+      // 4️⃣ Hydrate users slice ONLY after successful login
+      try {
+        await dispatch(fetchUsers()).unwrap();
+      } catch (uErr) {
+        console.error("[ClientLogin] Users hydration failed:", uErr);
+      }
+
+      // 5️⃣ Fetch user's cart
+      try {
+        await dispatch(fetchCart()).unwrap();
+      } catch (cartErr) {
+        console.error("Failed to fetch cart:", cartErr);
+        setError("Logged in but failed to fetch cart.");
+      }
+
+      console.log("[ClientLogin] Success:", user);
+      // Optional: navigate after login (left unchanged)
+
+    } catch (err) {
+      console.error("[ClientLogin] Error:", err);
+      setError(err.message || "Login failed. Please try again.");
+    } finally {
+      setLoading(false); // spinner stops only after both login & cart fetch
     }
-
-    console.log("[ClientLogin] Success:", user);
-
-    // 5️⃣ Optional: navigate to home/dashboard
-    // navigate("/"); // Uncomment if you want automatic navigation
-
-  } catch (err) {
-    console.error("[ClientLogin] Error:", err);
-    setError(err.message || "Login failed. Please try again.");
-  } finally {
-    setLoading(false); // spinner stops only after both login & cart fetch
-  }
-};
+  };
 
 
   return (

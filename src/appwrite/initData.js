@@ -9,8 +9,6 @@ import { initRealtimeSubscriptions } from "./realtimeService.js";
 
 export const initializeAppData = async () => {
   try {
-    console.log("[Init] Fetching initial data...");
-
     // Dispatch initial fetches
     await Promise.all([
       store.dispatch(fetchProducts()),
@@ -20,11 +18,8 @@ export const initializeAppData = async () => {
       store.dispatch(fetchUsers()),
     ]);
 
-    console.log("[Init] Initial data loaded.");
-
     // Start realtime listeners
     initRealtimeSubscriptions();
-    console.log("[Init] Realtime subscriptions started.");
   } catch (error) {
     console.error("[Init] Error initializing app data:", error);
   }
