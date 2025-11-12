@@ -257,6 +257,86 @@ export class appwriteConfigService {
     }
   }
 
+  async createSubscription({
+    user_id,
+    product_id,
+    packaging_size,
+    quantity,
+    interval,
+    shippingAddress,
+  }) {
+    const now = new Date();
+    const nextOrderAt = new Date(now);
+
+    if (interval === "monthly")
+      nextOrderAt.setMonth(nextOrderAt.getMonth() + 1);
+    else nextOrderAt.setDate(nextOrderAt.getDate() + 7);
+
+    const payload = {
+      user_id,
+      product_id,
+      packaging_size,
+      quantity,
+      interval,
+      status: "active",
+      nextOrderAt: nextOrderAt.toISOString(),
+      startedAt: now.toISOString(),
+      shippingAddress,
+    };
+
+    try {
+      return await this.databases.createDocument(
+        conf.appwriteDatabaseId,
+        conf.appwriteSubscriptionCollection,
+        ID.unique(),
+        payload,
+        [
+          Permission.read(Role.user(user_id)),
+          Permission.update(Role.user(user_id)),
+          Permission.delete(Role.user(user_id)),
+        ]
+      );
+    } catch (error) {
+      console.log("Appwrite :: createSubscription error ::", error);
+      throw error;
+    }
+  }
+
+  /**
+   * List subscriptions with optional filters.
+   * Accepts: { user_id, product_id, packaging_size, interval, queries }
+   * Returns array of subscription documents
+   */
+  async listSubscriptions({
+    user_id,
+    product_id,
+    packaging_size,
+    interval,
+    queries = [],
+  } = {}) {
+    try {
+      const q = Array.isArray(queries) ? [...queries] : [];
+      if (typeof user_id !== "undefined")
+        q.push(Query.equal("user_id", user_id));
+      if (typeof product_id !== "undefined")
+        q.push(Query.equal("product_id", product_id));
+      if (typeof packaging_size !== "undefined")
+        q.push(Query.equal("packaging_size", packaging_size));
+      if (typeof interval !== "undefined")
+        q.push(Query.equal("interval", interval));
+
+      const res = await this.databases.listDocuments(
+        conf.appwriteDatabaseId,
+        conf.appwriteSubscriptionCollection,
+        q
+      );
+      return res.documents || [];
+    } catch (error) {
+      console.log("Appwrite :: listSubscriptions error ::", error);
+      throw error;
+    }
+  }
+
   async updateProductDiscount(productId, discount) {
     try {
       return await this.databases.updateDocument(
@@ -388,10 +468,13 @@ export class appwriteConfigService {
         shippingAddress,
         total_cents,
       };
-      if (typeof delivery_date !== "undefined") payload.delivery_date = delivery_date;
+      if (typeof delivery_date !== "undefined")
+        payload.delivery_date = delivery_date;
       if (typeof paymentMode !== "undefined") payload.paymentMode = paymentMode;
-      if (typeof paymentStatus !== "undefined") payload.paymentStatus = paymentStatus;
-      if (typeof fulfillmentStatus !== "undefined") payload.fulfillmentStatus = fulfillmentStatus;
+      if (typeof paymentStatus !== "undefined")
+        payload.paymentStatus = paymentStatus;
+      if (typeof fulfillmentStatus !== "undefined")
+        payload.fulfillmentStatus = fulfillmentStatus;
 
       return await this.databases.createDocument(
         conf.appwriteDatabaseId,
@@ -427,7 +510,7 @@ export class appwriteConfigService {
     try {
       return await this.databases.listDocuments(
         conf.appwriteDatabaseId,
-        conf.appwriteOrdersCollection,
+        conf.appwriteOrdersCollection
       );
     } catch (error) {
       console.log("Appwrite :: listOrders error ::", error);

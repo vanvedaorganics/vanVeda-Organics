@@ -44,6 +44,7 @@ function Profile() {
   // Use Redux orders directly (with realtime updates)
   const allOrders = useSelector((state) => state.orders.items);
   const ordersLoading = useSelector((state) => state.orders.loading);
+  const products = useSelector((state) => state.products.items);
 
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -54,6 +55,8 @@ function Profile() {
   const [error, setError] = useState("");
   const [pendingEmail, setPendingEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [subscriptions, setSubscriptions] = useState([]);
+  const [subsLoading, setSubsLoading] = useState(false);
 
   // Local filtered state for orders (triggers re-render on Redux changes)
   const [currentOrders, setCurrentOrders] = useState([]);
@@ -66,8 +69,12 @@ function Profile() {
     formState: { errors },
   } = useForm();
 
-  // Derive active tab from route
-  const initialTab = location.pathname.endsWith("/orders") ? "orders" : "profile";
+  // Derive active tab from route (support /profile/subscriptions)
+  const initialTab = location.pathname.endsWith("/orders")
+    ? "orders"
+    : location.pathname.endsWith("/subscriptions")
+    ? "subscriptions"
+    : "profile";
   const [activeTab, setActiveTab] = useState(initialTab);
 
   // Scroll to top on mount
@@ -129,6 +136,43 @@ function Profile() {
     setCurrentOrders(current);
     setPastOrders(past);
   }, [allOrders, authUser]); // Re-run whenever allOrders or authUser changes
+
+  // Fetch subscriptions when profile available
+  useEffect(() => {
+    let active = true;
+    const loadSubs = async () => {
+      if (!profile) {
+        setSubscriptions([]);
+        return;
+      }
+      setSubsLoading(true);
+      try {
+        const docs = await appwriteConfigService.listSubscriptions({ user_id: profile.$id });
+        if (!active) return;
+        // parse shippingAddress & packaging_size for rendering
+        const parsed = (docs || []).map((d) => {
+          let pack = d.packaging_size;
+          try {
+            pack = typeof pack === "string" ? JSON.parse(pack) : pack;
+          } catch { pack = { sizeLabel: "", price_cents: 0 }; }
+          let ship = d.shippingAddress;
+          try {
+            ship = typeof ship === "string" ? JSON.parse(ship) : ship;
+          } catch { ship = null; }
+          return { ...d, parsedPackaging: pack, parsedShipping: ship };
+        });
+        setSubscriptions(parsed);
+      } catch (err) {
+        console.error("Failed to load subscriptions", err);
+      } finally {
+        if (active) setSubsLoading(false);
+      }
+    };
+    loadSubs();
+    return () => {
+      active = false;
+    };
+  }, [profile]);
 
   const openModal = () => {
     reset({
@@ -306,6 +350,16 @@ function Profile() {
           >
             Orders
           </button>
+          <button
+            onClick={() => { setActiveTab("subscriptions"); navigate("/profile/subscriptions"); }}
+            className={`px-4 py-2 text-sm md:text-base font-semibold transition ${
+              activeTab === "subscriptions"
+                ? "text-[#2D1D1A] border-b-2 border-[#2D1D1A]"
+                : "text-gray-600 hover:text-[#2D1D1A]"
+            }`}
+          >
+            Subscriptions
+          </button>
         </div>
 
         {/* Error Banner */}
@@ -362,6 +416,76 @@ function Profile() {
                   Edit Profile
                 </Button>
               </div>
+            </motion.div>
+          ) : activeTab === "subscriptions" ? (
+            <motion.div
+              key="tab-subscriptions"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              className="mt-6"
+            >
+              <h3 className="syne-bold text-xl mb-3 text-[#201413]">Your Subscriptions</h3>
+              {subsLoading ? (
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-green-700"></div>
+                </div>
+              ) : subscriptions.length === 0 ? (
+                <p className="text-sm text-[#613D38]">No active subscriptions.</p>
+              ) : (
+                <div className="space-y-4">
+                  {subscriptions.map((s) => {
+                    // Find product name
+                    const product = products?.find((p) => p.slug === s.product_id);
+                    const productName = product?.name || s.product_id;
+                    const priceCents = Number(s.parsedPackaging?.price_cents || 0);
+
+                    return (
+                      <div key={s.$id} className="border rounded-xl p-4 bg-white shadow-sm">
+                        <div className="flex justify-between items-start gap-4">
+                          <div>
+                            <div className="text-sm text-[#613D38]">Product:
+                              <span className="font-semibold text-[#2D1D1A] ml-2">{productName}</span>
+                            </div>
+                            <div className="text-sm text-[#613D38] mt-1">Size:
+                              <span className="font-semibold ml-2">{s.parsedPackaging?.sizeLabel || "-"}</span>
+                            </div>
+                            <div className="text-sm text-[#613D38] mt-1">Quantity:
+                              <span className="font-semibold ml-2">{s.quantity}</span>
+                            </div>
+                            <div className="text-sm text-[#613D38] mt-1">Interval:
+                              <span className="font-semibold ml-2">{s.interval}</span>
+                            </div>
+                          </div>
+
+                          <div className="text-right">
+                            <div className="text-xs text-gray-500">Price</div>
+                            <div className="font-semibold text-lg">{formatINR(priceCents)}</div>
+                            <div className="text-xs text-gray-500 mt-3">Status</div>
+                            <div className="font-semibold">{s.status}</div>
+                          </div>
+                        </div>
+
+                        <div className="mt-3 text-sm text-[#2D1D1A] bg-white p-3 rounded">
+                          <div className="text-xs text-gray-500">Next Order</div>
+                          <div className="font-medium">{s.nextOrderAt ? new Date(s.nextOrderAt).toLocaleString() : "-"}</div>
+                          <div className="mt-2 text-xs text-gray-500">Shipping Address</div>
+                          {s.parsedShipping ? (
+                            <div className="mt-1 text-sm">
+                              <div>{s.parsedShipping.residencyAddress}</div>
+                              {s.parsedShipping.landmark && <div>{s.parsedShipping.landmark}</div>}
+                              <div>{s.parsedShipping.street}</div>
+                              <div>{s.parsedShipping.pincode}, {s.parsedShipping.city}, {s.parsedShipping.state}</div>
+                            </div>
+                          ) : (
+                            <div className="text-sm text-gray-500">No address</div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </motion.div>
           ) : (
             <motion.div

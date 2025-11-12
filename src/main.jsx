@@ -89,6 +89,14 @@ const router = createBrowserRouter([
         ),
       },
       {
+        path: "/profile/subscriptions", // NEW: Orders tab route (no params)
+        element: (
+          <ClientAuthLayout>
+            <Profile />
+          </ClientAuthLayout>
+        ),
+      },
+      {
         path: "/blog",
         element: <Blog />,
       },

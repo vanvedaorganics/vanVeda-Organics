@@ -12,6 +12,8 @@ import {
   selectCartItems,
 } from "../store/cartsSlice";
 import appwriteService from "../appwrite/appwriteConfigService";
+import { Query } from "appwrite"; // used for advanced queries (optional)
+import { motion } from "framer-motion";
 
 // Helpers for new schema
 const parsePackagingSizes = (raw = []) => {
@@ -97,6 +99,41 @@ function ProductDetails() {
   const [selectedBatchIdx, setSelectedBatchIdx] = useState(0);
   const [batchDropdownOpen, setBatchDropdownOpen] = useState(false);
   const [batchWarning, setBatchWarning] = useState("");
+
+  // Users / addresses (for shipping address options)
+  const users = useSelector((state) => state.users.items);
+  const profileFromStore = useMemo(() => {
+    const uid = userData?.$id || userData?.user_id || userData?.id;
+    if (!uid || !Array.isArray(users)) return null;
+    return users.find((u) => u.$id === uid) || null;
+  }, [users, userData]);
+
+  // parse address helper (local)
+  const parseAddressArray = (addressArray) => {
+    if (!Array.isArray(addressArray) || addressArray.length === 0) return [];
+    return addressArray
+      .map((addr) => {
+        try {
+          return JSON.parse(addr);
+        } catch {
+          return null;
+        }
+      })
+      .filter(Boolean);
+  };
+
+  const profileAddresses = useMemo(() => {
+    if (profileFromStore) return parseAddressArray(profileFromStore.address);
+    return [];
+  }, [profileFromStore]);
+
+  // Subscription form state
+  const [subQuantity, setSubQuantity] = useState(1);
+  const [subInterval, setSubInterval] = useState("monthly"); // monthly | weekly
+  const [subAddressIdx, setSubAddressIdx] = useState(0);
+  const [subLoading, setSubLoading] = useState(false);
+  const [subError, setSubError] = useState("");
+  const [showSubSuccess, setShowSubSuccess] = useState(false);
 
   // Scroll to top on mount
   useEffect(() => {
@@ -351,6 +388,91 @@ function ProductDetails() {
     return () => window.removeEventListener("keydown", onKey);
   }, [batchDropdownOpen]);
 
+  // Reset subscription address when profile addresses change
+  useEffect(() => {
+    setSubAddressIdx(0);
+  }, [profileAddresses.length]);
+
+  const handleSubscribe = async () => {
+    setSubError("");
+    ensureLoggedInThen(async () => {
+      try {
+        if (!product) return;
+        if (!selectedSize) {
+          setSubError("Please select a packaging size.");
+          return;
+        }
+        const quantity = Math.max(1, Math.floor(Number(subQuantity) || 1));
+        if (quantity <= 0) {
+          setSubError("Quantity must be at least 1.");
+          return;
+        }
+        if (!profileAddresses || profileAddresses.length === 0) {
+          setSubError("No shipping address found. Add an address in your profile.");
+          return;
+        }
+        const addressObj = profileAddresses[subAddressIdx];
+        if (!addressObj) {
+          setSubError("Please select a valid shipping address.");
+          return;
+        }
+
+        // stringify packaging_size as required (store sizeLabel + price_cents)
+        const packagingObj = {
+          sizeLabel: selectedSize.size || "",
+          price_cents: typeof selectedSize.price_cents === "number" ? selectedSize.price_cents : 0,
+        };
+        const packaging_str = JSON.stringify(packagingObj);
+
+        // stringify selected address
+        const shippingAddressStr = JSON.stringify(addressObj);
+
+        setSubLoading(true);
+
+        // Prevent duplicate subscription: query for exact match
+        const existing = await appwriteService.listSubscriptions({
+          user_id: userData?.$id,
+          product_id: product.slug,
+          packaging_size: packaging_str,
+          interval: subInterval,
+        });
+
+        if (Array.isArray(existing) && existing.length > 0) {
+          setSubError("A subscription with same product, size and interval already exists.");
+          setSubLoading(false);
+          return;
+        }
+
+        // Create subscription
+        await appwriteService.createSubscription({
+          user_id: userData?.$id,
+          product_id: product.slug,
+          packaging_size: packaging_str,
+          quantity,
+          interval: subInterval,
+          shippingAddress: shippingAddressStr,
+        });
+
+        setShowSubSuccess(true);
+        // small delay then redirect to profile subscriptions tab
+        setTimeout(() => {
+          navigate("/profile/subscriptions");
+        }, 1100);
+      } catch (err) {
+        console.error("Subscription failed", err);
+        setSubError(err?.message || "Failed to create subscription.");
+      } finally {
+        setSubLoading(false);
+      }
+    });
+  };
+
+  // Replace the previous Success Modal behavior so redirect only happens on OK click
+  const handleSubSuccessOk = () => {
+    setShowSubSuccess(false);
+    navigate("/profile/subscriptions");
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -395,11 +517,14 @@ function ProductDetails() {
               <img
                 src={mainImageUrl}
                 alt={product.name}
-                className="w-full h-full object-cover transform transition-transform duration-300 hover:scale-105"
+                loading="lazy"
+                role="img"
+                aria-label={product.name}
+                className="w-full h-full object-cover transform transition-transform duration-350 hover:scale-105 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-300"
                 onError={(e) => (e.currentTarget.src = "/placeholder.svg")}
               />
               {hasDiscount && (
-                <div className="absolute top-2 left-2 bg-red-600 text-white px-2 py-1 rounded-full text-[10px] font-semibold">
+                <div className="absolute top-3 left-3 bg-gradient-to-br from-red-600 to-red-500 text-white px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm">
                   {product.discount}% OFF
                 </div>
               )}
@@ -416,13 +541,21 @@ function ProductDetails() {
                       <button
                         type="button"
                         key={fid + i}
-                        className={`relative h-20 rounded overflow-hidden border ${
+                        className={`relative h-20 rounded overflow-hidden border transition-transform duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 ${
                           isActive
-                            ? "ring-2 ring-emerald-600 border-transparent"
+                            ? "ring-2 ring-emerald-600 border-transparent scale-105"
                             : "border-gray-200 hover:border-emerald-300"
                         }`}
                         onClick={() => onThumbClick(i)}
-                        title="View image"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            onThumbClick(i);
+                          }
+                        }}
+                        aria-pressed={isActive}
+                        aria-label={`View image ${i + 1}`}
+                        title={`View image ${i + 1}`}
                       >
                         <img
                           src={url}
@@ -438,6 +571,217 @@ function ProductDetails() {
                 </div>
               </div>
             )}
+
+            <div className="w-full max-w-md mt-6 md:mt-8">
+              <motion.div
+                className="w-full bg-white border rounded-xl p-6 shadow-md"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <h3 className="text-lg font-semibold syne-bold mb-2 tracking-tight">
+                  Subscribe & Save
+                </h3>
+                <p className="text-sm text-gray-600 mb-4 leading-relaxed">
+                  Subscribe for recurring deliveries and never run out. Choose size,
+                  quantity, interval and shipping address.
+                </p>
+
+                {/* Selected size summary */}
+                <div className="mb-3">
+                  <div className="text-sm font-semibold">Packaging</div>
+                  <div className="mt-1 text-sm text-[#2D1D1A]">
+                    {selectedSize ? (
+                      <>
+                        <span className="font-medium">
+                          {selectedSize.size || "Default size"}
+                        </span>
+                        <span className="ml-2 text-gray-600">
+                          • ₹{((selectedSize.price_cents || baseCents) / 100).toFixed(2)}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-gray-500">No packaging selected</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Quantity + Interval */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
+                  <div>
+                    <label className="text-xs font-semibold text-gray-700 block mb-1">
+                      Quantity
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        aria-label="Decrease subscription quantity"
+                        title="Decrease"
+                        onClick={() => setSubQuantity(Math.max(1, Number(subQuantity) - 1))}
+                        className="hover:bg-gray-100"
+                      >
+                        <Minus className="h-4 w-4" />
+                      </Button>
+                      <Input
+                        type="number"
+                        min={1}
+                        value={subQuantity}
+                        aria-label="Subscription quantity"
+                        onChange={(e) => setSubQuantity(Math.max(1, Number(e.target.value || 1)))}
+                        className="w-24 text-center"
+                      />
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        aria-label="Increase subscription quantity"
+                        title="Increase"
+                        onClick={() => setSubQuantity(Number(subQuantity) + 1)}
+                        className="hover:bg-gray-100"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="text-xs font-semibold text-gray-700 block mb-1">
+                      Interval
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setSubInterval("monthly")}
+                        className={`px-3 py-2 rounded-xl border-2 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 ${
+                          subInterval === "monthly"
+                            ? "bg-[#2D1D1A] text-white border-[#2D1D1A] shadow-md"
+                            : "bg-white text-[#2D1D1A] border-[#2D1D1A]/20 hover:border-[#2D1D1A]/40"
+                        }`}
+                        aria-pressed={subInterval === "monthly"}
+                        title="Monthly subscription"
+                      >
+                        Monthly
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSubInterval("weekly")}
+                        className={`px-3 py-2 rounded-xl border-2 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 ${
+                          subInterval === "weekly"
+                            ? "bg-[#2D1D1A] text-white border-[#2D1D1A] shadow-md"
+                            : "bg-white text-[#2D1D1A] border-[#2D1D1A]/20 hover:border-[#2D1D1A]/40"
+                        }`}
+                        aria-pressed={subInterval === "weekly"}
+                        title="Weekly subscription"
+                      >
+                        Weekly
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Shipping address selector */}
+                <div className="mt-4">
+                  <label className="text-xs font-semibold text-gray-700 block mb-1">
+                    Shipping Address
+                  </label>
+                  {profileAddresses.length > 0 ? (
+                    <select
+                      value={subAddressIdx}
+                      onChange={(e) => setSubAddressIdx(Number(e.target.value))}
+                      className="w-full rounded-lg border p-2 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
+                      aria-label="Select shipping address"
+                    >
+                      {profileAddresses.map((a, i) => (
+                        <option key={i} value={i}>
+                          {a.residencyAddress} • {a.city} {a.pincode}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <div className="text-sm text-[#613D38]">
+                      No saved addresses.{" "}
+                      <a
+                        href="/profile"
+                        className="text-[#69A72A] underline"
+                      >
+                        Add address in profile
+                      </a>
+                    </div>
+                  )}
+                </div>
+
+                {/* Error */}
+                {subError && (
+                  <div className="text-sm text-red-600 mt-3 p-2 bg-red-50 rounded">
+                    {subError}
+                  </div>
+                )}
+
+                {/* Actions */}
+                <div className="flex gap-3 mt-4">
+                  <motion.div whileTap={{ scale: 0.98 }} className="flex-1">
+                    <Button
+                      onClick={handleSubscribe}
+                      size="lg"
+                      className="w-full rounded-xl bg-[#2D1D1A] text-white shadow-md hover:bg-[#2D1D1A]/90 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+                      disabled={subLoading}
+                      aria-disabled={subLoading}
+                    >
+                      {subLoading ? "Subscribing..." : "Subscribe"}
+                    </Button>
+                  </motion.div>
+
+                  <div className="flex-1">
+                    <Button
+                      variant="outline"
+                      className="w-full rounded-xl border-[#2D1D1A] hover:bg-[#e7ce9d] hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
+                      onClick={() => {
+                        // quick preview: show subscription summary modal (optional)
+                        setShowSubSuccess(false);
+                        setSubError("");
+                      }}
+                    >
+                      Learn More
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Success Modal (OK button required to redirect) */}
+                {showSubSuccess && (
+                  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+                    <motion.div
+                      role="dialog"
+                      aria-modal="true"
+                      aria-labelledby="sub-success-title"
+                      className="bg-white rounded-xl p-6 max-w-sm text-center shadow-lg"
+                      initial={{ scale: 0.98, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                    >
+                      <h3 id="sub-success-title" className="text-lg font-semibold">
+                        Subscription Created
+                      </h3>
+                      <p className="mt-2 text-sm text-gray-600">
+                        Your subscription has been created successfully.
+                      </p>
+                      <div className="mt-4 flex gap-3 justify-center">
+                        <Button
+                          variant="outline"
+                          onClick={() => setShowSubSuccess(false)}
+                          className="rounded-xl px-4 py-2"
+                        >
+                          Close
+                        </Button>
+                        <Button
+                          onClick={handleSubSuccessOk}
+                          className="rounded-xl bg-[#2D1D1A] text-white px-4 py-2"
+                        >
+                          OK
+                        </Button>
+                      </div>
+                    </motion.div>
+                  </div>
+                )}
+              </motion.div>
+            </div>
           </div>
 
           {/* Details */}
@@ -480,11 +824,9 @@ function ProductDetails() {
                   Your Rating
                 </div>
                 <div
-                  className={`flex items-center gap-2 p-2 rounded-md border border-[#2D1D1A]/20 bg-white/70 ${
-                    submittingRating ? "opacity-60 pointer-events-none" : ""
-                  }`}
+                  className={`flex items-center gap-2 p-2 rounded-md border border-[#2D1D1A]/20 bg-white/70 ${submittingRating ? "opacity-60 pointer-events-none" : ""}`}
                 >
-                  <div className="flex items-center">
+                  <div className="flex items-center" role="radiogroup" aria-label="Rate this product">
                     {[1, 2, 3, 4, 5].map((val) => {
                       const active = (hoverRating || userRating) >= val;
                       return (
@@ -492,7 +834,9 @@ function ProductDetails() {
                           key={val}
                           type="button"
                           aria-label={`Rate ${val} star${val > 1 ? "s" : ""}`}
-                          className="p-1"
+                          role="radio"
+                          aria-checked={userRating === val}
+                          className="p-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 rounded"
                           onMouseEnter={() => setHoverRating(val)}
                           onMouseLeave={() => setHoverRating(0)}
                           onFocus={() => setHoverRating(val)}
@@ -505,17 +849,13 @@ function ProductDetails() {
                           }
                         >
                           <Star
-                            className={`h-6 w-6 transition ${
-                              active
-                                ? "fill-[#2D1D1A] text-[#2D1D1A]"
-                                : "fill-gray-200 stroke-gray-400 hover:fill-[#E7CE9D] hover:stroke-[#2D1D1A]"
-                            }`}
+                            className={`h-6 w-6 transition ${active ? "fill-[#2D1D1A] text-[#2D1D1A]" : "fill-gray-200 stroke-gray-400 hover:fill-[#E7CE9D] hover:stroke-[#2D1D1A]" }`}
                           />
                         </button>
                       );
                     })}
                   </div>
-                  <div className="text-[12px] text-gray-600">
+                  <div className="text-[12px] text-gray-600" aria-live="polite">
                     {userRating > 0
                       ? `You rated ${userRating}/5`
                       : "Tap a star to rate"}
@@ -538,10 +878,10 @@ function ProductDetails() {
                       <button
                         key={`${s.size}-${idx}`}
                         type="button"
-                        className={`relative px-3 py-1.5 rounded border-2 text-sm font-bold transition ${
+                        className={`relative px-3 py-1.5 rounded border-2 text-sm font-bold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 transform ${
                           selected
-                            ? "bg-[#2D2D1A] text-white border-[#2D2D1A]"
-                            : "bg-white text-[#2D2D1A] border-[#2D2D1A] hover:bg-[#2D2D1A]/10"
+                            ? "bg-[#2D1D1A] text-white border-[#2D1D1A] shadow-sm scale-105"
+                            : "bg-white text-[#2D1D1A] border-[#2D1D1A] hover:bg-[#2D1D1A]/6"
                         }`}
                         onClick={() => {
                           setSelectedSizeIdx(idx);
@@ -550,7 +890,7 @@ function ProductDetails() {
                         aria-pressed={selected}
                         title={`Select size ${s.size || idx + 1}`}
                       >
-                        {s.size || `Size ${idx + 1}`}
+                        <span className="truncate max-w-[120px] inline-block align-middle">{s.size || `Size ${idx + 1}`}</span>
                         {perSizeQty > 0 && (
                           <span className="absolute -top-2 -right-2 h-5 min-w-[20px] px-1 rounded-full bg-[#E7CE9D] text-[#2D1D1A] text-[11px] flex items-center justify-center">
                             {perSizeQty}
@@ -583,12 +923,14 @@ function ProductDetails() {
                       }
                     }}
                     disabled={inCart}
-                    className={`w-full px-3 py-2.5 rounded-lg border-2 text-left transition text-sm flex items-center justify-between gap-2 ${
+                    aria-expanded={batchDropdownOpen}
+                    aria-haspopup="listbox"
+                    className={`w-full px-3 py-2.5 rounded-lg border-2 text-left transition text-sm flex items-center justify-between gap-2 focus:outline-none ${
                       inCart
                         ? "bg-gray-100 border-gray-300 text-gray-500 cursor-not-allowed"
                         : batchDropdownOpen
-                        ? "bg-[#E7CE9D] border-[#2D1D1A] text-[#2D1D1A]"
-                        : "bg-white border-[#2D1D1A]/20 text-[#2D1D1A] hover:border-[#2D1D1A]/40 hover:bg-[#E7CE9D]/10"
+                        ? "bg-[#E7CE9D] border-[#2D1D1A] text-[#2D1D1A] shadow-sm"
+                        : "bg-white border-[#2D1D1A]/20 text-[#2D1D1A] hover:border-[#2D1D1A]/40 hover:bg-[#E7CE9D]/8"
                     }`}
                   >
                     <div className="flex flex-col gap-0.5 flex-1 min-w-0">
@@ -605,15 +947,14 @@ function ProductDetails() {
                     </div>
                     {!inCart && (
                       <ChevronDown
-                        className={`w-5 h-5 shrink-0 transition-transform ${
-                          batchDropdownOpen ? "rotate-180" : ""
-                        }`}
+                        className={`w-5 h-5 shrink-0 transition-transform ${batchDropdownOpen ? "rotate-180" : ""}`}
+                        aria-hidden="true"
                       />
                     )}
                   </button>
 
                   {batchDropdownOpen && !inCart && (
-                    <div className="absolute z-50 mt-2 left-0 right-0 bg-white border-2 border-[#2D1D1A]/20 rounded-lg shadow-xl max-h-64 overflow-y-auto">
+                    <div className="absolute z-50 mt-2 left-0 right-0 bg-white border-2 border-[#2D1D1A]/20 rounded-lg shadow-xl max-h-64 overflow-y-auto" role="listbox" tabIndex={-1} aria-label="Select batch">
                       <div className="px-3 py-2 bg-[#E7CE9D]/20 border-b border-[#2D1D1A]/10 text-xs font-semibold text-[#2D1D1A]">
                         Select a batch
                       </div>
@@ -626,9 +967,10 @@ function ProductDetails() {
                             setBatchDropdownOpen(false);
                             setBatchWarning("");
                           }}
-                          className={`w-full px-3 py-2.5 text-left text-sm hover:bg-[#E7CE9D]/20 transition border-b border-[#E7CE9D]/20 last:border-0 ${
-                            idx === selectedBatchIdx ? "bg-[#E7CE9D]/30" : ""
-                          }`}
+                          className={`w-full px-3 py-2.5 text-left text-sm hover:bg-[#E7CE9D]/20 transition border-b border-[#E7CE9D]/20 last:border-0 ${idx === selectedBatchIdx ? "bg-[#E7CE9D]/30" : ""}`}
+                          role="option"
+                          aria-selected={idx === selectedBatchIdx}
+                          title={b.name || "Select batch"}
                         >
                           <div className="flex flex-col gap-0.5">
                             <span className="font-bold text-[#2D1D1A]">
@@ -665,27 +1007,30 @@ function ProductDetails() {
                 <Button
                   variant="outline"
                   size="icon"
+                  aria-label="Decrease quantity"
                   onClick={() => updateQty(quantity - 1)}
                   disabled={quantity <= 0}
-                  className="hover:bg-gray-100"
+                  className="hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
                 >
                   <Minus className="h-4 w-4" />
                 </Button>
                 <Input
                   type="number"
                   value={quantity}
+                  aria-label="Cart item quantity"
                   onChange={(e) => {
                     const v = parseInt(e.target.value, 10);
                     updateQty(Number.isNaN(v) ? 0 : v);
                   }}
-                  className="w-20 text-center text-[#201413] border focus:border-[#201413] focus:ring-[#201413]"
+                  className="w-20 text-center text-[#201413] border focus:border-[#201413] focus:ring-[#201413] focus:outline-none"
                   min="0"
                 />
                 <Button
                   variant="outline"
                   size="icon"
+                  aria-label="Increase quantity"
                   onClick={() => updateQty(quantity + 1)}
-                  className="hover:bg-gray-100"
+                  className="hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
                 >
                   <Plus className="h-4 w-4" />
                 </Button>
@@ -696,19 +1041,22 @@ function ProductDetails() {
             <div className="flex gap-4 mt-4">
               <Button
                 size="lg"
-                className={`flex-1 ${
+                className={`flex-1 rounded-xl text-white shadow-md transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 ${
                   inCart
                     ? "bg-[#2D1D1A] hover:bg-[#2D1D1A]/90"
                     : "bg-[#2D1D1A] hover:bg-[#2D1D1A]/90"
-                } text-white shadow-md hover:shadow-lg transition-all duration-300`}
+                }`}
                 onClick={onAddToCartClick}
+                aria-pressed={inCart}
+                title={inCart ? "Remove from cart" : "Add to cart"}
               >
                 {inCart ? "Remove From Cart" : "Add To Cart"}
               </Button>
               <Button
                 size="lg"
                 variant="outline"
-                className="flex-1 outline-[#2D1D1A] shadow-md hover:bg-[#e7ce9d] hover:shadow-lg transition-all duration-300 bg-transparent"
+                className="flex-1 rounded-xl outline-[#2D1D1A] shadow-md hover:bg-[#e7ce9d] hover:shadow-lg transition-all duration-300 bg-transparent focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
+                title="Buy now"
               >
                 Buy Now
               </Button>
