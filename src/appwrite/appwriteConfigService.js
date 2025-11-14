@@ -337,6 +337,20 @@ export class appwriteConfigService {
     }
   }
 
+  async updateSubscription(subscriptionId, updates) {
+    try {
+      return await this.databases.updateDocument(
+        conf.appwriteDatabaseId,
+        conf.appwriteSubscriptionCollection,
+        subscriptionId,
+        updates
+      );
+    } catch (error) {
+      console.log("Appwrite :: updateSubscription error ::", error);
+      throw error;
+    }
+  }
+
   async updateProductDiscount(productId, discount) {
     try {
       return await this.databases.updateDocument(
@@ -458,6 +472,7 @@ export class appwriteConfigService {
     fulfillmentStatus,
     delivery_date,
     paymentMode,
+    auto_order = false,
   }) {
     try {
       // Build payload without undefined fields to respect backend defaults
@@ -467,6 +482,7 @@ export class appwriteConfigService {
         items,
         shippingAddress,
         total_cents,
+        auto_order,
       };
       if (typeof delivery_date !== "undefined")
         payload.delivery_date = delivery_date;
