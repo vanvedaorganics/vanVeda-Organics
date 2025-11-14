@@ -571,217 +571,6 @@ function ProductDetails() {
                 </div>
               </div>
             )}
-
-            <div className="w-full max-w-md mt-6 md:mt-8">
-              <motion.div
-                className="w-full bg-white border rounded-xl p-6 shadow-md"
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-              >
-                <h3 className="text-lg font-semibold syne-bold mb-2 tracking-tight">
-                  Subscribe & Save
-                </h3>
-                <p className="text-sm text-gray-600 mb-4 leading-relaxed">
-                  Subscribe for recurring deliveries and never run out. Choose size,
-                  quantity, interval and shipping address.
-                </p>
-
-                {/* Selected size summary */}
-                <div className="mb-3">
-                  <div className="text-sm font-semibold">Packaging</div>
-                  <div className="mt-1 text-sm text-[#2D1D1A]">
-                    {selectedSize ? (
-                      <>
-                        <span className="font-medium">
-                          {selectedSize.size || "Default size"}
-                        </span>
-                        <span className="ml-2 text-gray-600">
-                          • ₹{((selectedSize.price_cents || baseCents) / 100).toFixed(2)}
-                        </span>
-                      </>
-                    ) : (
-                      <span className="text-gray-500">No packaging selected</span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Quantity + Interval */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
-                  <div>
-                    <label className="text-xs font-semibold text-gray-700 block mb-1">
-                      Quantity
-                    </label>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        aria-label="Decrease subscription quantity"
-                        title="Decrease"
-                        onClick={() => setSubQuantity(Math.max(1, Number(subQuantity) - 1))}
-                        className="hover:bg-gray-100"
-                      >
-                        <Minus className="h-4 w-4" />
-                      </Button>
-                      <Input
-                        type="number"
-                        min={1}
-                        value={subQuantity}
-                        aria-label="Subscription quantity"
-                        onChange={(e) => setSubQuantity(Math.max(1, Number(e.target.value || 1)))}
-                        className="w-24 text-center"
-                      />
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        aria-label="Increase subscription quantity"
-                        title="Increase"
-                        onClick={() => setSubQuantity(Number(subQuantity) + 1)}
-                        className="hover:bg-gray-100"
-                      >
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="md:col-span-2">
-                    <label className="text-xs font-semibold text-gray-700 block mb-1">
-                      Interval
-                    </label>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setSubInterval("monthly")}
-                        className={`px-3 py-2 rounded-xl border-2 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 ${
-                          subInterval === "monthly"
-                            ? "bg-[#2D1D1A] text-white border-[#2D1D1A] shadow-md"
-                            : "bg-white text-[#2D1D1A] border-[#2D1D1A]/20 hover:border-[#2D1D1A]/40"
-                        }`}
-                        aria-pressed={subInterval === "monthly"}
-                        title="Monthly subscription"
-                      >
-                        Monthly
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setSubInterval("weekly")}
-                        className={`px-3 py-2 rounded-xl border-2 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 ${
-                          subInterval === "weekly"
-                            ? "bg-[#2D1D1A] text-white border-[#2D1D1A] shadow-md"
-                            : "bg-white text-[#2D1D1A] border-[#2D1D1A]/20 hover:border-[#2D1D1A]/40"
-                        }`}
-                        aria-pressed={subInterval === "weekly"}
-                        title="Weekly subscription"
-                      >
-                        Weekly
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Shipping address selector */}
-                <div className="mt-4">
-                  <label className="text-xs font-semibold text-gray-700 block mb-1">
-                    Shipping Address
-                  </label>
-                  {profileAddresses.length > 0 ? (
-                    <select
-                      value={subAddressIdx}
-                      onChange={(e) => setSubAddressIdx(Number(e.target.value))}
-                      className="w-full rounded-lg border p-2 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
-                      aria-label="Select shipping address"
-                    >
-                      {profileAddresses.map((a, i) => (
-                        <option key={i} value={i}>
-                          {a.residencyAddress} • {a.city} {a.pincode}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    <div className="text-sm text-[#613D38]">
-                      No saved addresses.{" "}
-                      <a
-                        href="/profile"
-                        className="text-[#69A72A] underline"
-                      >
-                        Add address in profile
-                      </a>
-                    </div>
-                  )}
-                </div>
-
-                {/* Error */}
-                {subError && (
-                  <div className="text-sm text-red-600 mt-3 p-2 bg-red-50 rounded">
-                    {subError}
-                  </div>
-                )}
-
-                {/* Actions */}
-                <div className="flex gap-3 mt-4">
-                  <motion.div whileTap={{ scale: 0.98 }} className="flex-1">
-                    <Button
-                      onClick={handleSubscribe}
-                      size="lg"
-                      className="w-full rounded-xl bg-[#2D1D1A] text-white shadow-md hover:bg-[#2D1D1A]/90 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
-                      disabled={subLoading}
-                      aria-disabled={subLoading}
-                    >
-                      {subLoading ? "Subscribing..." : "Subscribe"}
-                    </Button>
-                  </motion.div>
-
-                  <div className="flex-1">
-                    <Button
-                      variant="outline"
-                      className="w-full rounded-xl border-[#2D1D1A] hover:bg-[#e7ce9d] hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
-                      onClick={() => {
-                        // quick preview: show subscription summary modal (optional)
-                        setShowSubSuccess(false);
-                        setSubError("");
-                      }}
-                    >
-                      Learn More
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Success Modal (OK button required to redirect) */}
-                {showSubSuccess && (
-                  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-                    <motion.div
-                      role="dialog"
-                      aria-modal="true"
-                      aria-labelledby="sub-success-title"
-                      className="bg-white rounded-xl p-6 max-w-sm text-center shadow-lg"
-                      initial={{ scale: 0.98, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                    >
-                      <h3 id="sub-success-title" className="text-lg font-semibold">
-                        Subscription Created
-                      </h3>
-                      <p className="mt-2 text-sm text-gray-600">
-                        Your subscription has been created successfully.
-                      </p>
-                      <div className="mt-4 flex gap-3 justify-center">
-                        <Button
-                          variant="outline"
-                          onClick={() => setShowSubSuccess(false)}
-                          className="rounded-xl px-4 py-2"
-                        >
-                          Close
-                        </Button>
-                        <Button
-                          onClick={handleSubSuccessOk}
-                          className="rounded-xl bg-[#2D1D1A] text-white px-4 py-2"
-                        >
-                          OK
-                        </Button>
-                      </div>
-                    </motion.div>
-                  </div>
-                )}
-              </motion.div>
-            </div>
           </div>
 
           {/* Details */}
@@ -1060,6 +849,217 @@ function ProductDetails() {
               >
                 Buy Now
               </Button>
+            </div>
+
+            <div className="w-full mt-6 md:mt-8">
+              <motion.div
+                className="w-full bg-white border rounded-xl p-6 shadow-md"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <h3 className="text-lg font-semibold syne-bold mb-2 tracking-tight">
+                  Subscribe & Save
+                </h3>
+                <p className="text-sm text-gray-600 mb-4 leading-relaxed">
+                  Subscribe for recurring deliveries and never run out. Choose size,
+                  quantity, interval and shipping address.
+                </p>
+
+                {/* Selected size summary */}
+                <div className="mb-3">
+                  <div className="text-sm font-semibold">Packaging</div>
+                  <div className="mt-1 text-sm text-[#2D1D1A]">
+                    {selectedSize ? (
+                      <>
+                        <span className="font-medium">
+                          {selectedSize.size || "Default size"}
+                        </span>
+                        <span className="ml-2 text-gray-600">
+                          • ₹{((selectedSize.price_cents || baseCents) / 100).toFixed(2)}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-gray-500">No packaging selected</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Quantity + Interval */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
+                  <div>
+                    <label className="text-xs font-semibold text-gray-700 block mb-1">
+                      Quantity
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        aria-label="Decrease subscription quantity"
+                        title="Decrease"
+                        onClick={() => setSubQuantity(Math.max(1, Number(subQuantity) - 1))}
+                        className="hover:bg-gray-100"
+                      >
+                        <Minus className="h-4 w-4" />
+                      </Button>
+                      <Input
+                        type="number"
+                        min={1}
+                        value={subQuantity}
+                        aria-label="Subscription quantity"
+                        onChange={(e) => setSubQuantity(Math.max(1, Number(e.target.value || 1)))}
+                        className="w-24 text-center"
+                      />
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        aria-label="Increase subscription quantity"
+                        title="Increase"
+                        onClick={() => setSubQuantity(Number(subQuantity) + 1)}
+                        className="hover:bg-gray-100"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="text-xs font-semibold text-gray-700 block mb-1">
+                      Interval
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setSubInterval("monthly")}
+                        className={`px-3 py-2 rounded-xl border-2 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 ${
+                          subInterval === "monthly"
+                            ? "bg-[#2D1D1A] text-white border-[#2D1D1A] shadow-md"
+                            : "bg-white text-[#2D1D1A] border-[#2D1D1A]/20 hover:border-[#2D1D1A]/40"
+                        }`}
+                        aria-pressed={subInterval === "monthly"}
+                        title="Monthly subscription"
+                      >
+                        Monthly
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSubInterval("weekly")}
+                        className={`px-3 py-2 rounded-xl border-2 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 ${
+                          subInterval === "weekly"
+                            ? "bg-[#2D1D1A] text-white border-[#2D1D1A] shadow-md"
+                            : "bg-white text-[#2D1D1A] border-[#2D1D1A]/20 hover:border-[#2D1D1A]/40"
+                        }`}
+                        aria-pressed={subInterval === "weekly"}
+                        title="Weekly subscription"
+                      >
+                        Weekly
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Shipping address selector */}
+                <div className="mt-4">
+                  <label className="text-xs font-semibold text-gray-700 block mb-1">
+                    Shipping Address
+                  </label>
+                  {profileAddresses.length > 0 ? (
+                    <select
+                      value={subAddressIdx}
+                      onChange={(e) => setSubAddressIdx(Number(e.target.value))}
+                      className="w-full rounded-lg border p-2 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
+                      aria-label="Select shipping address"
+                    >
+                      {profileAddresses.map((a, i) => (
+                        <option key={i} value={i}>
+                          {a.residencyAddress} • {a.city} {a.pincode}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <div className="text-sm text-[#613D38]">
+                      No saved addresses.{" "}
+                      <a
+                        href="/profile"
+                        className="text-[#69A72A] underline"
+                      >
+                        Add address in profile
+                      </a>
+                    </div>
+                  )}
+                </div>
+
+                {/* Error */}
+                {subError && (
+                  <div className="text-sm text-red-600 mt-3 p-2 bg-red-50 rounded">
+                    {subError}
+                  </div>
+                )}
+
+                {/* Actions */}
+                <div className="flex gap-3 mt-4">
+                  <motion.div whileTap={{ scale: 0.98 }} className="flex-1">
+                    <Button
+                      onClick={handleSubscribe}
+                      size="lg"
+                      className="w-full rounded-xl bg-[#2D1D1A] text-white shadow-md hover:bg-[#2D1D1A]/90 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+                      disabled={subLoading}
+                      aria-disabled={subLoading}
+                    >
+                      {subLoading ? "Subscribing..." : "Subscribe"}
+                    </Button>
+                  </motion.div>
+
+                  <div className="flex-1">
+                    <Button
+                      variant="outline"
+                      className="w-full rounded-xl border-[#2D1D1A] hover:bg-[#e7ce9d] hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
+                      onClick={() => {
+                        // quick preview: show subscription summary modal (optional)
+                        setShowSubSuccess(false);
+                        setSubError("");
+                      }}
+                    >
+                      Learn More
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Success Modal (OK button required to redirect) */}
+                {showSubSuccess && (
+                  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+                    <motion.div
+                      role="dialog"
+                      aria-modal="true"
+                      aria-labelledby="sub-success-title"
+                      className="bg-white rounded-xl p-6 max-w-sm text-center shadow-lg"
+                      initial={{ scale: 0.98, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                    >
+                      <h3 id="sub-success-title" className="text-lg font-semibold">
+                        Subscription Created
+                      </h3>
+                      <p className="mt-2 text-sm text-gray-600">
+                        Your subscription has been created successfully.
+                      </p>
+                      <div className="mt-4 flex gap-3 justify-center">
+                        <Button
+                          variant="outline"
+                          onClick={() => setShowSubSuccess(false)}
+                          className="rounded-xl px-4 py-2"
+                        >
+                          Close
+                        </Button>
+                        <Button
+                          onClick={handleSubSuccessOk}
+                          className="rounded-xl bg-[#2D1D1A] text-white px-4 py-2"
+                        >
+                          OK
+                        </Button>
+                      </div>
+                    </motion.div>
+                  </div>
+                )}
+              </motion.div>
             </div>
 
             {/* Overview */}
