@@ -170,7 +170,7 @@ export default function AdminLayout() {
         </header>
 
         {/* Page Content */}
-        <main className="overflow-y-auto bg-gray-100">
+        <main className="bg-gray-100">
           {!loading ? <Outlet /> : <p>Loading...</p>}
         </main>
       </div>
