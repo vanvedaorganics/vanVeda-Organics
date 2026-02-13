@@ -1,5 +1,5 @@
-import React, { useEffect } from "react";
 import { motion } from "framer-motion";
+import React, { useEffect } from "react";
 
 // Variants for reusable fade-in-up animation
 const fadeInUp = {
@@ -7,7 +7,7 @@ const fadeInUp = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
 };
 
-function VanVedaPolicies() {
+function TrueSoilPolicies() {
   // Scroll to top on mount
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -35,7 +35,7 @@ function VanVedaPolicies() {
         "We currently deliver across India.",
         "Orders are shipped within 24–48 hours of harvest/dispatch.",
         "Delivery is usually within 2–4 working days depending on your location.",
-        "Vanveda is not liable for delays caused by courier/logistics providers.",
+        "Truesoil is not liable for delays caused by courier/logistics providers.",
       ],
     },
     {
@@ -50,7 +50,7 @@ function VanVedaPolicies() {
     {
       title: "5. Use of Website",
       content: [
-        "Content, photos, and logos on Vanveda’s website are our intellectual property.",
+        "Content, photos, and logos on Truesoil’s website are our intellectual property.",
         "Unauthorized copying, resale, or misuse of content is strictly prohibited.",
       ],
     },
@@ -58,13 +58,13 @@ function VanVedaPolicies() {
       title: "6. Liability Disclaimer",
       content: [
         "We ensure the best quality products; however, natural variations in size, taste, and ripening are part of organic produce.",
-        "Vanveda shall not be held liable for issues beyond its control (e.g., transport delays, weather impact on harvest).",
+        "Truesoil shall not be held liable for issues beyond its control (e.g., transport delays, weather impact on harvest).",
       ],
     },
     {
       title: "7. Policy Updates",
       content: [
-        "Vanveda reserves the right to update or modify these terms at any time. Customers are advised to review them periodically.",
+        "Truesoil reserves the right to update or modify these terms at any time. Customers are advised to review them periodically.",
       ],
     },
   ];
@@ -82,7 +82,7 @@ function VanVedaPolicies() {
         className="syne-bold text-3xl md:text-4xl font-serif text-[#2d1d1a] text-center mb-12 relative"
         variants={fadeInUp}
       >
-        VanVeda Policies
+        Truesoil Policies
         <span className="absolute left-1/2 -bottom-2 w-16 h-1 bg-[#69a72a] rounded-full transform -translate-x-1/2 animate-expandLine"></span>
       </motion.h1>
 
@@ -91,7 +91,7 @@ function VanVedaPolicies() {
         className="ubuntu-regular text-center text-[#613d38] mb-10 max-w-3xl mx-auto"
         variants={fadeInUp}
       >
-        Welcome to Vanveda – a farm-to-home initiative bringing you authentic
+        Welcome to Truesoil – a farm-to-home initiative bringing you authentic
         GI-certified Gir Kesar mangoes and premium organic products. By
         accessing or purchasing from our website, you agree to the following
         terms and conditions.
@@ -120,4 +120,4 @@ function VanVedaPolicies() {
   );
 }
 
-export default VanVedaPolicies;
+export default TrueSoilPolicies;

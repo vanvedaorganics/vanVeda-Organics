@@ -80,9 +80,9 @@ function ShippingAndDeliveryPolicy() {
         className="ubuntu-regular text-center text-[#613d38] mb-10 max-w-3xl mx-auto"
         variants={fadeInUp}
       >
-        At Vanveda, we take utmost care to ensure that your mangoes and organic
-        products reach you in the freshest and safest condition. Please review
-        our shipping and delivery policies below.
+        At True Soil, we take utmost care to ensure that your mangoes and
+        organic products reach you in the freshest and safest condition. Please
+        review our shipping and delivery policies below.
       </motion.p>
 
       {/* Policy Sections */}

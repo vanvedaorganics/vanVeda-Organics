@@ -27,7 +27,7 @@ function AboutUs() {
         className="syne-bold text-3xl lg:text-4xl font-serif text-[#2d1d1a] text-center mb-12 relative"
         variants={fadeInUp}
       >
-        About Van Veda Organics
+        About True Soil Organics
         <span className="absolute left-1/2 -bottom-2 w-16 h-1 bg-[#69a72a] rounded-full transform -translate-x-1/2 animate-expandLine"></span>
       </motion.h1>
 
@@ -48,11 +48,11 @@ function AboutUs() {
             From Our Farms To Your Home
           </h2>
           <p className="ubuntu-regular text-lg leading-relaxed text-[#613d38]">
-            At Vanveda, we believe that real taste comes straight from the soil.
-            For years, our family has been cultivating Gir Kesar Mangoes in the
-            fertile lands of Gir. What started as a traditional farming practice
-            has now grown into a vision to deliver the same authentic farm-fresh
-            goodness to homes across India.
+            At True Soil, we believe that real taste comes straight from the
+            soil. For years, our family has been cultivating Gir Kesar Mangoes
+            in the fertile lands of Gir. What started as a traditional farming
+            practice has now grown into a vision to deliver the same authentic
+            farm-fresh goodness to homes across India.
           </p>
           <h2 className="syne-bold text-3xl leading-tight text-primary hover:underline underline-offset-4 decoration-[#69a72a] transition duration-300">
             Celebrating Farmer's Life
@@ -61,9 +61,9 @@ function AboutUs() {
             We are not just a brand, we are farmers first. Behind every mango,
             every organic product, there's a story of early mornings in the
             orchards, careful nurturing of trees, and a deep respect for the
-            land. By choosing Vanveda, you're not only enjoying premium produce,
-            but also supporting farmer families and helping us preserve age-old
-            farming traditions.
+            land. By choosing True Soild, you're not only enjoying premium
+            produce, but also supporting farmer families and helping us preserve
+            age-old farming traditions.
           </p>
         </div>
       </motion.section>
@@ -90,7 +90,7 @@ function AboutUs() {
           </h2>
           <p className="ubuntu-regular text-lg leading-relaxed text-[#613d38]">
             For years, we sold our mangoes offline to loyal customers who
-            trusted our quality. Now, with Vanveda, we are bringing this
+            trusted our quality. Now, with True Soil, we are bringing this
             experience online so whether you're in Ahmedabad, Mumbai, Delhi, or
             Bangalore, you can enjoy the taste of authentic Gir Kesar Mangoes,
             delivered right to your doorstep in just 2-4 days. And this is just

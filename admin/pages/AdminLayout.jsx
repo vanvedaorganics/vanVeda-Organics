@@ -20,7 +20,7 @@ export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const [userName, setUsername] = useState(null)
+  const [userName, setUsername] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -31,7 +31,7 @@ export default function AdminLayout() {
           authService.isAdmin().then((isAdmin) => {
             if (isAdmin) {
               dispatch(login(userData));
-              setUsername(userData.name)
+              setUsername(userData.name);
             } else {
               dispatch(logout());
             }
@@ -45,7 +45,7 @@ export default function AdminLayout() {
   const userLogout = async () => {
     authService.logout().then(() => {
       dispatch(logout());
-      setUsername(null)
+      setUsername(null);
       navigate("/admin/login");
       console.log("[Logout] Success");
     });
@@ -53,7 +53,7 @@ export default function AdminLayout() {
 
   return (
     <div className="flex h-screen bg-gray-100">
-       <Toaster richColors position="top-right" />
+      <Toaster richColors position="top-right" />
       {/* Sidebar */}
       <aside
         className={`fixed top-0 left-0 h-full w-64 bg-[#084629] text-white transition-transform duration-300 z-10 
@@ -61,7 +61,7 @@ export default function AdminLayout() {
       >
         <div className="space-grotesk-bold p-4 text-xl font-bold border-b border-green-900 flex items-center gap-3">
           <Package color="#084629" className="bg-[#dfb96a] rounded-md" />
-          VanVed Organics
+          True Soil Organics
           <X
             className="md:hidden  transition-transform duration-300 active:scale-90 active:text-gray-400"
             onClick={() => setSidebarOpen(false)}
@@ -150,7 +150,7 @@ export default function AdminLayout() {
             </button>
             <div>
               <h1 className="text-2xl font-semibold text-[#084629] space-grotesk-bold">
-                VanVeda Admin
+                Truesoil Admin
               </h1>
               <h2 className="spac-grotesk-medium text-gray-800">
                 Manage Your Store

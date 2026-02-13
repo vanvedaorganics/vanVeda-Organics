@@ -28,7 +28,7 @@ function Blog() {
         className="syne-bold text-3xl md:text-4xl font-serif text-[#2d1d1a] text-center mb-12 relative"
         variants={fadeInUp}
       >
-        VanVeda Blogs
+        TrueSoil Blogs
         <span className="absolute left-1/2 -bottom-2 w-16 h-1 bg-[#69a72a] rounded-full transform -translate-x-1/2 animate-expandLine"></span>
       </motion.h1>
 

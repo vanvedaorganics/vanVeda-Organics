@@ -20,7 +20,7 @@ function Home() {
 
   // Pick a few hardcoded featured products for now
   const featuredProducts = products.filter((p) =>
-    ["gir-kesar-mango","shudh-desi-ghee"].includes(p.slug)
+    ["gir-kesar-mango", "shudh-desi-ghee"].includes(p.slug),
   );
 
   return (
@@ -29,9 +29,9 @@ function Home() {
       <section className="relative flex h-[600px] w-full items-center justify-center overflow-hidden px-4 text-center">
         <div className="relative h-full w-full overflow-hidden">
           <img
-            src="HeroImage.jpg"
-            alt="Van Veda Organics Hero"
-            className="absolute inset-0 z-0 h-full w-full animate-fade-in object-cover"
+            src="HeroImage.png"
+            alt="True Soil Organics Hero"
+            className="absolute inset-0 z-0 h-full w-full animate-fade-in object-fill"
             loading="lazy"
           />
         </div>
@@ -39,12 +39,11 @@ function Home() {
         <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/20 backdrop-blur-xs">
           <div className="max-w-4xl space-y-6 text-white animate-slide-up">
             <h1 className="syne-medium text-4xl font-bold md:text-7xl text-neutral-950">
-              Cultivating Health
-              , Nurturing Earth
+              Cultivating Health , Nurturing Earth
             </h1>
             <p className="text-lg opacity-90 md:text-xl text-[#2D2D1A]">
-              Your journey to pure, wholesome, and sustainable living with Van
-              Veda Organics starts here.
+              Your journey to pure, wholesome, and sustainable living with True
+              Soil Organics starts here.
             </p>
 
             <div className="mt-8 flex justify-center gap-4">

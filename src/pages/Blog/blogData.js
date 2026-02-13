@@ -1,14 +1,14 @@
 const blogData = [
   {
-    title: "Vanveda Gir Kesar Mango – The Queen of Mango",
-    slug: "vanveda-gir-kesar-mango",
+    title: "True Soild Gir Kesar Mango – The Queen of Mango",
+    slug: "true-gir-kesar-mango",
     image: "/Mangoes.jpg",
     excerpt:
-      "Discover the authentic taste of Vanveda Gir Kesar Mango, India’s first GI-tagged fruit. Handpicked from Gir farms, naturally ripened, and packed with care for a premium mango experience.",
-    author: "VanVeda Team",
+      "Discover the authentic taste of True Soil Gir Kesar Mango, India’s first GI-tagged fruit. Handpicked from Gir farms, naturally ripened, and packed with care for a premium mango experience.",
+    author: "TrueSoil Team",
     publishDate: "2025-09-23", // ISO format is safest, can render as dd-mm-yyyy
     content: `
-🥭 Why Choose Vanveda’s Gir Kesar Mango?
+🥭 Why Choose TrueSoil’s Gir Kesar Mango?
 
   • Direct from Our Farms in Gir: Grown in the fertile, red-soil belt near Gir National Park, our mangoes soak in the unique climate, giving them their famous saffron-like color and naturally sweet taste.
 
@@ -41,7 +41,7 @@ const blogData = [
   - We currently deliver across India.
   - Orders are shipped within 24–48 hours of harvest/dispatch.
   - Delivery is usually within 2–4 working days depending on your location.
-  - Vanveda is not liable for delays caused by courier/logistics providers.
+  - True Soil is not liable for delays caused by courier/logistics providers.
   - Safe & hygienic handling to keep your mangoes fresh.
   `,
   },

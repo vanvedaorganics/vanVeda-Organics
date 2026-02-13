@@ -29,7 +29,7 @@ import Blog from "./pages/Blog/Blog.jsx";
 import BlogDetail from "./pages/Blog/BlogDetail.jsx";
 import AboutUs from "./pages/AboutUs.jsx";
 import ContactUs from "./pages/ContactUs.jsx";
-import VanVedaPolicies from "./pages/VanVedaPolicies.jsx";
+import TrueSoilPolicies from "./pages/TrueSoilPolicies.jsx";
 import ShippingAndDeliveryPolicy from "./pages/ShippingAndDeliveryPolicy.jsx";
 import Checkout from "./pages/Checkout.jsx";
 
@@ -113,8 +113,8 @@ const router = createBrowserRouter([
         element: <AboutUs />,
       },
       {
-        path: "/vanveda-policies",
-        element: <VanVedaPolicies />,
+        path: "/truesoil-policies",
+        element: <TrueSoilPolicies />,
       },
       {
         path: "/shipping-policy",
@@ -191,5 +191,5 @@ createRoot(document.getElementById("root")).render(
     <Provider store={store}>
       <RouterProvider router={router} />
     </Provider>
-  </StrictMode>
+  </StrictMode>,
 );

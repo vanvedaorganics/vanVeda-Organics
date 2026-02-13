@@ -18,13 +18,13 @@ function Footer() {
         <div className="space-y-4">
           <Link href="/" className="flex items-center gap-2 font-semibold">
             <img
-              src="/VanVedaHeaderLogo.png"
-              alt="Van Veda Organics Logo"
+              src="/Truesoil.jpg.jpeg"
+              alt="True Soil Organics Logo"
               className="filter brightness-150 w-24 sm:w-28 md:w-32 lg:w-36 xl:w-40 h-auto object-contain transform scale-105 sm:scale-100 transition-transform duration-300"
             />
           </Link>
           <p className="text-sm text-white/80">
-            Van Veda Organics is committed to bringing you the purest organic
+            True Soil Organics is committed to bringing you the purest organic
             products, sustainably sourced from nature's bounty.
           </p>
           <div className="flex space-x-4">
@@ -80,10 +80,7 @@ function Footer() {
             >
               Certificates
             </Link>
-            <Link
-              to="/"
-              className="hover:text-[#E7CE9D] transition-colors"
-            >
+            <Link to="/" className="hover:text-[#E7CE9D] transition-colors">
               FAQ
             </Link>
           </nav>
@@ -94,10 +91,10 @@ function Footer() {
           <h3 className="text-lg font-semibold text-[#E7CE9D]">Policies</h3>
           <nav className="grid gap-2 text-sm text-white font-semibold">
             <Link
-              to="/vanveda-policies"
+              to="/truesoil-policies"
               className="hover:text-[#E7CE9D] transition-colors"
             >
-              VanVeda Policies
+              TrueSoil Policies
             </Link>
             <Link
               to="/shipping-policy"
@@ -113,7 +110,7 @@ function Footer() {
           <h3 className="text-lg font-semibold text-[#E7CE9D]">Contact Us</h3>
           <div className="space-y-2 text-sm text-white font-semibold">
             <p className="flex items-center gap-2">
-              <Mail className="h-4 w-4" /> info@vanvedaorganics.com
+              <Mail className="h-4 w-4" /> info@truesoilorganics.com
             </p>
             <p className="flex items-center gap-2">
               <Phone className="h-4 w-4" /> +91 12345 67890
@@ -141,7 +138,7 @@ function Footer() {
         </div>
       </div>
       <div className="container text-center text-sm text-white/60 mt-8 pt-8 border-t border-white/20">
-        &copy; {new Date().getFullYear()} Van Veda Organics. All rights
+        &copy; {new Date().getFullYear()} True Soil Organics. All rights
         reserved.
       </div>
     </footer>

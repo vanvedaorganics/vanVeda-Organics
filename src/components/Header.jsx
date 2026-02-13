@@ -81,12 +81,37 @@ export function Header() {
   const authStatus = useSelector((state) => state.auth.status);
 
   const navItems = [
-    { name: "Certificates", slug: "/certificates", icon: <Award className="h-5 w-5" />, active: true },
-    { name: "Blog", slug: "/blog", icon: <BookOpen className="h-5 w-5" />, active: true },
-    { name: "About Us", slug: "/about-us", icon: <Info className="h-5 w-5" />, active: true },
+    {
+      name: "Certificates",
+      slug: "/certificates",
+      icon: <Award className="h-5 w-5" />,
+      active: true,
+    },
+    {
+      name: "Blog",
+      slug: "/blog",
+      icon: <BookOpen className="h-5 w-5" />,
+      active: true,
+    },
+    {
+      name: "About Us",
+      slug: "/about-us",
+      icon: <Info className="h-5 w-5" />,
+      active: true,
+    },
     // { name: "Contact Us", slug: "/contact-us", icon: <Phone className="h-5 w-5" />, active: true },
-    { name: "Profile", slug: "/profile", icon: <User className="h-5 w-5" />, active: authStatus },
-    { name: "Login", slug: "/login", icon: <User className="h-5 w-5" />, active: !authStatus },
+    {
+      name: "Profile",
+      slug: "/profile",
+      icon: <User className="h-5 w-5" />,
+      active: authStatus,
+    },
+    {
+      name: "Login",
+      slug: "/login",
+      icon: <User className="h-5 w-5" />,
+      active: !authStatus,
+    },
   ];
 
   const navLinkClasses = ({ isActive }) =>
@@ -130,7 +155,8 @@ export function Header() {
         if (!product) return null;
 
         // Extract qty and batch from itemData (handle both legacy number and new object format)
-        const qty = typeof itemData === "number" ? itemData : (itemData?.qty ?? 0);
+        const qty =
+          typeof itemData === "number" ? itemData : (itemData?.qty ?? 0);
         const batchData = typeof itemData === "object" ? itemData?.batch : null;
 
         const packaging = parsePackagingSizes(product.packaging_size);
@@ -143,8 +169,8 @@ export function Header() {
           typeof sizeObj?.price_cents === "number"
             ? sizeObj.price_cents
             : typeof product.price_cents === "number"
-            ? product.price_cents
-            : 0;
+              ? product.price_cents
+              : 0;
 
         const unitCents = discountPrice(baseCents, product.discount || 0);
 
@@ -169,7 +195,10 @@ export function Header() {
 
   // Subtotal calculation (per-size)
   const subtotal = useMemo(() => {
-    return cartProducts.reduce((acc, row) => acc + (row.unitCents / 100) * (row.qty || 0), 0);
+    return cartProducts.reduce(
+      (acc, row) => acc + (row.unitCents / 100) * (row.qty || 0),
+      0,
+    );
   }, [cartProducts]);
 
   return (
@@ -196,8 +225,15 @@ export function Header() {
         transition={{ duration: 0.5 }}
       >
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2 font-semibold text-xl text-[#2D1D1A]">
-          <img src="/VanVedaHeaderLogo.png" alt="VanVeda Organics" className="h-10 md:h-14 w-auto object-contain" />
+        <Link
+          to="/"
+          className="flex items-center gap-2 font-semibold text-xl text-[#2D1D1A]"
+        >
+          <img
+            src="/Truesoil.png"
+            alt="TrueSoil Organics"
+            className="h-10 md:h-14 w-auto object-contain"
+          />
         </Link>
 
         {/* Desktop Nav */}
@@ -211,13 +247,20 @@ export function Header() {
             {navItems.map(
               (item) =>
                 item.active && (
-                  <NavLink key={item.slug} to={item.slug} className={navLinkClasses}>
+                  <NavLink
+                    key={item.slug}
+                    to={item.slug}
+                    className={navLinkClasses}
+                  >
                     {item.name}
                   </NavLink>
-                )
+                ),
             )}
             {authStatus && (
-              <button onClick={handleLogout} className="text-sm font-medium text-gray-900 hover:text-green-900">
+              <button
+                onClick={handleLogout}
+                className="text-sm font-medium text-gray-900 hover:text-green-900"
+              >
                 Sign Out
               </button>
             )}
@@ -255,7 +298,11 @@ export function Header() {
             className="lg:hidden hover:bg-gray-100 p-2 rounded-full"
             aria-label="Toggle navigation menu"
           >
-            {mobileMenuOpen ? <X className="h-5 w-5 text-gray-900" /> : <Menu className="h-5 w-5 text-gray-900" />}
+            {mobileMenuOpen ? (
+              <X className="h-5 w-5 text-gray-900" />
+            ) : (
+              <Menu className="h-5 w-5 text-gray-900" />
+            )}
             <span className="sr-only">Toggle navigation menu</span>
           </button>
         </div>
@@ -284,17 +331,23 @@ export function Header() {
                 placeholder="Search products..."
                 className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-green-900 focus:ring-1 focus:ring-green-900"
               />
-              
+
               {/* Product Category Icons */}
               <div className="mt-6 mb-4">
-                <h3 className="text-sm font-semibold text-gray-700 mb-3">Shop by Category</h3>
+                <h3 className="text-sm font-semibold text-gray-700 mb-3">
+                  Shop by Category
+                </h3>
                 <div className="flex items-center justify-around gap-4">
                   <Link
                     to="/products?category=mango"
                     onClick={() => setMobileMenuOpen(false)}
                     className="flex flex-col items-center gap-2 hover:opacity-80 transition-opacity"
                   >
-                    <img src="/mango.png" alt="Mango" className="w-14 h-14 object-contain" />
+                    <img
+                      src="/mango.png"
+                      alt="Mango"
+                      className="w-14 h-14 object-contain"
+                    />
                     <span className="text-xs text-gray-700">Mango</span>
                   </Link>
                   <Link
@@ -302,7 +355,11 @@ export function Header() {
                     onClick={() => setMobileMenuOpen(false)}
                     className="flex flex-col items-center gap-2 hover:opacity-80 transition-opacity"
                   >
-                    <img src="/ghee.png" alt="Ghee" className="w-14 h-14 object-contain" />
+                    <img
+                      src="/ghee.png"
+                      alt="Ghee"
+                      className="w-14 h-14 object-contain"
+                    />
                     <span className="text-xs text-gray-700">Ghee</span>
                   </Link>
                 </div>
@@ -324,7 +381,9 @@ export function Header() {
                         to={item.slug}
                         className={({ isActive }) =>
                           `flex items-center gap-2 rounded-md px-3 py-2 text-lg transition-colors ${
-                            isActive ? "bg-green-100 text-green-900 font-semibold" : "text-gray-900 hover:text-green-900"
+                            isActive
+                              ? "bg-green-100 text-green-900 font-semibold"
+                              : "text-gray-900 hover:text-green-900"
                           }`
                         }
                         onClick={() => setMobileMenuOpen(false)}
@@ -332,7 +391,7 @@ export function Header() {
                         {item.icon}
                         {item.name}
                       </NavLink>
-                    )
+                    ),
                 )}
                 {authStatus && (
                   <button
@@ -373,7 +432,9 @@ export function Header() {
             >
               {/* Scrollable Cart Content */}
               <div className="flex-1 overflow-y-auto p-6">
-                <h2 className="text-xl syne-bold mb-4 text-[#2D2D1A]">Your Cart</h2>
+                <h2 className="text-xl syne-bold mb-4 text-[#2D2D1A]">
+                  Your Cart
+                </h2>
 
                 <div className="space-y-4">
                   {cartProducts.length === 0 ? (
