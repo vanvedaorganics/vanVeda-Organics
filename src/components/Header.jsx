@@ -232,7 +232,7 @@ export function Header() {
           <img
             src="/Truesoil.png"
             alt="TrueSoil Organics"
-            className="h-10 md:h-14 w-auto object-contain"
+            className="h-12 md:h-18 w-auto object-contain"
           />
         </Link>
 
