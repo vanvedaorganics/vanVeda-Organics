@@ -131,6 +131,27 @@ export class AuthService {
       return false;
     }
   }
+
+  async createRecovery(email, url) {
+    try {
+      return await this.account.createRecovery(email, url);
+    } catch (error) {
+      throw new Error("Appwrite Error :: createRecovery :: " + error.message);
+    }
+  }
+
+  async updateRecovery(userId, secret, password, passwordAgain) {
+    try {
+      return await this.account.updateRecovery(
+        userId,
+        secret,
+        password,
+        passwordAgain
+      );
+    } catch (error) {
+      throw new Error("Appwrite Error :: updateRecovery :: " + error.message);
+    }
+  }
 }
 const appwriteAuthService = new AuthService();
 export default appwriteAuthService;

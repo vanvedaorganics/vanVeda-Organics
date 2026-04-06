@@ -15,6 +15,7 @@ const conf = {
     appwriteBucketId: String(import.meta.env.VITE_APPWRITE_BUCKET_ID),
     appwriteTeamsId: String(import.meta.env.VITE_APPWRITE_TEAMS_ID),
     appwriteRazorpayOrderIdFunctionId: String(import.meta.env.VITE_APPWRITE_RAZORPAY_FUNCTION_ID),
+    appBaseUrl: String(import.meta.env.VITE_APP_URL || window.location.origin),
 }
 
 export default conf;

@@ -31,6 +31,8 @@ import ContactUs from "./pages/ContactUs.jsx";
 import TrueSoilPolicies from "./pages/TrueSoilPolicies.jsx";
 import ShippingAndDeliveryPolicy from "./pages/ShippingAndDeliveryPolicy.jsx";
 import Checkout from "./pages/Checkout.jsx";
+import ForgotPassword from "./pages/ForgotPassword.jsx";
+import ResetPassword from "./pages/ResetPassword.jsx";
 
 initializeAppData();
 
@@ -56,6 +58,22 @@ const router = createBrowserRouter([
         element: (
           <ClientAuthLayout authentication={false}>
             <ClientSignup />
+          </ClientAuthLayout>
+        ),
+      },
+      {
+        path: "/forgot-password",
+        element: (
+          <ClientAuthLayout authentication={false}>
+            <ForgotPassword />
+          </ClientAuthLayout>
+        ),
+      },
+      {
+        path: "/reset-password",
+        element: (
+          <ClientAuthLayout authentication={false}>
+            <ResetPassword />
           </ClientAuthLayout>
         ),
       },
