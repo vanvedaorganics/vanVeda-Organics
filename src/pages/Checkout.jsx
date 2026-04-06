@@ -435,40 +435,69 @@ function Checkout() {
         },
       };
 
-      // Simplified payment mode selection
-      const paymentMode =
-        paymentChoice === "RAZORPAY"
-          ? Math.random() < 0.5
-            ? "UPI"
-            : "Card"
-          : "COD";
+      const finalizeOrder = async (pMode, pStatus = "Pending") => {
+        const shippingAddress = JSON.stringify(selectedAddress);
+        await appwriteService.createOrder({
+          user_id: profile.$id,
+          userName: profile.displayName || "",
+          items: JSON.stringify(itemsPayload),
+          shippingAddress,
+          total_cents: totals.subtotalCents,
+          delivery_date: farthestDeliveryDate,
+          paymentMode: pMode,
+          paymentStatus: pStatus,
+        });
 
-      const shippingAddress = JSON.stringify(selectedAddress);
+        dispatch(emptyUserCart());
+        dispatch(setEmptyCart());
 
-      // Place order with error handling
-      await appwriteService.createOrder({
-        user_id: profile.$id,
-        userName: profile.displayName || "",
-        items: JSON.stringify(itemsPayload),
-        shippingAddress,
-        total_cents: totals.subtotalCents,
-        delivery_date: farthestDeliveryDate,
-        paymentMode,
-      });
+        setError({
+          type: "success",
+          message: "Order placed successfully! Redirecting to your profile...",
+        });
 
-      // Success: empty cart and redirect
-      dispatch(emptyUserCart());
-      dispatch(setEmptyCart());
+        setTimeout(() => {
+          navigate("/profile/orders");
+        }, 1500);
+      };
 
-      // Show success message briefly before redirect
-      setError({
-        type: "success",
-        message: "Order placed successfully! Redirecting to your profile...",
-      });
+      if (paymentChoice === "COD") {
+        await finalizeOrder("COD");
+      } else {
+        // Razorpay flow
+        try {
+          const razorpayOrderId = await appwriteService.createRazorpayOrderId(totals.subtotalCents / 100);
+          
+          const options = {
+            key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+            amount: totals.subtotalCents,
+            currency: "INR",
+            name: "True Soil Organics",
+            description: "Order Payment",
+            order_id: razorpayOrderId,
+            handler: async () => {
+              // Finalize order in backend after successful payment
+              await finalizeOrder("Razorpay", "Paid");
+            },
+            prefill: {
+              name: profile.displayName || "",
+              email: profile.email || "",
+              contact: profile.phone || "",
+            },
+            theme: {
+              color: "#28543d",
+            },
+          };
 
-      setTimeout(() => {
-        navigate("/profile/orders"); // CHANGED: go to Orders tab route
-      }, 1500);
+          const rzp = new window.Razorpay(options);
+          rzp.on('payment.failed', (resp) => {
+            setError({ type: "error", message: "Payment failed: " + resp.error.description });
+          });
+          rzp.open();
+        } catch (err) {
+          throw new Error("Razorpay Initialization failed: " + err.message);
+        }
+      }
     } catch (e) {
       console.error("Failed to place order", e);
       setError({ type: "error", message: getUserFriendlyError(e) });

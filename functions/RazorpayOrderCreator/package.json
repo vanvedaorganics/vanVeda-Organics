@@ -1,0 +1,9 @@
+{
+  "name": "razorpay-order-creator",
+  "version": "1.0.0",
+  "main": "src/main.js",
+  "type": "module",
+  "dependencies": {
+    "razorpay": "^2.9.2"
+  }
+}

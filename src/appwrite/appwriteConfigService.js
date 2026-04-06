@@ -8,6 +8,7 @@ import {
   ID,
   Permission,
   Role,
+  Functions,
 } from "appwrite";
 
 export class appwriteConfigService {
@@ -15,6 +16,7 @@ export class appwriteConfigService {
   account;
   databases;
   storage;
+  functions;
 
   constructor() {
     this.client
@@ -22,6 +24,7 @@ export class appwriteConfigService {
       .setProject(conf.appwriteProjectId);
     this.databases = new Databases(this.client);
     this.storage = new Storage(this.client);
+    this.functions = new Functions(this.client);
 
     // this.account = new Account(this.client);
   }
@@ -924,6 +927,30 @@ export class appwriteConfigService {
       return await this.updateProductReviewStats(product_id);
     } catch (error) {
       console.log("Appwrite :: rateProduct error ::", error);
+      throw error;
+    }
+  }
+
+  // 💳 Razorpay
+  async createRazorpayOrderId(amount) {
+    try {
+      if (!conf.appwriteRazorpayOrderIdFunctionId || conf.appwriteRazorpayOrderIdFunctionId === "undefined") {
+        throw new Error("Razorpay Function ID not configured");
+      }
+      const res = await this.functions.createExecution(
+        conf.appwriteRazorpayOrderIdFunctionId,
+        JSON.stringify({ amount }),
+        false,
+        '/',
+        'POST'
+      );
+      const parsedRes = JSON.parse(res.responseBody);
+      if (!parsedRes.success) {
+        throw new Error(parsedRes.message || "Failed to create Razorpay Order ID");
+      }
+      return parsedRes.order_id;
+    } catch (error) {
+      console.log("Appwrite :: createRazorpayOrderId error ::", error);
       throw error;
     }
   }
