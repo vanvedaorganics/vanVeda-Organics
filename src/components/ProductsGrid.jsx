@@ -3,7 +3,7 @@ import ProductCard from "./ProductCard";
 
 const ProductsGrid = ({ products = [] }) => {
   return (
-    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div className="mx-auto max-w-7xl 2xl:max-w-[1600px] px-4 sm:px-6 lg:px-8">
       <div
         className="
           grid gap-6 sm:gap-8

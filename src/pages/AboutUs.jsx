@@ -16,7 +16,7 @@ function AboutUs() {
 
   return (
     <motion.div
-      className="max-w-7xl mx-auto py-8 lg:py-12 font-sans px-4 sm:px-6"
+      className="max-w-7xl 2xl:max-w-[1600px] mx-auto py-8 lg:py-12 font-sans px-4 sm:px-6"
       initial="hidden"
       animate="visible"
       exit="hidden"

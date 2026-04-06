@@ -233,7 +233,7 @@ export function Header() {
       {/* Main Header */}
       {/* ── Desktop layout (lg+) ── */}
       <motion.div
-        className="hidden lg:flex max-w-7xl mx-auto h-24 items-center gap-8 justify-between px-8"
+        className="hidden lg:flex max-w-7xl 2xl:max-w-[1600px] mx-auto h-24 items-center gap-8 justify-between px-8"
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5 }}

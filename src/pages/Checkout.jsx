@@ -514,7 +514,7 @@ function Checkout() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35 }}
-            className="mx-auto max-w-7xl grid grid-cols-1 lg:grid-cols-3 gap-6"
+            className="mx-auto max-w-7xl 2xl:max-w-[1600px] grid grid-cols-1 lg:grid-cols-3 gap-6"
           >
             {/* Left: Address + Payment */}
             <div className="lg:col-span-2 space-y-6">

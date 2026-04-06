@@ -17,7 +17,7 @@ function Blog() {
 
   return (
     <motion.div
-      className="max-w-7xl mx-auto w-full py-8 md:py-12 font-sans px-4 sm:px-6"
+      className="max-w-7xl 2xl:max-w-[1600px] mx-auto w-full py-8 md:py-12 font-sans px-4 sm:px-6"
       initial="hidden"
       animate="visible"
       exit="hidden"

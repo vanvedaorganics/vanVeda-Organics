@@ -520,7 +520,7 @@ function ProductDetails() {
         </div>
       )}
 
-      <div className={`mx-auto max-w-7xl ${submittingRating ? "pointer-events-none" : ""}`}>
+      <div className={`mx-auto max-w-7xl 2xl:max-w-[1600px] ${submittingRating ? "pointer-events-none" : ""}`}>
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-xs text-gray-400 mb-8 font-medium uppercase tracking-wider">
           <Link to="/" className="hover:text-[#28543d] transition-colors">Home</Link>
