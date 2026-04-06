@@ -5,7 +5,6 @@ import ProductCard from "./ProductCard";
 import ProductsGrid from "./ProductsGrid"
 import ImageShowcase from "./ImageShowcase";
 import Input from "./Input"
-import CertificateCard from "./CertificateCard";
 import CartCard from "./CartCard";
 import BlogCard from "./BlogCard";
 
@@ -17,7 +16,6 @@ export {
     ProductCard,
     ImageShowcase,
     ProductsGrid,
-    CertificateCard,
     CartCard,
     BlogCard,
 }

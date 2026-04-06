@@ -889,12 +889,12 @@ function ProductDetails() {
             
             {/* Features */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4">
-               {[
-                 { label: "100% Organic", icon: <CheckCircle2 className="h-4 w-4" /> },
-                 { label: "Zero Pesticides", icon: <CheckCircle2 className="h-4 w-4" /> },
-                 { label: "Lab Tested", icon: <CheckCircle2 className="h-4 w-4" /> },
-                 { label: "Farm Fresh", icon: <CheckCircle2 className="h-4 w-4" /> }
-               ].map((feat, i) => (
+                {[
+                  { label: "100% Organic", icon: <CheckCircle2 className="h-4 w-4" /> },
+                  { label: "Zero Pesticides", icon: <CheckCircle2 className="h-4 w-4" /> },
+                  { label: "Farm Fresh", icon: <CheckCircle2 className="h-4 w-4" /> },
+                  { label: "Handpicked", icon: <CheckCircle2 className="h-4 w-4" /> }
+                ].map((feat, i) => (
                  <div key={i} className="flex items-center gap-2 text-[10px] font-black uppercase tracking-tighter text-[#28543d] py-2 px-3 rounded-xl bg-[#28543d]/5">
                    {feat.icon}
                    {feat.label}

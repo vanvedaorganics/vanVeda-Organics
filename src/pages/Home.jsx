@@ -4,7 +4,7 @@ import { Button, ProductsGrid, ImageShowcase, BlogCard } from "../components";
 import { Link } from "react-router-dom";
 import { fetchProducts, selectAllProducts } from "../store/productsSlice";
 import { motion } from "framer-motion";
-import { Leaf, Globe, Truck, FlaskConical, Quote, ArrowRight } from "lucide-react";
+import { Leaf, Globe, Truck, FlaskConical, Quote, ArrowRight, ShieldCheck } from "lucide-react";
 import blogData from "./Blog/blogData";
 
 function Home() {
@@ -54,7 +54,7 @@ function Home() {
               transition={{ delay: 0.3 }}
               className="mb-6 inline-block rounded-full px-6 py-2 text-[10px] font-black uppercase tracking-[0.2em] bg-[#E7CE9D]/10 text-[#E7CE9D] border border-[#E7CE9D]/30 backdrop-blur-md"
             >
-              100% Certified Organic • Soil to Soul
+              100% Raw & Natural • Soil to Soul
             </motion.span>
 
             <motion.h1
@@ -102,7 +102,7 @@ function Home() {
               { icon: Leaf, title: "100% Organic", desc: "Non-GMO & Pure" },
               { icon: Globe, title: "Sustainable", desc: "Eco-friendly farms" },
               { icon: Truck, title: "Direct to Table", desc: "Fresh from harvest" },
-              { icon: FlaskConical, title: "Lab Tested", desc: "Highest QC standards" }
+              { icon: ShieldCheck, title: "Zero Additives", desc: "No harmful chemicals" }
             ].map((feature, idx) => (
               <div key={idx} className="flex flex-col items-center text-center group">
                 <div className="w-14 h-14 rounded-2xl bg-[#faf8f4] flex items-center justify-center mb-4 group-hover:bg-[#E7CE9D]/10 transition-colors duration-500">

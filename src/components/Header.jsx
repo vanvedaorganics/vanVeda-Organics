@@ -88,12 +88,6 @@ export function Header() {
       active: true,
     },
     {
-      name: "Certificates",
-      slug: "/certificates",
-      icon: <Award className="h-5 w-5" />,
-      active: true,
-    },
-    {
       name: "Blog",
       slug: "/blog",
       icon: <BookOpen className="h-5 w-5" />,

@@ -19,7 +19,6 @@ import Offers from "../admin/pages/Offers.jsx";
 // Client pages
 import Home from "./pages/Home.jsx";
 import ClientProducts from "./pages/ClientProducts.jsx";
-import Certificates from "./pages/Certificates.jsx";
 import ProductDetails from "./pages/ProductDetails.jsx";
 import ClientLogin from "./pages/ClientLogin.jsx";
 import ClientAuthLayout from "./components/ClientAuthLayout.jsx";
@@ -67,10 +66,6 @@ const router = createBrowserRouter([
       {
         path: "products/:slug", // ✅ Dynamic route for product details
         element: <ProductDetails />,
-      },
-      {
-        path: "certificates",
-        element: <Certificates />,
       },
       {
         path: "/profile",
