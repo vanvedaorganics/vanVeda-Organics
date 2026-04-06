@@ -218,8 +218,9 @@ export function Header() {
       )}
 
       {/* Main Header */}
+      {/* ── Desktop layout (lg+) ── */}
       <motion.div
-        className="max-w-7xl mx-auto flex h-16 md:h-20 items-center justify-between px-2 sm:px-4 md:px-6"
+        className="hidden lg:flex max-w-7xl mx-auto h-20 items-center justify-between px-6"
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5 }}
@@ -232,18 +233,18 @@ export function Header() {
           <img
             src="/Truesoil.png"
             alt="TrueSoil Organics"
-            className="h-12 md:h-18 w-auto object-contain"
+            className="h-18 w-auto object-contain"
           />
         </Link>
 
         {/* Desktop Nav */}
-        <div className="hidden lg:flex items-center gap-6 text-sm font-medium">
+        <div className="flex items-center gap-6 text-sm font-medium">
           <Input
             type="search"
             placeholder="Search products..."
             className="w-[200px] lg:w-[250px] rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-green-900 focus:ring-1 focus:ring-green-900"
           />
-          <nav className="hidden lg:flex items-center gap-4 xl:gap-6">
+          <nav className="flex items-center gap-4 xl:gap-6">
             {navItems.map(
               (item) =>
                 item.active && (
@@ -267,45 +268,85 @@ export function Header() {
           </nav>
         </div>
 
-        {/* Actions */}
-        <div className="flex items-center gap-2 md:gap-4">
-          {/* Cart */}
-          <motion.button
-            onClick={() => setCartOpen(true)}
-            whileHover={{ scale: 1.1, rotate: -2 }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 300, damping: 15 }}
-            className="relative p-2 rounded-full bg-white shadow-md hover:shadow-lg transition-shadow duration-300"
-            aria-label="Open cart"
-          >
-            <ShoppingCart className="h-5 w-5 text-gray-900" />
-            {cartItemCount > 0 && (
-              <motion.span
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                exit={{ scale: 0 }}
-                className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#e7ce9d] text-xs text-[#2D1D1A] shadow-sm"
-              >
-                {cartItemCount}
-              </motion.span>
-            )}
-            <span className="sr-only">Shopping Cart</span>
-          </motion.button>
+        {/* Cart */}
+        <motion.button
+          onClick={() => setCartOpen(true)}
+          whileHover={{ scale: 1.1, rotate: -2 }}
+          whileTap={{ scale: 0.95 }}
+          transition={{ type: "spring", stiffness: 300, damping: 15 }}
+          className="relative p-2 rounded-full bg-white shadow-md hover:shadow-lg transition-shadow duration-300"
+          aria-label="Open cart"
+        >
+          <ShoppingCart className="h-5 w-5 text-gray-900" />
+          {cartItemCount > 0 && (
+            <motion.span
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0 }}
+              className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#e7ce9d] text-xs text-[#2D1D1A] shadow-sm"
+            >
+              {cartItemCount}
+            </motion.span>
+          )}
+          <span className="sr-only">Shopping Cart</span>
+        </motion.button>
+      </motion.div>
 
-          {/* Mobile Menu Toggle */}
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden hover:bg-gray-100 p-2 rounded-full"
-            aria-label="Toggle navigation menu"
-          >
-            {mobileMenuOpen ? (
-              <X className="h-5 w-5 text-gray-900" />
-            ) : (
-              <Menu className="h-5 w-5 text-gray-900" />
-            )}
-            <span className="sr-only">Toggle navigation menu</span>
-          </button>
-        </div>
+      {/* ── Mobile layout (< lg): Hamburger | Logo | Cart ── */}
+      <motion.div
+        className="lg:hidden flex h-16 items-center justify-between px-2 sm:px-4"
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
+        {/* Left: Mobile Menu Toggle */}
+        <button
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="hover:bg-gray-100 p-2 rounded-full"
+          aria-label="Toggle navigation menu"
+        >
+          {mobileMenuOpen ? (
+            <X className="h-5 w-5 text-gray-900" />
+          ) : (
+            <Menu className="h-5 w-5 text-gray-900" />
+          )}
+          <span className="sr-only">Toggle navigation menu</span>
+        </button>
+
+        {/* Center: Logo */}
+        <Link
+          to="/"
+          className="absolute left-1/2 -translate-x-1/2 flex items-center"
+        >
+          <img
+            src="/Truesoil.png"
+            alt="TrueSoil Organics"
+            className="h-12 w-auto object-contain"
+          />
+        </Link>
+
+        {/* Right: Cart */}
+        <motion.button
+          onClick={() => setCartOpen(true)}
+          whileHover={{ scale: 1.1, rotate: -2 }}
+          whileTap={{ scale: 0.95 }}
+          transition={{ type: "spring", stiffness: 300, damping: 15 }}
+          className="relative p-2 rounded-full bg-white shadow-md hover:shadow-lg transition-shadow duration-300"
+          aria-label="Open cart"
+        >
+          <ShoppingCart className="h-5 w-5 text-gray-900" />
+          {cartItemCount > 0 && (
+            <motion.span
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0 }}
+              className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#e7ce9d] text-xs text-[#2D1D1A] shadow-sm"
+            >
+              {cartItemCount}
+            </motion.span>
+          )}
+          <span className="sr-only">Shopping Cart</span>
+        </motion.button>
       </motion.div>
 
       {/* Mobile Menu Sidebar */}
@@ -320,10 +361,10 @@ export function Header() {
               onClick={() => setMobileMenuOpen(false)}
             />
             <motion.div
-              className="fixed top-0 right-0 bottom-0 w-72 bg-white z-50 p-6 shadow-lg flex flex-col"
-              initial={{ x: "100%" }}
+              className="fixed top-0 left-0 bottom-0 w-72 bg-white z-50 p-6 shadow-lg flex flex-col"
+              initial={{ x: "-100%" }}
               animate={{ x: 0 }}
-              exit={{ x: "100%" }}
+              exit={{ x: "-100%" }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
             >
               <Input

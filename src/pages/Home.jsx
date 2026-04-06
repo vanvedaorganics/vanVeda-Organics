@@ -26,43 +26,55 @@ function Home() {
   return (
     <>
       {/* ---------------- Hero Section ---------------- */}
-      <section className="relative flex h-[600px] w-full items-center justify-center overflow-hidden px-4 text-center">
-        <div className="relative h-full w-full overflow-hidden">
-          <img
-            src="HeroImage.png"
-            alt="True Soil Organics Hero"
-            className="absolute inset-0 z-0 h-full w-full animate-fade-in object-fill"
-            loading="lazy"
-          />
-        </div>
+      <section className="relative w-full overflow-hidden" style={{ minHeight: "clamp(420px, 70vh, 700px)" }}>
+        {/* Background Image */}
+        <img
+          src="HeroImage.png"
+          alt="True Soil Organics Hero"
+          className="absolute inset-0 z-0 h-full w-full object-cover object-center"
+          loading="eager"
+        />
 
-        <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/20 backdrop-blur-xs">
-          <div className="max-w-4xl space-y-6 text-white animate-slide-up">
-            <h1 className="syne-medium text-4xl font-bold md:text-7xl text-neutral-950">
-              Cultivating Health , Nurturing Earth
+        {/* Gradient overlay — strong at bottom, lighter at top for image visibility */}
+        <div
+          className="absolute inset-0 z-10"
+          style={{
+            background:
+              "linear-gradient(to top, rgba(20,16,8,0.92) 0%, rgba(20,16,8,0.55) 45%, rgba(20,16,8,0.18) 100%)",
+          }}
+        />
+
+        {/* Content */}
+        <div className="relative z-20 flex h-full w-full items-end justify-center pb-12 sm:pb-16 md:pb-20 px-4 sm:px-6"
+          style={{ minHeight: "clamp(420px, 70vh, 700px)" }}>
+          <div className="w-full max-w-3xl text-center">
+
+            {/* Pill badge */}
+            <span
+              className="mb-4 inline-block rounded-full px-4 py-1.5 text-xs font-semibold uppercase tracking-widest"
+              style={{ background: "rgba(231,206,157,0.18)", color: "#E7CE9D", border: "1px solid rgba(231,206,157,0.35)" }}
+            >
+              100% Certified Organic
+            </span>
+
+            {/* Main heading */}
+            <h1
+              className="syne-medium font-extrabold leading-tight tracking-tight text-white"
+              style={{ fontSize: "clamp(1.75rem, 5vw, 4rem)", textShadow: "0 2px 24px rgba(0,0,0,0.55)" }}
+            >
+              Cultivating Health,
+              <br className="hidden sm:block" />
+              {" "}Nurturing Earth
             </h1>
-            <p className="text-lg opacity-90 md:text-xl text-[#2D2D1A]">
-              Your journey to pure, wholesome, and sustainable living with True
-              Soil Organics starts here.
-            </p>
 
-            <div className="mt-8 flex justify-center gap-4">
-              <Button
-                asChild
-                size="lg"
-                className="rounded-xl bg-[#E7CE9D] text-sm text-[#2D1D1A] shadow-lg hover:scale-105 hover:bg-[#E7CE9D]/90"
-              >
-                <Link to="/products">Explore Products</Link>
-              </Button>
-              <Button
-                asChild
-                size="lg"
-                variant="outline"
-                className="rounded-xl border border-[#2D2D1A]/20 text-[#2D2D1A] bg-white/35 hover:scale-105 hover:bg-white hover:text-[#2D1D1A]"
-              >
-                <Link to="/about-us">Our Story</Link>
-              </Button>
-            </div>
+            {/* Sub-text */}
+            <p
+              className="mx-auto mt-4 max-w-xl text-sm sm:text-base md:text-lg font-medium"
+              style={{ color: "rgba(255,255,255,0.85)", textShadow: "0 1px 8px rgba(0,0,0,0.5)" }}
+            >
+              Your journey to pure, wholesome, and sustainable living with
+              True Soil Organics starts here.
+            </p>
           </div>
         </div>
       </section>
