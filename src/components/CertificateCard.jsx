@@ -27,7 +27,7 @@ const CertificateCard = ({ cert }) => {
         <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
           <button
             onClick={handleDownload}
-            className="bg-white text-[#2d1d1a] flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium shadow hover:bg-gray-100"
+            className="bg-white text-[#744531] flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium shadow hover:bg-gray-100"
           >
             <Download size={16} />
             Download
@@ -44,7 +44,7 @@ const CertificateCard = ({ cert }) => {
             className="h-full w-full object-contain"
           />
         </div>
-        <h3 className="syne-bold text-xl text-[#2d1d1a]">{cert.name}</h3>
+        <h3 className="syne-bold text-xl text-[#744531]">{cert.name}</h3>
       </div>
 
       {/* Content */}

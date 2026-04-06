@@ -33,8 +33,8 @@ function App() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#fafafa]">
         <div className="flex flex-col items-center gap-3">
-          <Loader2 className="w-10 h-10 text-[#2D1D1A] animate-spin" />
-          <p className="text-[#2D1D1A] text-lg font-medium">Loading...</p>
+          <Loader2 className="w-10 h-10 text-[#744531] animate-spin" />
+          <p className="text-[#744531] text-lg font-medium">Loading...</p>
         </div>
       </div>
     );

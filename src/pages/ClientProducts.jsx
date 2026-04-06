@@ -45,7 +45,7 @@ function ClientProducts() {
           <button
             onClick={() => handleCategoryClick("mango")}
             className={`transition-transform hover:scale-110 ${
-              categoryFilter === "mango" ? "ring-4 ring-[#69a72a] rounded-full" : ""
+              categoryFilter === "mango" ? "ring-4 ring-[#28543d] rounded-full" : ""
             }`}
             aria-label="Filter Mango Products"
           >
@@ -58,7 +58,7 @@ function ClientProducts() {
           <button
             onClick={() => handleCategoryClick("ghee")}
             className={`transition-transform hover:scale-110 ${
-              categoryFilter === "ghee" ? "ring-4 ring-[#69a72a] rounded-full" : ""
+              categoryFilter === "ghee" ? "ring-4 ring-[#28543d] rounded-full" : ""
             }`}
             aria-label="Filter Ghee Products"
           >
@@ -71,7 +71,7 @@ function ClientProducts() {
           {categoryFilter !== "all" && (
             <button
               onClick={() => handleCategoryClick("all")}
-              className="px-4 py-2 text-sm font-medium text-white bg-[#69a72a] rounded-lg hover:bg-[#5a8f23] transition-colors"
+              className="px-4 py-2 text-sm font-medium text-white bg-[#28543d] rounded-lg hover:bg-[#5a8f23] transition-colors"
             >
               Show All
             </button>
@@ -79,11 +79,11 @@ function ClientProducts() {
         </div>
 
         {/* Heading */}
-        <h1 className="syne-bold text-3xl md:text-4xl font-serif text-[#2d1d1a] text-center mb-12 relative">
+        <h1 className="syne-bold text-3xl md:text-4xl font-serif text-[#744531] text-center mb-12 relative">
           {categoryFilter === "all" 
             ? "Our Organic Products" 
             : `Our ${categoryFilter.charAt(0).toUpperCase() + categoryFilter.slice(1)} Products`}
-          <span className="absolute left-1/2 -bottom-2 w-16 h-1 bg-[#69a72a] rounded-full transform -translate-x-1/2 animate-expandLine"></span>
+          <span className="absolute left-1/2 -bottom-2 w-16 h-1 bg-[#28543d] rounded-full transform -translate-x-1/2 animate-expandLine"></span>
         </h1>
 
         {/* Products */}

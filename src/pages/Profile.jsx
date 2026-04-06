@@ -317,7 +317,7 @@ function Profile() {
       <div className="mx-auto max-w-5xl bg-white rounded-2xl shadow-lg p-6 md:p-8">
         {/* Header */}
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 md:w-16 md:h-16 flex items-center justify-center rounded-full bg-[#2D1D1A] text-white shadow-md">
+          <div className="w-14 h-14 md:w-16 md:h-16 flex items-center justify-center rounded-full bg-[#744531] text-white shadow-md">
             <User className="w-7 h-7 md:w-8 md:h-8" />
           </div>
           <div>
@@ -334,8 +334,8 @@ function Profile() {
             onClick={() => { setActiveTab("profile"); navigate("/profile"); }}
             className={`px-4 py-2 text-sm md:text-base font-semibold transition ${
               activeTab === "profile"
-                ? "text-[#2D1D1A] border-b-2 border-[#2D1D1A]"
-                : "text-gray-600 hover:text-[#2D1D1A]"
+                ? "text-[#744531] border-b-2 border-[#744531]"
+                : "text-gray-600 hover:text-[#744531]"
             }`}
           >
             Profile
@@ -344,8 +344,8 @@ function Profile() {
             onClick={() => { setActiveTab("orders"); navigate("/profile/orders"); }}
             className={`px-4 py-2 text-sm md:text-base font-semibold transition ${
               activeTab === "orders"
-                ? "text-[#2D1D1A] border-b-2 border-[#2D1D1A]"
-                : "text-gray-600 hover:text-[#2D1D1A]"
+                ? "text-[#744531] border-b-2 border-[#744531]"
+                : "text-gray-600 hover:text-[#744531]"
             }`}
           >
             Orders
@@ -354,8 +354,8 @@ function Profile() {
             onClick={() => { setActiveTab("subscriptions"); navigate("/profile/subscriptions"); }}
             className={`px-4 py-2 text-sm md:text-base font-semibold transition ${
               activeTab === "subscriptions"
-                ? "text-[#2D1D1A] border-b-2 border-[#2D1D1A]"
-                : "text-gray-600 hover:text-[#2D1D1A]"
+                ? "text-[#744531] border-b-2 border-[#744531]"
+                : "text-gray-600 hover:text-[#744531]"
             }`}
           >
             Subscriptions
@@ -378,11 +378,11 @@ function Profile() {
               {/* Info */}
               <div className="space-y-6">
                 <div className="flex items-center gap-3">
-                  <Mail className="w-5 h-5 text-[#2D1D1A]" />
+                  <Mail className="w-5 h-5 text-[#744531]" />
                   <span className="text-lg text-[#201413]">{profile.email}</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <Phone className="w-5 h-5 text-[#2D1D1A]" />
+                  <Phone className="w-5 h-5 text-[#744531]" />
                   <span className="text-lg text-[#201413]">{profile.phone}</span>
                 </div>
                 <div className="space-y-3">
@@ -410,7 +410,7 @@ function Profile() {
               <div className="flex gap-4 mt-8">
                 <Button
                   size="lg"
-                  className="flex-1 rounded-xl bg-[#2D1D1A] text-white shadow-md hover:bg-[#2D1D1A]/90 hover:shadow-lg"
+                  className="flex-1 rounded-xl bg-[#744531] text-white shadow-md hover:bg-[#744531]/90 hover:shadow-lg"
                   onClick={openModal}
                 >
                   Edit Profile
@@ -445,7 +445,7 @@ function Profile() {
                         <div className="flex justify-between items-start gap-4">
                           <div>
                             <div className="text-sm text-[#613D38]">Product:
-                              <span className="font-semibold text-[#2D1D1A] ml-2">{productName}</span>
+                              <span className="font-semibold text-[#744531] ml-2">{productName}</span>
                             </div>
                             <div className="text-sm text-[#613D38] mt-1">Size:
                               <span className="font-semibold ml-2">{s.parsedPackaging?.sizeLabel || "-"}</span>
@@ -466,7 +466,7 @@ function Profile() {
                           </div>
                         </div>
 
-                        <div className="mt-3 text-sm text-[#2D1D1A] bg-white p-3 rounded">
+                        <div className="mt-3 text-sm text-[#744531] bg-white p-3 rounded">
                           <div className="text-xs text-gray-500">Next Order</div>
                           <div className="font-medium">{s.nextOrderAt ? new Date(s.nextOrderAt).toLocaleString() : "-"}</div>
                           <div className="mt-2 text-xs text-gray-500">Shipping Address</div>
@@ -676,7 +676,7 @@ function Profile() {
 
                 <Button
                   type="submit"
-                  className="w-full bg-[#2D1D1A] text-white rounded-xl hover:bg-[#2D1D1A]/90"
+                  className="w-full bg-[#744531] text-white rounded-xl hover:bg-[#744531]/90"
                   disabled={saving}
                 >
                   {saving ? (
@@ -721,7 +721,7 @@ function Profile() {
               <Button
                 onClick={handleConfirmEmailUpdate}
                 disabled={saving}
-                className="bg-[#2D1D1A] text-white"
+                className="bg-[#744531] text-white"
               >
                 {saving ? "Updating..." : "Confirm"}
               </Button>
@@ -765,7 +765,7 @@ function OrderCard({ order, formatINR, safeJSONParse, normalizeStatus }) {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div className="space-y-1">
           <div className="text-sm text-[#613D38]">
-            Order ID: <span className="font-semibold text-[#2D1D1A]">{order.$id}</span>
+            Order ID: <span className="font-semibold text-[#744531]">{order.$id}</span>
           </div>
           <div className="text-xs text-gray-500">
             Placed on {new Date(order.$createdAt).toLocaleString()}
@@ -778,14 +778,14 @@ function OrderCard({ order, formatINR, safeJSONParse, normalizeStatus }) {
           </div>
         </div>
         <div className="text-right">
-          <div className="text-sm text-[#2D1D1A] font-semibold">Total</div>
+          <div className="text-sm text-[#744531] font-semibold">Total</div>
           <div className="text-lg font-bold">{formatINR(order.total_cents)}</div>
         </div>
       </div>
 
       {/* Address */}
       {shippingAddr && (
-        <div className="mt-3 text-xs text-[#2D1D1A] bg-[#E7CE9D]/20 border border-[#2D1D1A]/10 rounded-md p-3">
+        <div className="mt-3 text-xs text-[#744531] bg-[#E7CE9D]/20 border border-[#744531]/10 rounded-md p-3">
           <div className="font-semibold mb-1">Shipping Address</div>
           <div>{shippingAddr.residencyAddress}</div>
           {shippingAddr.landmark && <div>{shippingAddr.landmark}</div>}
@@ -800,7 +800,7 @@ function OrderCard({ order, formatINR, safeJSONParse, normalizeStatus }) {
       <div className="mt-3">
         <button
           onClick={() => setIsExpanded((prev) => !prev)}
-          className="text-sm font-semibold text-[#2D1D1A] hover:underline"
+          className="text-sm font-semibold text-[#744531] hover:underline"
         >
           {isExpanded ? "Hide items" : "View items"}
         </button>
@@ -846,7 +846,7 @@ function OrderCard({ order, formatINR, safeJSONParse, normalizeStatus }) {
               </div>
               {/* Summary */}
               {orderItems.summary && (
-                <div className="mt-3 text-right text-sm text-[#2D1D1A]">
+                <div className="mt-3 text-right text-sm text-[#744531]">
                   Subtotal:{" "}
                   <span className="font-semibold">
                     {formatINR(orderItems.summary.subtotal_cents)}

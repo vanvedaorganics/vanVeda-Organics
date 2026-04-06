@@ -103,14 +103,14 @@ function ClientSignup() {
     <div className="w-full bg-[#fafafa] min-h-screen flex items-center justify-center px-4">
       <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-8">
         {/* Title */}
-        <h2 className="text-center text-3xl md:text-4xl font-bold text-[#2D1D1A]">
+        <h2 className="text-center text-3xl md:text-4xl font-bold text-[#744531]">
           Sign up to create account
         </h2>
         <p className="mt-2 text-center text-base text-[#613D38]">
           Already have an account?{" "}
           <Link
             to="/login"
-            className="text-[#69A72A] font-medium hover:underline"
+            className="text-[#28543d] font-medium hover:underline"
           >
             Sign In
           </Link>
@@ -248,7 +248,7 @@ function ClientSignup() {
             type="submit"
             size="lg"
             disabled={loading}
-            className="w-full rounded-xl bg-[#2D1D1A] text-white shadow-md hover:bg-[#2D1D1A]/90 hover:shadow-lg transition-all duration-300"
+            className="w-full rounded-xl bg-[#744531] text-white shadow-md hover:bg-[#744531]/90 hover:shadow-lg transition-all duration-300"
           >
             {loading ? "Creating Account..." : "Create Account"}
           </Button>

@@ -12,7 +12,7 @@ import {
 
 function Footer() {
   return (
-    <footer className="bg-[#2D1D1A] text-primary-foreground py-12 md:py-16 font-sans">
+    <footer className="bg-[#744531] text-primary-foreground py-12 md:py-16 font-sans">
       <div className="container grid grid-cols-1 md:grid-cols-4 gap-8 px-4 md:px-6">
         {/* Brand Info */}
         <div className="space-y-4">

@@ -521,7 +521,7 @@ function Checkout() {
               {/* Address Section */}
               <div className="bg-white rounded-2xl shadow-lg p-6 space-y-4 border">
                 <div className="flex items-center gap-2">
-                  <MapPin className="w-5 h-5 text-[#2D1D1A]" />
+                  <MapPin className="w-5 h-5 text-[#744531]" />
                   <h2 className="text-xl font-bold text-[#201413]">
                     Shipping Address
                   </h2>
@@ -547,7 +547,7 @@ function Checkout() {
                         key={idx}
                         className={`flex items-start gap-3 rounded-lg border p-3 cursor-pointer transition ${
                           selectedAddressIdx === idx && !useNewAddress
-                            ? "border-[#2D1D1A] bg-[#E7CE9D]/20"
+                            ? "border-[#744531] bg-[#E7CE9D]/20"
                             : "border-gray-200 hover:bg-gray-50"
                         }`}
                         onClick={() => {
@@ -589,7 +589,7 @@ function Checkout() {
                       setUseNewAddress((v) => !v);
                       setSelectedAddressIdx(null);
                     }}
-                    className="text-sm font-semibold text-[#2D1D1A] hover:underline"
+                    className="text-sm font-semibold text-[#744531] hover:underline"
                   >
                     {useNewAddress ? "Use Saved Address" : "Add New Address"}
                   </button>
@@ -607,7 +607,7 @@ function Checkout() {
                       <motion.div
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="text-sm font-semibold text-[#2D1D1A] bg-[#E7CE9D]/20 border border-[#2D1D1A]/20 rounded-md p-3 flex items-center gap-2"
+                        className="text-sm font-semibold text-[#744531] bg-[#E7CE9D]/20 border border-[#744531]/20 rounded-md p-3 flex items-center gap-2"
                       >
                         <MapPin className="w-4 h-4 flex-shrink-0" />
                         <span>
@@ -696,7 +696,7 @@ function Checkout() {
               {/* Payment Section */}
               <div className="bg-white rounded-2xl shadow-lg p-6 space-y-4 border">
                 <div className="flex items-center gap-2">
-                  <User className="w-5 h-5 text-[#2D1D1A]" />
+                  <User className="w-5 h-5 text-[#744531]" />
                   <h2 className="text-xl font-bold text-[#201413]">Payment</h2>
                 </div>
 
@@ -705,11 +705,11 @@ function Checkout() {
                     onClick={() => setPaymentChoice("COD")}
                     className={`flex items-center gap-3 p-4 rounded-xl border transition ${
                       paymentChoice === "COD"
-                        ? "border-[#2D1D1A] bg-[#E7CE9D]/20"
+                        ? "border-[#744531] bg-[#E7CE9D]/20"
                         : "border-gray-200 hover:bg-gray-50"
                     }`}
                   >
-                    <Wallet className="w-6 h-6 text-[#2D1D1A]" />
+                    <Wallet className="w-6 h-6 text-[#744531]" />
                     <div className="text-left">
                       <div className="font-semibold">Cash on Delivery</div>
                       <div className="text-xs text-gray-600">
@@ -722,11 +722,11 @@ function Checkout() {
                     onClick={() => setPaymentChoice("RAZORPAY")}
                     className={`flex items-center gap-3 p-4 rounded-xl border transition ${
                       paymentChoice === "RAZORPAY"
-                        ? "border-[#2D1D1A] bg-[#E7CE9D]/20"
+                        ? "border-[#744531] bg-[#E7CE9D]/20"
                         : "border-gray-200 hover:bg-gray-50"
                     }`}
                   >
-                    <CreditCard className="w-6 h-6 text-[#2D1D1A]" />
+                    <CreditCard className="w-6 h-6 text-[#744531]" />
                     <div className="text-left">
                       <div className="font-semibold">Razor Pay</div>
                       <div className="text-xs text-gray-600">
@@ -742,7 +742,7 @@ function Checkout() {
             <div className="space-y-6">
               <div className="bg-white rounded-2xl shadow-lg p-6 border">
                 <div className="flex items-center gap-2 mb-4">
-                  <Package className="w-5 h-5 text-[#2D1D1A]" />
+                  <Package className="w-5 h-5 text-[#744531]" />
                   <h2 className="text-xl font-bold text-[#201413]">
                     Order Summary
                   </h2>
@@ -764,7 +764,7 @@ function Checkout() {
                         )}
                         {row.batch &&
                         (row.batch.name || row.batch.delivery_date) ? (
-                          <div className="text-xs text-[#2D1D1A]">
+                          <div className="text-xs text-[#744531]">
                             Batch: {row.batch.name}
                             {row.batch.delivery_date
                               ? ` • Delivery: ${row.batch.delivery_date}`
@@ -776,7 +776,7 @@ function Checkout() {
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="text-sm text-[#2D1D1A] font-semibold">
+                        <div className="text-sm text-[#744531] font-semibold">
                           ₹{(row.unitCents / 100).toFixed(2)}
                         </div>
                         <div className="text-xs text-gray-500">
@@ -788,7 +788,7 @@ function Checkout() {
                 </div>
 
                 {/* Delivery ETA */}
-                <div className="mt-4 flex items-center gap-2 text-sm text-[#2D1D1A]">
+                <div className="mt-4 flex items-center gap-2 text-sm text-[#744531]">
                   <Truck className="w-4 h-4" />
                   <span className="font-semibold">Estimated Delivery</span>
                   <CalendarDays className="w-4 h-4 ml-1" />
@@ -797,7 +797,7 @@ function Checkout() {
 
                 {/* Totals */}
                 <div className="mt-4 border-t pt-4">
-                  <div className="flex items-center justify-between text-[#2D1D1A]">
+                  <div className="flex items-center justify-between text-[#744531]">
                     <span className="font-semibold flex items-center gap-1">
                       <IndianRupee className="w-4 h-4" /> Payable
                     </span>
@@ -812,7 +812,7 @@ function Checkout() {
                   disabled={!canPlace || placing}
                   className={`w-full mt-4 rounded-xl ${
                     canPlace && !placing
-                      ? "bg-[#2D1D1A] hover:bg-[#2D1D1A]/90"
+                      ? "bg-[#744531] hover:bg-[#744531]/90"
                       : "bg-gray-300 cursor-not-allowed"
                   } text-white shadow-md hover:shadow-lg transition-all duration-300`}
                 >

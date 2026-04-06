@@ -103,7 +103,7 @@ function Home() {
             <Button
               asChild
               size="lg"
-              className="rounded-xl bg-[#2D1D1A] px-8 py-3 text-sm text-white shadow-md hover:shadow-lg"
+              className="rounded-xl bg-[#744531] px-8 py-3 text-sm text-white shadow-md hover:shadow-lg"
             >
               <Link to="/products">View All Products</Link>
             </Button>

@@ -219,7 +219,7 @@ const ProductCard = ({
     <Link
       to={`/products/${slug}`}
       className={cn(
-        "group relative max-w-sm mx-auto overflow-hidden rounded-xl border border-[#E7CE9D]/40 bg-white text-[#2D1D1A] shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 flex flex-col",
+        "group relative max-w-sm mx-auto overflow-hidden rounded-xl border border-[#E7CE9D]/40 bg-white text-[#744531] shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 flex flex-col",
         // NEW: ensure dropdown can overflow parent when open
         batchDropdownOpen && "overflow-visible",
         className
@@ -247,7 +247,7 @@ const ProductCard = ({
         <div className="flex items-start gap-2">
           <h3 className="text-base font-semibold line-clamp-1 flex-1">{name}</h3>
           {categoryName && (
-            <span className="shrink-0 px-2 py-0.5 rounded-md bg-[#E7CE9D] text-[#2D1D1A] text-[10px] font-semibold tracking-wide">
+            <span className="shrink-0 px-2 py-0.5 rounded-md bg-[#E7CE9D] text-[#744531] text-[10px] font-semibold tracking-wide">
               {categoryName}
             </span>
           )}
@@ -265,7 +265,7 @@ const ProductCard = ({
                 key={i}
                 className={`h-3.5 w-3.5 ${
                   i < Math.floor(average_rating)
-                    ? "fill-[#2D1D1A] text-[#2D1D1A]"
+                    ? "fill-[#744531] text-[#744531]"
                     : "fill-gray-200 stroke-gray-400"
                 }`}
               />
@@ -276,7 +276,7 @@ const ProductCard = ({
 
         {/* Price */}
         <div className="mt-3 flex items-center gap-2">
-          <span className="text-lg font-bold text-[#2D1D1A]">{formattedFinal}</span>
+          <span className="text-lg font-bold text-[#744531]">{formattedFinal}</span>
           {hasDiscount && baseCents > 0 && (
             <span className="text-xs line-through text-[#613D38]">{formattedBase}</span>
           )}
@@ -299,8 +299,8 @@ const ProductCard = ({
                     className={cn(
                       "px-2 py-1 rounded border-2 text-xs font-semibold transition tracking-wide",
                       selected
-                        ? "bg-[#2D1D1A] text-white border-[#2D1D1A]"
-                        : "bg-white text-[#2D1D1A] border-[#2D1D1A] hover:bg-[#2D1D1A]/10"
+                        ? "bg-[#744531] text-white border-[#744531]"
+                        : "bg-white text-[#744531] border-[#744531] hover:bg-[#744531]/10"
                     )}
                     aria-pressed={selected}
                     aria-label={`Select size ${s.size || idx + 1}`}
@@ -316,7 +316,7 @@ const ProductCard = ({
         {/* NEW: Batch dropdown selector */}
         {hasBatches && (
           <div className="mt-3 relative z-10" data-batch-dropdown>
-            <div className="text-[10px] font-semibold text-[#2D1D1A] mb-1.5 uppercase tracking-wide">
+            <div className="text-[10px] font-semibold text-[#744531] mb-1.5 uppercase tracking-wide">
               Select Batch {inCart && cartBatch && (
                 <span className="text-emerald-600 normal-case">
                   (Selected: {cartBatch.name})
@@ -338,7 +338,7 @@ const ProductCard = ({
                   inCart
                     ? "bg-gray-100 border-gray-300 text-gray-500 cursor-not-allowed"
                     : batchDropdownOpen
-                    ? "bg-[#E7CE9D] border-[#2D1D1A] text-[#2D1D1A]"
+                    ? "bg-[#E7CE9D] border-[#744531] text-[#744531]"
                     : "bg-white border-[#E7CE9D]/60 text-[#613D38] hover:border-[#E7CE9D] hover:bg-[#E7CE9D]/10"
                 )}
               >
@@ -403,7 +403,7 @@ const ProductCard = ({
             onClick={handleToggleCart}
             size="sm"
             className={cn(
-              "flex-1 text-xs font-semibold shadow-sm transition bg-[#2D1D1A] hover:bg-[#2D1D1A]/90 text-white"
+              "flex-1 text-xs font-semibold shadow-sm transition bg-[#744531] hover:bg-[#744531]/90 text-white"
             )}
           >
             {inCart ? "Remove" : "Add To Cart"}
@@ -414,7 +414,7 @@ const ProductCard = ({
               <button
                 onClick={(e) => adjustQty(e, -1)}
                 aria-label="Decrease quantity"
-                className="h-8 w-8 flex items-center justify-center rounded bg-[#E7CE9D]/40 hover:bg-[#E7CE9D]/60 text-[#2D1D1A] text-sm font-bold"
+                className="h-8 w-8 flex items-center justify-center rounded bg-[#E7CE9D]/40 hover:bg-[#E7CE9D]/60 text-[#744531] text-sm font-bold"
               >
                 -
               </button>
@@ -424,7 +424,7 @@ const ProductCard = ({
               <button
                 onClick={(e) => adjustQty(e, 1)}
                 aria-label="Increase quantity"
-                className="h-8 w-8 flex items-center justify-center rounded bg-[#E7CE9D]/40 hover:bg-[#E7CE9D]/60 text-[#2D1D1A] text-sm font-bold"
+                className="h-8 w-8 flex items-center justify-center rounded bg-[#E7CE9D]/40 hover:bg-[#E7CE9D]/60 text-[#744531] text-sm font-bold"
               >
                 +
               </button>

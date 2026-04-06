@@ -24,11 +24,11 @@ function AboutUs() {
     >
       {/* Page Heading */}
       <motion.h1
-        className="syne-bold text-3xl lg:text-4xl font-serif text-[#2d1d1a] text-center mb-12 relative"
+        className="syne-bold text-3xl lg:text-4xl font-serif text-[#744531] text-center mb-12 relative"
         variants={fadeInUp}
       >
         About True Soil Organics
-        <span className="absolute left-1/2 -bottom-2 w-16 h-1 bg-[#69a72a] rounded-full transform -translate-x-1/2 animate-expandLine"></span>
+        <span className="absolute left-1/2 -bottom-2 w-16 h-1 bg-[#28543d] rounded-full transform -translate-x-1/2 animate-expandLine"></span>
       </motion.h1>
 
       {/* Section 1 */}
@@ -44,7 +44,7 @@ function AboutUs() {
           />
         </div>
         <div className="space-y-6 text-foreground">
-          <h2 className="syne-bold text-3xl leading-tight text-primary hover:underline underline-offset-4 decoration-[#69a72a] transition duration-300">
+          <h2 className="syne-bold text-3xl leading-tight text-primary hover:underline underline-offset-4 decoration-[#28543d] transition duration-300">
             From Our Farms To Your Home
           </h2>
           <p className="ubuntu-regular text-lg leading-relaxed text-[#613d38]">
@@ -54,7 +54,7 @@ function AboutUs() {
             practice has now grown into a vision to deliver the same authentic
             farm-fresh goodness to homes across India.
           </p>
-          <h2 className="syne-bold text-3xl leading-tight text-primary hover:underline underline-offset-4 decoration-[#69a72a] transition duration-300">
+          <h2 className="syne-bold text-3xl leading-tight text-primary hover:underline underline-offset-4 decoration-[#28543d] transition duration-300">
             Celebrating Farmer's Life
           </h2>
           <p className="ubuntu-regular text-lg leading-relaxed text-[#613d38]">
@@ -74,7 +74,7 @@ function AboutUs() {
         variants={fadeInUp}
       >
         <div className="space-y-6 text-foreground order-2 lg:order-1">
-          <h2 className="syne-bold text-3xl leading-tight text-primary hover:underline underline-offset-4 decoration-[#69a72a] transition duration-300">
+          <h2 className="syne-bold text-3xl leading-tight text-primary hover:underline underline-offset-4 decoration-[#28543d] transition duration-300">
             The Lands Of Gir
           </h2>
           <p className="ubuntu-regular text-lg leading-relaxed text-[#613d38]">
@@ -85,7 +85,7 @@ function AboutUs() {
             This is why the Gir Kesar Mango cannot be replicated anywhere else
             in the world.
           </p>
-          <h2 className="syne-bold text-3xl leading-tight text-primary hover:underline underline-offset-4 decoration-[#69a72a] transition duration-300">
+          <h2 className="syne-bold text-3xl leading-tight text-primary hover:underline underline-offset-4 decoration-[#28543d] transition duration-300">
             From Local To Digital
           </h2>
           <p className="ubuntu-regular text-lg leading-relaxed text-[#613d38]">
@@ -114,9 +114,9 @@ function AboutUs() {
         className="bg-[#e7ce9d]/20 p-6 sm:p-8 lg:p-10 rounded-xl shadow-inner text-center mt-16 mx-3 sm:mx-6 lg:mx-16"
         variants={fadeInUp}
       >
-        <h2 className="syne-bold text-3xl text-[#2d1d1a] mb-4 relative inline-block">
+        <h2 className="syne-bold text-3xl text-[#744531] mb-4 relative inline-block">
           Our Promise
-          <span className="absolute left-0 bottom-0 w-0 h-1 bg-[#69a72a] transition-all duration-500 group-hover:w-full"></span>
+          <span className="absolute left-0 bottom-0 w-0 h-1 bg-[#28543d] transition-all duration-500 group-hover:w-full"></span>
         </h2>
         <p className="ubuntu-regular text-[#613d38] mb-8 max-w-3xl mx-auto">
           We are driven by a commitment to purity, sustainability, and
@@ -142,7 +142,7 @@ function AboutUs() {
               className="space-y-3 p-6 rounded-xl bg-white/50 shadow-md hover:shadow-xl hover:-translate-y-2 transform transition duration-500"
               variants={fadeInUp}
             >
-              <CheckCircle className="h-10 w-10 text-[#69a72a] mx-auto" />
+              <CheckCircle className="h-10 w-10 text-[#28543d] mx-auto" />
               <h3 className="syne-bold text-xl text-[#201413]">{item.title}</h3>
               <p className="ubuntu-regular text-sm text-[#613d38]">
                 {item.desc}

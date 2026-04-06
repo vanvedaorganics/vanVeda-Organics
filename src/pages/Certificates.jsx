@@ -69,11 +69,11 @@ function Certificates() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Page Heading */}
         <motion.h1
-          className="syne-bold text-3xl md:text-4xl font-serif text-[#2d1d1a] text-center mb-12 relative"
+          className="syne-bold text-3xl md:text-4xl font-serif text-[#744531] text-center mb-12 relative"
           variants={fadeInUp}
         >
           Our Certifications
-          <span className="absolute left-1/2 -bottom-2 w-16 h-1 bg-[#69a72a] rounded-full transform -translate-x-1/2 animate-expandLine"></span>
+          <span className="absolute left-1/2 -bottom-2 w-16 h-1 bg-[#28543d] rounded-full transform -translate-x-1/2 animate-expandLine"></span>
         </motion.h1>
 
         {/* Certification Cards */}
@@ -93,7 +93,7 @@ function Certificates() {
           className="bg-[#e7ce9d]/20 p-8 rounded-lg shadow-inner text-center mb-16"
           variants={fadeInUp}
         >
-          <h2 className="text-3xl syne-bold text-[#2d1d1a] mb-4">
+          <h2 className="text-3xl syne-bold text-[#744531] mb-4">
             Why Certifications Matter
           </h2>
           <p className="text-[#613d38] ubuntu-regular mb-6 max-w-3xl mx-auto">
@@ -123,7 +123,7 @@ function Certificates() {
                 className="space-y-3 p-6 rounded-xl bg-white/50 shadow-md hover:shadow-xl hover:-translate-y-2 transform transition duration-500"
                 variants={fadeInUp}
               >
-                <CheckCircle className="h-10 w-10 text-[#69a72a] mx-auto" />
+                <CheckCircle className="h-10 w-10 text-[#28543d] mx-auto" />
                 <h3 className="syne-bold text-xl text-[#201413]">
                   {item.title}
                 </h3>

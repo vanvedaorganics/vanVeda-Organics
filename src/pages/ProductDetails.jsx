@@ -499,8 +499,8 @@ function ProductDetails() {
       {submittingRating && (
         <div className="absolute inset-0 z-50 bg-white/60 backdrop-blur-sm flex items-center justify-center pointer-events-auto">
           <div className="flex flex-col items-center gap-3">
-            <div className="h-12 w-12 rounded-full border-4 border-[#2D1D1A]/20 border-t-[#2D1D1A] animate-spin" />
-            <span className="text-sm text-[#2D1D1A]">Submitting rating…</span>
+            <div className="h-12 w-12 rounded-full border-4 border-[#744531]/20 border-t-[#744531] animate-spin" />
+            <span className="text-sm text-[#744531]">Submitting rating…</span>
           </div>
         </div>
       )}
@@ -581,7 +581,7 @@ function ProductDetails() {
               </h1>
 
               {/* Price (per selected size) */}
-              <div className="roboto-bold mt-4 text-3xl font-bold text-[#2D1D1A]">
+              <div className="roboto-bold mt-4 text-3xl font-bold text-[#744531]">
                 ₹{(discountedCents / 100).toFixed(2)}
                 {hasDiscount && baseCents > 0 && (
                   <span className="ml-2 text-base text-[#613D38] line-through">
@@ -598,7 +598,7 @@ function ProductDetails() {
                       key={i}
                       className={`h-5 w-5 ${
                         i < Math.floor(product.average_rating || 0)
-                          ? "fill-[#2D1D1A] text-[#2D1D1A]"
+                          ? "fill-[#744531] text-[#744531]"
                           : "fill-gray-300 stroke-gray-400"
                       }`}
                     />
@@ -609,11 +609,11 @@ function ProductDetails() {
 
               {/* ⭐ Your Rating (interactive) */}
               <div className="mt-3">
-                <div className="text-xs font-semibold text-[#2D1D1A] mb-1">
+                <div className="text-xs font-semibold text-[#744531] mb-1">
                   Your Rating
                 </div>
                 <div
-                  className={`flex items-center gap-2 p-2 rounded-md border border-[#2D1D1A]/20 bg-white/70 ${submittingRating ? "opacity-60 pointer-events-none" : ""}`}
+                  className={`flex items-center gap-2 p-2 rounded-md border border-[#744531]/20 bg-white/70 ${submittingRating ? "opacity-60 pointer-events-none" : ""}`}
                 >
                   <div className="flex items-center" role="radiogroup" aria-label="Rate this product">
                     {[1, 2, 3, 4, 5].map((val) => {
@@ -638,7 +638,7 @@ function ProductDetails() {
                           }
                         >
                           <Star
-                            className={`h-6 w-6 transition ${active ? "fill-[#2D1D1A] text-[#2D1D1A]" : "fill-gray-200 stroke-gray-400 hover:fill-[#E7CE9D] hover:stroke-[#2D1D1A]" }`}
+                            className={`h-6 w-6 transition ${active ? "fill-[#744531] text-[#744531]" : "fill-gray-200 stroke-gray-400 hover:fill-[#E7CE9D] hover:stroke-[#744531]" }`}
                           />
                         </button>
                       );
@@ -669,8 +669,8 @@ function ProductDetails() {
                         type="button"
                         className={`relative px-3 py-1.5 rounded border-2 text-sm font-bold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 transform ${
                           selected
-                            ? "bg-[#2D1D1A] text-white border-[#2D1D1A] shadow-sm scale-105"
-                            : "bg-white text-[#2D1D1A] border-[#2D1D1A] hover:bg-[#2D1D1A]/6"
+                            ? "bg-[#744531] text-white border-[#744531] shadow-sm scale-105"
+                            : "bg-white text-[#744531] border-[#744531] hover:bg-[#744531]/6"
                         }`}
                         onClick={() => {
                           setSelectedSizeIdx(idx);
@@ -681,7 +681,7 @@ function ProductDetails() {
                       >
                         <span className="truncate max-w-[120px] inline-block align-middle">{s.size || `Size ${idx + 1}`}</span>
                         {perSizeQty > 0 && (
-                          <span className="absolute -top-2 -right-2 h-5 min-w-[20px] px-1 rounded-full bg-[#E7CE9D] text-[#2D1D1A] text-[11px] flex items-center justify-center">
+                          <span className="absolute -top-2 -right-2 h-5 min-w-[20px] px-1 rounded-full bg-[#E7CE9D] text-[#744531] text-[11px] flex items-center justify-center">
                             {perSizeQty}
                           </span>
                         )}
@@ -718,8 +718,8 @@ function ProductDetails() {
                       inCart
                         ? "bg-gray-100 border-gray-300 text-gray-500 cursor-not-allowed"
                         : batchDropdownOpen
-                        ? "bg-[#E7CE9D] border-[#2D1D1A] text-[#2D1D1A] shadow-sm"
-                        : "bg-white border-[#2D1D1A]/20 text-[#2D1D1A] hover:border-[#2D1D1A]/40 hover:bg-[#E7CE9D]/8"
+                        ? "bg-[#E7CE9D] border-[#744531] text-[#744531] shadow-sm"
+                        : "bg-white border-[#744531]/20 text-[#744531] hover:border-[#744531]/40 hover:bg-[#E7CE9D]/8"
                     }`}
                   >
                     <div className="flex flex-col gap-0.5 flex-1 min-w-0">
@@ -743,8 +743,8 @@ function ProductDetails() {
                   </button>
 
                   {batchDropdownOpen && !inCart && (
-                    <div className="absolute z-50 mt-2 left-0 right-0 bg-white border-2 border-[#2D1D1A]/20 rounded-lg shadow-xl max-h-64 overflow-y-auto" role="listbox" tabIndex={-1} aria-label="Select batch">
-                      <div className="px-3 py-2 bg-[#E7CE9D]/20 border-b border-[#2D1D1A]/10 text-xs font-semibold text-[#2D1D1A]">
+                    <div className="absolute z-50 mt-2 left-0 right-0 bg-white border-2 border-[#744531]/20 rounded-lg shadow-xl max-h-64 overflow-y-auto" role="listbox" tabIndex={-1} aria-label="Select batch">
+                      <div className="px-3 py-2 bg-[#E7CE9D]/20 border-b border-[#744531]/10 text-xs font-semibold text-[#744531]">
                         Select a batch
                       </div>
                       {batches.map((b, idx) => (
@@ -762,7 +762,7 @@ function ProductDetails() {
                           title={b.name || "Select batch"}
                         >
                           <div className="flex flex-col gap-0.5">
-                            <span className="font-bold text-[#2D1D1A]">
+                            <span className="font-bold text-[#744531]">
                               {b.name || "Unnamed Batch"}
                             </span>
                             {b.delivery_date && (
@@ -832,8 +832,8 @@ function ProductDetails() {
                 size="lg"
                 className={`flex-1 rounded-xl text-white shadow-md transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 ${
                   inCart
-                    ? "bg-[#2D1D1A] hover:bg-[#2D1D1A]/90"
-                    : "bg-[#2D1D1A] hover:bg-[#2D1D1A]/90"
+                    ? "bg-[#744531] hover:bg-[#744531]/90"
+                    : "bg-[#744531] hover:bg-[#744531]/90"
                 }`}
                 onClick={onAddToCartClick}
                 aria-pressed={inCart}
@@ -844,7 +844,7 @@ function ProductDetails() {
               <Button
                 size="lg"
                 variant="outline"
-                className="flex-1 rounded-xl outline-[#2D1D1A] shadow-md hover:bg-[#e7ce9d] hover:shadow-lg transition-all duration-300 bg-transparent focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
+                className="flex-1 rounded-xl outline-[#744531] shadow-md hover:bg-[#e7ce9d] hover:shadow-lg transition-all duration-300 bg-transparent focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
                 title="Buy now"
               >
                 Buy Now
@@ -868,7 +868,7 @@ function ProductDetails() {
                 {/* Selected size summary */}
                 <div className="mb-3">
                   <div className="text-sm font-semibold">Packaging</div>
-                  <div className="mt-1 text-sm text-[#2D1D1A]">
+                  <div className="mt-1 text-sm text-[#744531]">
                     {selectedSize ? (
                       <>
                         <span className="font-medium">
@@ -932,8 +932,8 @@ function ProductDetails() {
                         onClick={() => setSubInterval("monthly")}
                         className={`px-3 py-2 rounded-xl border-2 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 ${
                           subInterval === "monthly"
-                            ? "bg-[#2D1D1A] text-white border-[#2D1D1A] shadow-md"
-                            : "bg-white text-[#2D1D1A] border-[#2D1D1A]/20 hover:border-[#2D1D1A]/40"
+                            ? "bg-[#744531] text-white border-[#744531] shadow-md"
+                            : "bg-white text-[#744531] border-[#744531]/20 hover:border-[#744531]/40"
                         }`}
                         aria-pressed={subInterval === "monthly"}
                         title="Monthly subscription"
@@ -945,8 +945,8 @@ function ProductDetails() {
                         onClick={() => setSubInterval("weekly")}
                         className={`px-3 py-2 rounded-xl border-2 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 ${
                           subInterval === "weekly"
-                            ? "bg-[#2D1D1A] text-white border-[#2D1D1A] shadow-md"
-                            : "bg-white text-[#2D1D1A] border-[#2D1D1A]/20 hover:border-[#2D1D1A]/40"
+                            ? "bg-[#744531] text-white border-[#744531] shadow-md"
+                            : "bg-white text-[#744531] border-[#744531]/20 hover:border-[#744531]/40"
                         }`}
                         aria-pressed={subInterval === "weekly"}
                         title="Weekly subscription"
@@ -980,7 +980,7 @@ function ProductDetails() {
                       No saved addresses.{" "}
                       <a
                         href="/profile"
-                        className="text-[#69A72A] underline"
+                        className="text-[#28543d] underline"
                       >
                         Add address in profile
                       </a>
@@ -1001,7 +1001,7 @@ function ProductDetails() {
                     <Button
                       onClick={handleSubscribe}
                       size="lg"
-                      className="w-full rounded-xl bg-[#2D1D1A] text-white shadow-md hover:bg-[#2D1D1A]/90 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+                      className="w-full rounded-xl bg-[#744531] text-white shadow-md hover:bg-[#744531]/90 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
                       disabled={subLoading}
                       aria-disabled={subLoading}
                     >
@@ -1012,7 +1012,7 @@ function ProductDetails() {
                   <div className="flex-1">
                     <Button
                       variant="outline"
-                      className="w-full rounded-xl border-[#2D1D1A] hover:bg-[#e7ce9d] hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
+                      className="w-full rounded-xl border-[#744531] hover:bg-[#e7ce9d] hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
                       onClick={() => {
                         // quick preview: show subscription summary modal (optional)
                         setShowSubSuccess(false);
@@ -1051,7 +1051,7 @@ function ProductDetails() {
                         </Button>
                         <Button
                           onClick={handleSubSuccessOk}
-                          className="rounded-xl bg-[#2D1D1A] text-white px-4 py-2"
+                          className="rounded-xl bg-[#744531] text-white px-4 py-2"
                         >
                           OK
                         </Button>

@@ -86,9 +86,9 @@ function CartCard({
   const imageUrl = imageFileId ? getImageUrl(imageFileId) : "/placeholder.svg";
 
   return (
-    <div className="flex flex-col sm:flex-row gap-4 border-2 border-[#2D1D1A] rounded-md p-4 shadow-md bg-white hover:shadow-lg transition-all duration-200">
+    <div className="flex flex-col sm:flex-row gap-4 border-2 border-[#744531] rounded-md p-4 shadow-md bg-white hover:shadow-lg transition-all duration-200">
       {/* Image */}
-      <div className="w-24 h-24 flex-shrink-0 overflow-hidden border-r-2 border-[#2D1D1A] pr-2">
+      <div className="w-24 h-24 flex-shrink-0 overflow-hidden border-r-2 border-[#744531] pr-2">
         <img
           src={imageUrl}
           alt={product.name}
@@ -121,7 +121,7 @@ function CartCard({
           {/* NEW: Batch pill */}
           {batch && (batch.name || batch.delivery_date) && (
             <div className="flex flex-col gap-1">
-              <span className="px-2 py-0.5 w-fit text-[11px] rounded bg-[#E7CE9D] text-[#2D1D1A] border border-[#2D1D1A]/20 font-semibold">
+              <span className="px-2 py-0.5 w-fit text-[11px] rounded bg-[#E7CE9D] text-[#744531] border border-[#744531]/20 font-semibold">
                 Batch: {batch.name || "Unnamed"}
               </span>
               {batch.delivery_date && (
@@ -133,7 +133,7 @@ function CartCard({
           )}
 
           <div>
-            <div className="roboto-bold text-lg text-[#2D1D1A]">
+            <div className="roboto-bold text-lg text-[#744531]">
               ₹{displayUnit.toFixed(2)}
               {hasDiscount && displayBase !== null && (
                 <span className="ml-2 text-sm text-[#613D38] line-through">
@@ -145,7 +145,7 @@ function CartCard({
               Total: ₹{lineTotal.toFixed(2)}
               <button
                 onClick={handleRemove}
-                className="ubuntu-medium text-sm text-[#2D1D1A] hover:text-[#2D1D1A]/80 cursor-pointer p-1"
+                className="ubuntu-medium text-sm text-[#744531] hover:text-[#744531]/80 cursor-pointer p-1"
                 aria-label={`Remove ${product.name} from cart`}
                 title="Remove"
               >

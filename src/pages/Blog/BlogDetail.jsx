@@ -60,14 +60,14 @@ const BlogDetail = () => {
         </div>
 
         {/* Content */}
-        <div className="ubuntu-regular max-w-none text-[#2d1d1a]/80 leading-relaxed whitespace-pre-wrap">
+        <div className="ubuntu-regular max-w-none text-[#744531]/80 leading-relaxed whitespace-pre-wrap">
           {post.content}
         </div>
       </article>
 
       {/* CTA Section */}
       <section className="mt-16 text-center bg-[#e7ce9d]/20 p-8 rounded-lg shadow-inner max-w-3xl mx-auto">
-        <h2 className="text-3xl syne-bold text-[#2d1d1a] mb-4">
+        <h2 className="text-3xl syne-bold text-[#744531] mb-4">
           Continue Your Organic Journey
         </h2>
         <p className="ubuntu-regular text-[#2D2D1A]/70 mb-6">
@@ -77,7 +77,7 @@ const BlogDetail = () => {
         <div className="flex flex-wrap justify-center gap-4">
           <Button
             asChild
-            className="bg-[#69A72A] hover:bg-[#69A728]/90 text-white"
+            className="bg-[#28543d] hover:bg-[#69A728]/90 text-white"
           >
             <Link to="/blog">More Blog Posts</Link>
           </Button>

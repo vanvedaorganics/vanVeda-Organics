@@ -70,7 +70,7 @@ export default function ClientLogin() {
     <div className="w-full bg-[#fafafa] min-h-screen flex items-center justify-center px-4">
       <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-8">
         {/* Title */}
-        <h1 className="syne-bold text-3xl md:text-4xl text-[#2D1D1A] text-center mb-8">
+        <h1 className="syne-bold text-3xl md:text-4xl text-[#744531] text-center mb-8">
           Login
         </h1>
 
@@ -124,7 +124,7 @@ export default function ClientLogin() {
             type="submit"
             size="lg"
             disabled={loading}
-            className="w-full rounded-xl bg-[#2D1D1A] text-white shadow-md hover:bg-[#2D1D1A]/90 hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
+            className="w-full rounded-xl bg-[#744531] text-white shadow-md hover:bg-[#744531]/90 hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
           >
             {loading && <Loader2 className="w-5 h-5 animate-spin" />}
             {loading ? "Logging in..." : "Login"}
@@ -134,7 +134,7 @@ export default function ClientLogin() {
         {/* Extra actions */}
         <p className="text-center text-sm text-[#613D38] mt-6">
           Don’t have an account?{" "}
-          <a href="/signup" className="text-[#69A72A] hover:underline">
+          <a href="/signup" className="text-[#28543d] hover:underline">
             Sign up
           </a>
         </p>

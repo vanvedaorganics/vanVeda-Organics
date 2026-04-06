@@ -115,7 +115,7 @@ export function Header() {
   ];
 
   const navLinkClasses = ({ isActive }) =>
-    `transition-colors hover:text-[#69A72A] ${isActive ? "text-green-900 font-semibold" : "text-gray-900"}`;
+    `transition-colors hover:text-[#28543d] ${isActive ? "text-green-900 font-semibold" : "text-gray-900"}`;
 
   useEffect(() => {
     setOfferLoading(true);
@@ -205,7 +205,7 @@ export function Header() {
     <header className="w-full bg-white shadow-[0_6px_10px_-2px_rgba(0,0,0,0.2)] border-b border-gray-200 font-sans">
       {/* Top bar */}
       {offer !== null && (
-        <div className="bg-[#69A72A] text-white text-center py-2 text-sm">
+        <div className="bg-[#28543d] text-white text-center py-2 text-sm">
           {offerLoading ? (
             <div role="status" className="flex justify-center">
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -228,7 +228,7 @@ export function Header() {
         {/* Logo */}
         <Link
           to="/"
-          className="flex items-center gap-2 font-semibold text-xl text-[#2D1D1A]"
+          className="flex items-center gap-2 font-semibold text-xl text-[#744531]"
         >
           <img
             src="/Truesoil.png"
@@ -283,7 +283,7 @@ export function Header() {
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               exit={{ scale: 0 }}
-              className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#e7ce9d] text-xs text-[#2D1D1A] shadow-sm"
+              className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#e7ce9d] text-xs text-[#744531] shadow-sm"
             >
               {cartItemCount}
             </motion.span>
@@ -340,7 +340,7 @@ export function Header() {
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               exit={{ scale: 0 }}
-              className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#e7ce9d] text-xs text-[#2D1D1A] shadow-sm"
+              className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#e7ce9d] text-xs text-[#744531] shadow-sm"
             >
               {cartItemCount}
             </motion.span>
@@ -407,7 +407,7 @@ export function Header() {
                 <Link
                   to="/products"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="mt-4 w-full flex items-center justify-center gap-2 rounded-md px-3 py-2.5 text-sm font-medium bg-[#69a72a] text-white hover:bg-[#5a8f23] transition-colors"
+                  className="mt-4 w-full flex items-center justify-center gap-2 rounded-md px-3 py-2.5 text-sm font-medium bg-[#28543d] text-white hover:bg-[#5a8f23] transition-colors"
                 >
                   Shop All Products
                 </Link>
@@ -519,7 +519,7 @@ export function Header() {
                       navigate("/checkout");
                       setCartOpen(false);
                     }}
-                    className="flex-1 py-2 px-4 ubuntu-medium bg-[#2D1D1A] hover:bg-[#2D1D1A]/90 text-white rounded-md"
+                    className="flex-1 py-2 px-4 ubuntu-medium bg-[#744531] hover:bg-[#744531]/90 text-white rounded-md"
                   >
                     Checkout
                   </button>
@@ -585,7 +585,7 @@ export function Header() {
                       navigate("/checkout");
                       setCartOpen(false);
                     }}
-                    className="flex-1 py-2 px-4 ubuntu-medium bg-[#2D1D1A] hover:bg-[#2D1D1A]/90 text-white rounded-md"
+                    className="flex-1 py-2 px-4 ubuntu-medium bg-[#744531] hover:bg-[#744531]/90 text-white rounded-md"
                   >
                     Checkout
                   </button>
