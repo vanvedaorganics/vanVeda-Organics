@@ -86,108 +86,103 @@ function CartCard({
   const imageUrl = imageFileId ? getImageUrl(imageFileId) : "/placeholder.svg";
 
   return (
-    <div className="flex flex-col sm:flex-row gap-4 border-2 border-[#744531] rounded-md p-4 shadow-md bg-white hover:shadow-lg transition-all duration-200">
-      {/* Image */}
-      <div className="w-24 h-24 flex-shrink-0 overflow-hidden border-r-2 border-[#744531] pr-2">
+    <div className="group flex flex-col sm:flex-row gap-5 bg-white border border-[#E7CE9D]/30 rounded-2xl p-5 shadow-md hover:shadow-xl transition-all duration-300">
+      {/* ── Image ────────────────────────────────────────── */}
+      <div className="w-24 h-24 sm:w-32 sm:h-32 flex-shrink-0 overflow-hidden rounded-2xl bg-[#faf8f4] border border-[#E7CE9D]/20">
         <img
           src={imageUrl}
           alt={product.name}
-          className="w-full h-full object-cover rounded-sm shadow-sm"
+          className="w-full h-full object-cover transform transition-transform duration-500 group-hover:scale-110"
           onError={(e) => (e.currentTarget.src = "/placeholder.svg")}
         />
       </div>
 
-      {/* Details + Quantity */}
-      <div className="flex-1 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        {/* Left side: title + price */}
-        <div className="flex flex-col justify-between gap-2">
-          <div className="flex justify-between items-start gap-2">
+      {/* ── Details ──────────────────────────────────────── */}
+      <div className="flex-1 flex flex-col justify-between py-1">
+        <div className="space-y-2">
+          <div className="flex flex-wrap items-start justify-between gap-3">
             <Link
               to={`/product/${product.slug}`}
-              className="syne-bold text-base text-[#201413] hover:underline"
-              title={`View ${product.name}`}
+              className="syne-bold text-lg text-[#1a2e1a] hover:text-[#28543d] transition-colors leading-tight"
             >
               {product.name}
             </Link>
+            
+            <button
+              onClick={handleRemove}
+              className="text-[11px] font-bold text-gray-400 hover:text-red-500 uppercase tracking-widest transition-colors flex items-center gap-1"
+              aria-label={`Remove ${product.name} from cart`}
+            >
+              Remove
+            </button>
           </div>
 
-          {/* Size pill (when available) */}
-          {sizeLabel !== null && (
-            <span className="px-2 py-0.5 w-fit text-[11px] rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
-              {sizeLabel || `Size ${typeof sizeIdx === "number" ? sizeIdx + 1 : ""}`}
-            </span>
-          )}
-
-          {/* NEW: Batch pill */}
-          {batch && (batch.name || batch.delivery_date) && (
-            <div className="flex flex-col gap-1">
-              <span className="px-2 py-0.5 w-fit text-[11px] rounded bg-[#E7CE9D] text-[#744531] border border-[#744531]/20 font-semibold">
-                Batch: {batch.name || "Unnamed"}
+          <div className="flex flex-wrap gap-2">
+            {/* Size pill */}
+            {sizeLabel !== null && (
+              <span className="px-2.5 py-0.5 text-[10px] font-bold rounded-lg bg-[#28543d]/5 text-[#28543d] border border-[#28543d]/10 uppercase tracking-wider">
+                {sizeLabel || `Size ${typeof sizeIdx === "number" ? sizeIdx + 1 : ""}`}
               </span>
-              {batch.delivery_date && (
-                <span className="text-[10px] text-gray-600">
-                  Delivery by: {batch.delivery_date}
-                </span>
-              )}
-            </div>
-          )}
+            )}
 
-          <div>
-            <div className="roboto-bold text-lg text-[#744531]">
-              ₹{displayUnit.toFixed(2)}
-              {hasDiscount && displayBase !== null && (
-                <span className="ml-2 text-sm text-[#613D38] line-through">
-                  ₹{displayBase.toFixed(2)}
+            {/* Batch pill */}
+            {batch && (batch.name || batch.delivery_date) && (
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-0.5 text-[10px] font-bold rounded-lg bg-[#E7CE9D]/30 text-[#744531] border border-[#744531]/10 uppercase tracking-wider">
+                  Batch: {batch.name || "Unnamed"}
                 </span>
-              )}
-            </div>
-            <div className="text-xs flex items-center justify-between gap-2 text-gray-600">
-              Total: ₹{lineTotal.toFixed(2)}
-              <button
-                onClick={handleRemove}
-                className="ubuntu-medium text-sm text-[#744531] hover:text-[#744531]/80 cursor-pointer p-1"
-                aria-label={`Remove ${product.name} from cart`}
-                title="Remove"
-              >
-                Remove Item
-              </button>
-            </div>
+              </div>
+            )}
           </div>
+          
+          {batch?.delivery_date && (
+            <p className="text-[10px] text-gray-400 font-medium italic">
+              Estimated arrival: {batch.delivery_date}
+            </p>
+          )}
         </div>
 
-        {/* Quantity controls */}
-        <div className="inline-flex shadow-sm rounded-md overflow-hidden border border-gray-400 h-10 w-fit sm:w-auto sm:ml-4">
-          {/* Minus */}
-          <button
-            onClick={() => updateQty(quantity - 1)}
-            disabled={quantity <= 0}
-            className="bg-[#E7CE9D] w-10 h-full flex items-center justify-center disabled:opacity-50 cursor-pointer"
-            aria-label={`Decrease quantity of ${product.name}`}
-          >
-            <Minus className="h-4 w-4" />
-          </button>
+        {/* ── Bottom Section: Price & Quantity ─────────────── */}
+        <div className="flex flex-wrap items-end justify-between gap-4 mt-4">
+          <div className="space-y-0.5">
+            <div className="flex items-baseline gap-2">
+              <span className="text-xl font-black text-[#744531]">₹{displayUnit.toFixed(2)}</span>
+              {hasDiscount && displayBase !== null && (
+                <span className="text-xs text-gray-400 line-through">₹{displayBase.toFixed(2)}</span>
+              )}
+            </div>
+            <div className="text-[11px] font-bold text-[#28543d] uppercase tracking-widest">
+              Total: ₹{lineTotal.toFixed(2)}
+            </div>
+          </div>
 
-          {/* Input */}
-          <Input
-            type="number"
-            value={quantity}
-            onChange={(e) => {
-              const v = parseInt(e.target.value, 10);
-              updateQty(Number.isNaN(v) ? 0 : v);
-            }}
-            className="w-12 sm:w-16 text-center text-sm border-0 focus:ring-0 focus:outline-none h-full"
-            min="0"
-            aria-label={`Quantity for ${product.name}`}
-          />
-
-          {/* Plus */}
-          <button
-            onClick={() => updateQty(quantity + 1)}
-            className="bg-[#E7CE9D] w-10 h-full flex items-center justify-center cursor-pointer"
-            aria-label={`Increase quantity of ${product.name}`}
-          >
-            <Plus className="h-4 w-4" />
-          </button>
+          <div className="flex items-center bg-[#f5f0e8] rounded-xl p-1 shadow-inner border border-black/[0.03]">
+            <button
+              onClick={() => updateQty(quantity - 1)}
+              disabled={quantity <= 0}
+              className="h-9 w-9 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm text-[#744531] transition-all disabled:opacity-30"
+              aria-label={`Decrease quantity of ${product.name}`}
+            >
+              <Minus className="h-4 w-4" />
+            </button>
+            <input
+              type="number"
+              value={quantity}
+              onChange={(e) => {
+                const v = parseInt(e.target.value, 10);
+                updateQty(Number.isNaN(v) ? 0 : v);
+              }}
+              className="w-10 bg-transparent text-center font-bold text-sm text-[#744531] focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              min="0"
+            />
+            <button
+              onClick={() => updateQty(quantity + 1)}
+              className="h-9 w-9 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm text-[#744531] transition-all"
+              aria-label={`Increase quantity of ${product.name}`}
+            >
+              <Plus className="h-4 w-4" />
+            </button>
+          </div>
         </div>
       </div>
     </div>

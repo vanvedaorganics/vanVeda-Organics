@@ -1,9 +1,9 @@
 // components/ProductDetails.jsx
 import React, { useEffect, useMemo, useState, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { Button, Input } from "../components";
-import { Star, Minus, Plus, ChevronDown } from "lucide-react";
+import { Star, Minus, Plus, ChevronDown, ShoppingCart, Award, ShieldCheck, CheckCircle2 } from "lucide-react";
 import { getImageUrl } from "../../utils/getImageUrl";
 import {
   changeItemQuantity,
@@ -221,11 +221,20 @@ function ProductDetails() {
     return cartItem?.batch || null;
   }, [cartItem]);
 
-  // Images for selected size
+  // Restore comprehensive image gallery logic
   const images = useMemo(() => {
-    const list = Array.isArray(selectedSize?.images) ? selectedSize.images : [];
-    return list;
-  }, [selectedSize]);
+    if (!product) return [];
+    
+    // 1. Start with top-level product images if they exist
+    const globalImages = Array.isArray(product.images) ? product.images : [];
+    
+    // 2. Add size-specific images
+    const sizeImages = Array.isArray(selectedSize?.images) ? selectedSize.images : [];
+    
+    // 3. Combine and remove duplicates while preserving order
+    const combined = [...globalImages, ...sizeImages].filter(Boolean);
+    return Array.from(new Set(combined));
+  }, [product, selectedSize]);
 
   // Main display image
   const mainImageUrl = useMemo(() => {
@@ -475,16 +484,21 @@ function ProductDetails() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-green-700"></div>
+      <div className="flex flex-col justify-center items-center h-[70vh] gap-4">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#E7CE9D] border-t-[#28543d]"></div>
+        <p className="text-[#28543d] font-medium animate-pulse">Loading product details...</p>
       </div>
     );
   }
 
   if (!product) {
     return (
-      <div className="flex justify-center items-center h-screen text-xl font-semibold text-gray-700">
-        Product not found
+      <div className="flex flex-col justify-center items-center h-[70vh] gap-4">
+        <div className="text-6xl text-gray-200">?</div>
+        <h2 className="text-2xl font-bold text-[#744531]">Product not found</h2>
+        <Button onClick={() => navigate("/products")} className="bg-[#28543d] text-white rounded-xl">
+          Back to Products
+        </Button>
       </div>
     );
   }
@@ -493,77 +507,70 @@ function ProductDetails() {
 
   return (
     <div
-      className="relative w-full px-4 sm:px-6 lg:px-12 xl:px-20 py-8 md:py-12 font-sans"
+      className="relative w-full px-4 sm:px-6 lg:px-12 xl:px-20 py-8 md:py-16 bg-[#fafafa] font-sans"
       aria-busy={submittingRating ? "true" : "false"}
     >
+      {/* ── Submitting Overlay ────────────────────────────────────────── */}
       {submittingRating && (
-        <div className="absolute inset-0 z-50 bg-white/60 backdrop-blur-sm flex items-center justify-center pointer-events-auto">
-          <div className="flex flex-col items-center gap-3">
-            <div className="h-12 w-12 rounded-full border-4 border-[#744531]/20 border-t-[#744531] animate-spin" />
-            <span className="text-sm text-[#744531]">Submitting rating…</span>
+        <div className="fixed inset-0 z-[60] bg-white/40 backdrop-blur-sm flex items-center justify-center pointer-events-auto">
+          <div className="flex flex-col items-center gap-3 bg-white p-6 rounded-2xl shadow-xl border border-[#E7CE9D]/30">
+            <div className="h-10 w-10 rounded-full border-4 border-[#744531]/10 border-t-[#744531] animate-spin" />
+            <span className="text-sm font-semibold text-[#744531]">Submitting rating…</span>
           </div>
         </div>
       )}
-      <div
-        className={`mx-auto max-w-7xl ${
-          submittingRating ? "pointer-events-none" : ""
-        }`}
-      >
-        <div className="grid gap-8 md:grid-cols-2 lg:gap-16">
-          {/* Image + Gallery */}
-          <div className="flex flex-col items-center">
-            {/* Main Image */}
-            <div className="relative w-full max-w-md aspect-square rounded-lg overflow-hidden shadow-lg mb-4">
-              <img
+
+      <div className={`mx-auto max-w-7xl ${submittingRating ? "pointer-events-none" : ""}`}>
+        {/* Breadcrumb */}
+        <nav className="flex items-center gap-2 text-xs text-gray-400 mb-8 font-medium uppercase tracking-wider">
+          <Link to="/" className="hover:text-[#28543d] transition-colors">Home</Link>
+          <span>/</span>
+          <Link to="/products" className="hover:text-[#28543d] transition-colors">Products</Link>
+          <span>/</span>
+          <span className="text-[#744531] truncate max-w-[150px]">{product.name}</span>
+        </nav>
+
+        <div className="grid gap-12 lg:grid-cols-2 lg:gap-20 items-start">
+          
+          {/* ── Left Column: Media ─────────────────────────────────────── */}
+          <div className="flex flex-col gap-6 lg:sticky lg:top-28 z-10">
+            <div className="relative aspect-square rounded-[2rem] overflow-hidden bg-white shadow-2xl border border-[#E7CE9D]/20 group">
+              <motion.img
+                key={mainImageUrl}
+                initial={{ opacity: 0, scale: 1.05 }}
+                animate={{ opacity: 1, scale: 1 }}
                 src={mainImageUrl}
                 alt={product.name}
-                loading="lazy"
-                role="img"
-                aria-label={product.name}
-                className="w-full h-full object-cover transform transition-transform duration-350 hover:scale-105 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-300"
+                className="w-full h-full object-cover"
                 onError={(e) => (e.currentTarget.src = "/placeholder.svg")}
               />
               {hasDiscount && (
-                <div className="absolute top-3 left-3 bg-gradient-to-br from-red-600 to-red-500 text-white px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm">
+                <div className="absolute top-6 left-6 bg-[#744531] text-white px-4 py-1.5 rounded-full text-xs font-bold shadow-lg tracking-wider">
                   {product.discount}% OFF
                 </div>
               )}
             </div>
 
-            {/* Thumbnails Gallery (for selected size) */}
-            {images?.length > 0 && (
-              <div className="w-full max-w-md">
-                <div className="grid grid-cols-5 sm:grid-cols-6 gap-2">
+            {/* Thumbnails */}
+            {images?.length > 1 && (
+              <div className="px-2">
+                <div className="flex flex-wrap gap-3">
                   {images.map((fid, i) => {
-                    const url = getImageUrl(fid);
                     const isActive = i === activeImageIdx;
                     return (
                       <button
-                        type="button"
                         key={fid + i}
-                        className={`relative h-20 rounded overflow-hidden border transition-transform duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 ${
-                          isActive
-                            ? "ring-2 ring-emerald-600 border-transparent scale-105"
-                            : "border-gray-200 hover:border-emerald-300"
-                        }`}
                         onClick={() => onThumbClick(i)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            e.preventDefault();
-                            onThumbClick(i);
-                          }
-                        }}
-                        aria-pressed={isActive}
-                        aria-label={`View image ${i + 1}`}
-                        title={`View image ${i + 1}`}
+                        className={`relative h-16 w-16 sm:h-20 sm:w-20 rounded-2xl overflow-hidden border-2 transition-all duration-300 ${
+                          isActive
+                            ? "border-[#28543d] shadow-md scale-105"
+                            : "border-transparent opacity-60 hover:opacity-100 hover:border-[#E7CE9D]"
+                        }`}
                       >
                         <img
-                          src={url}
-                          alt={`${product.name} ${i + 1}`}
+                          src={getImageUrl(fid)}
+                          alt={`${product.name} thumbnail ${i + 1}`}
                           className="h-full w-full object-cover"
-                          onError={(e) =>
-                            (e.currentTarget.src = "/placeholder.svg")
-                          }
                         />
                       </button>
                     );
@@ -573,115 +580,57 @@ function ProductDetails() {
             )}
           </div>
 
-          {/* Details */}
-          <div className="grid gap-6">
-            <div>
-              <h1 className="syne-bold text-3xl md:text-4xl text-[#201413]">
+          {/* ── Right Column: Content ──────────────────────────────────── */}
+          <div className="flex flex-col gap-8">
+            <div className="space-y-4">
+              <h1 className="syne-bold text-4xl md:text-5xl lg:text-6xl text-[#1a2e1a] leading-[1.1]">
                 {product.name}
               </h1>
 
-              {/* Price (per selected size) */}
-              <div className="roboto-bold mt-4 text-3xl font-bold text-[#744531]">
-                ₹{(discountedCents / 100).toFixed(2)}
+              {/* Price */}
+              <div className="flex flex-wrap items-baseline gap-4 pt-2">
+                <span className="text-4xl font-black text-[#744531]">
+                  ₹{(discountedCents / 100).toFixed(2)}
+                </span>
                 {hasDiscount && baseCents > 0 && (
-                  <span className="ml-2 text-base text-[#613D38] line-through">
+                  <span className="text-xl text-gray-400 line-through font-medium">
                     ₹{(baseCents / 100).toFixed(2)}
                   </span>
                 )}
               </div>
-
-              {/* Rating */}
-              <div className="mt-2 flex items-center gap-1 text-sm text-gray-600">
-                <div className="flex items-center">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      className={`h-5 w-5 ${
-                        i < Math.floor(product.average_rating || 0)
-                          ? "fill-[#744531] text-[#744531]"
-                          : "fill-gray-300 stroke-gray-400"
-                      }`}
-                    />
-                  ))}
-                </div>
-                <span>({product.review_count || 0} reviews)</span>
-              </div>
-
-              {/* ⭐ Your Rating (interactive) */}
-              <div className="mt-3">
-                <div className="text-xs font-semibold text-[#744531] mb-1">
-                  Your Rating
-                </div>
-                <div
-                  className={`flex items-center gap-2 p-2 rounded-md border border-[#744531]/20 bg-white/70 ${submittingRating ? "opacity-60 pointer-events-none" : ""}`}
-                >
-                  <div className="flex items-center" role="radiogroup" aria-label="Rate this product">
-                    {[1, 2, 3, 4, 5].map((val) => {
-                      const active = (hoverRating || userRating) >= val;
-                      return (
-                        <button
-                          key={val}
-                          type="button"
-                          aria-label={`Rate ${val} star${val > 1 ? "s" : ""}`}
-                          role="radio"
-                          aria-checked={userRating === val}
-                          className="p-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 rounded"
-                          onMouseEnter={() => setHoverRating(val)}
-                          onMouseLeave={() => setHoverRating(0)}
-                          onFocus={() => setHoverRating(val)}
-                          onBlur={() => setHoverRating(0)}
-                          onClick={() => onRate(val)}
-                          title={
-                            authStatus
-                              ? `Click to rate ${val} star${val > 1 ? "s" : ""}`
-                              : "Login to rate"
-                          }
-                        >
-                          <Star
-                            className={`h-6 w-6 transition ${active ? "fill-[#744531] text-[#744531]" : "fill-gray-200 stroke-gray-400 hover:fill-[#E7CE9D] hover:stroke-[#744531]" }`}
-                          />
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <div className="text-[12px] text-gray-600" aria-live="polite">
-                    {userRating > 0
-                      ? `You rated ${userRating}/5`
-                      : "Tap a star to rate"}
-                  </div>
-                </div>
-              </div>
             </div>
 
-            {/* Packaging Size selector (styled) */}
+            <hr className="border-[#E7CE9D]/30" />
+
+            {/* Packaging Size */}
             {hasSizes && (
-              <div className="grid gap-2">
-                <h2 className="text-base font-semibold">Packaging Size:</h2>
-                <div className="flex flex-wrap gap-2">
+              <div className="space-y-4">
+                <h3 className="text-xs font-bold text-[#28543d] uppercase tracking-widest flex items-center gap-2">
+                  <span>Selection Packaging</span>
+                  <span className="h-px flex-1 bg-[#28543d]/10"></span>
+                </h3>
+                <div className="flex flex-wrap gap-3">
                   {sizes.map((s, idx) => {
-                    const selected = idx === selectedSizeIdx;
+                    const isActive = idx === selectedSizeIdx;
                     const perSizeKey = makeCartKey(product.slug, idx);
-                    const perSizeItem = items?.[perSizeKey];
-                    const perSizeQty = typeof perSizeItem === "number" ? perSizeItem : (perSizeItem?.qty ?? 0);
+                    const perSizeQty = typeof items?.[perSizeKey] === "number" ? items?.[perSizeKey] : (items?.[perSizeKey]?.qty ?? 0);
+                    
                     return (
                       <button
                         key={`${s.size}-${idx}`}
-                        type="button"
-                        className={`relative px-3 py-1.5 rounded border-2 text-sm font-bold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 transform ${
-                          selected
-                            ? "bg-[#744531] text-white border-[#744531] shadow-sm scale-105"
-                            : "bg-white text-[#744531] border-[#744531] hover:bg-[#744531]/6"
-                        }`}
                         onClick={() => {
                           setSelectedSizeIdx(idx);
                           setBatchWarning("");
                         }}
-                        aria-pressed={selected}
-                        title={`Select size ${s.size || idx + 1}`}
+                        className={`relative px-6 py-3 rounded-2xl text-sm font-bold transition-all duration-300 border-2 ${
+                          isActive
+                            ? "bg-[#28543d] text-white border-[#28543d] shadow-lg scale-105"
+                            : "bg-white text-[#28543d] border-[#28543d]/10 hover:border-[#28543d]/40"
+                        }`}
                       >
-                        <span className="truncate max-w-[120px] inline-block align-middle">{s.size || `Size ${idx + 1}`}</span>
+                        {s.size}
                         {perSizeQty > 0 && (
-                          <span className="absolute -top-2 -right-2 h-5 min-w-[20px] px-1 rounded-full bg-[#E7CE9D] text-[#744531] text-[11px] flex items-center justify-center">
+                          <span className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-[#E7CE9D] text-[#744531] text-xs flex items-center justify-center border-2 border-white shadow-sm">
                             {perSizeQty}
                           </span>
                         )}
@@ -692,388 +641,304 @@ function ProductDetails() {
               </div>
             )}
 
-            {/* NEW: Batch dropdown selector */}
+            {/* Batch Selector */}
             {hasBatches && (
-              <div className="grid gap-2 relative" data-batch-dropdown-detail>
-                <h2 className="text-base font-semibold">
-                  Available Batches:
-                  {inCart && cartBatch && (
-                    <span className="ml-2 text-sm text-emerald-600 font-normal">
-                      (Selected: {cartBatch.name})
-                    </span>
-                  )}
-                </h2>
+              <div className="space-y-3 relative" data-batch-dropdown-detail>
+                <h3 className="text-xs font-bold text-[#28543d] uppercase tracking-widest flex items-center gap-2">
+                  <span>Harvest Batch</span>
+                  <span className="h-px flex-1 bg-[#28543d]/10"></span>
+                </h3>
                 <div className="relative">
                   <button
-                    type="button"
-                    onClick={() => {
-                      if (!inCart) {
-                        setBatchDropdownOpen((prev) => !prev);
-                      }
-                    }}
+                    onClick={() => !inCart && setBatchDropdownOpen(!batchDropdownOpen)}
                     disabled={inCart}
-                    aria-expanded={batchDropdownOpen}
-                    aria-haspopup="listbox"
-                    className={`w-full px-3 py-2.5 rounded-lg border-2 text-left transition text-sm flex items-center justify-between gap-2 focus:outline-none ${
+                    className={`w-full px-5 py-4 rounded-2xl border-2 text-left transition-all flex items-center justify-between gap-3 ${
                       inCart
-                        ? "bg-gray-100 border-gray-300 text-gray-500 cursor-not-allowed"
+                        ? "bg-gray-50 border-gray-100 text-gray-400 cursor-not-allowed"
                         : batchDropdownOpen
-                        ? "bg-[#E7CE9D] border-[#744531] text-[#744531] shadow-sm"
-                        : "bg-white border-[#744531]/20 text-[#744531] hover:border-[#744531]/40 hover:bg-[#E7CE9D]/8"
+                        ? "bg-[#E7CE9D]/20 border-[#744531] text-[#744531]"
+                        : "bg-white border-[#28543d]/10 text-[#744531] hover:border-[#744531]/40"
                     }`}
                   >
-                    <div className="flex flex-col gap-0.5 flex-1 min-w-0">
-                      <span className="font-bold text-sm truncate">
-                        {inCart && cartBatch
-                          ? cartBatch.name || "Unnamed Batch"
-                          : selectedBatch?.name || "Select a batch"}
-                      </span>
+                    <div className="flex-1">
+                      <p className="font-bold text-sm">
+                        {inCart && cartBatch ? cartBatch.name : selectedBatch?.name || "Select delivery batch"}
+                      </p>
                       {((inCart && cartBatch?.delivery_date) || (!inCart && selectedBatch?.delivery_date)) && (
-                        <span className="text-xs opacity-75">
-                          Delivery by: {inCart ? cartBatch.delivery_date : selectedBatch.delivery_date}
-                        </span>
+                        <p className="text-xs opacity-60 font-medium">Estimated Arrival: {inCart ? cartBatch.delivery_date : selectedBatch.delivery_date}</p>
                       )}
                     </div>
-                    {!inCart && (
-                      <ChevronDown
-                        className={`w-5 h-5 shrink-0 transition-transform ${batchDropdownOpen ? "rotate-180" : ""}`}
-                        aria-hidden="true"
-                      />
-                    )}
+                    {!inCart && <ChevronDown className={`w-5 h-5 transition-transform duration-300 ${batchDropdownOpen ? "rotate-180" : ""}`} />}
                   </button>
 
                   {batchDropdownOpen && !inCart && (
-                    <div className="absolute z-50 mt-2 left-0 right-0 bg-white border-2 border-[#744531]/20 rounded-lg shadow-xl max-h-64 overflow-y-auto" role="listbox" tabIndex={-1} aria-label="Select batch">
-                      <div className="px-3 py-2 bg-[#E7CE9D]/20 border-b border-[#744531]/10 text-xs font-semibold text-[#744531]">
-                        Select a batch
-                      </div>
+                    <div className="absolute z-50 mt-3 left-0 right-0 bg-white rounded-2xl shadow-2xl border border-[#E7CE9D]/30 overflow-hidden ring-4 ring-black/5 animate-slide-up">
                       {batches.map((b, idx) => (
                         <button
                           key={`batch-${idx}`}
-                          type="button"
                           onClick={() => {
                             setSelectedBatchIdx(idx);
                             setBatchDropdownOpen(false);
                             setBatchWarning("");
                           }}
-                          className={`w-full px-3 py-2.5 text-left text-sm hover:bg-[#E7CE9D]/20 transition border-b border-[#E7CE9D]/20 last:border-0 ${idx === selectedBatchIdx ? "bg-[#E7CE9D]/30" : ""}`}
-                          role="option"
-                          aria-selected={idx === selectedBatchIdx}
-                          title={b.name || "Select batch"}
+                          className={`w-full px-5 py-4 text-left transition-colors hover:bg-[#E7CE9D]/10 border-b border-[#E7CE9D]/10 last:border-0 ${
+                            idx === selectedBatchIdx ? "bg-[#E7CE9D]/20 font-bold" : ""
+                          }`}
                         >
-                          <div className="flex flex-col gap-0.5">
-                            <span className="font-bold text-[#744531]">
-                              {b.name || "Unnamed Batch"}
-                            </span>
-                            {b.delivery_date && (
-                              <span className="text-xs text-[#613D38] opacity-75">
-                                Delivery by: {b.delivery_date}
-                              </span>
-                            )}
-                          </div>
+                          <div className="text-sm font-bold text-[#1a2e1a]">{b.name}</div>
+                          {b.delivery_date && <div className="text-xs text-gray-400 mt-0.5">Ship date: {b.delivery_date}</div>}
                         </button>
                       ))}
                     </div>
                   )}
                 </div>
                 {batchWarning && (
-                  <div className="text-sm text-red-600 font-medium bg-red-50 border border-red-200 rounded-md p-2">
-                    {batchWarning}
+                  <div className="text-xs font-bold text-red-600 bg-red-50 border border-red-100 rounded-xl px-4 py-3 animate-pulse">
+                    ⚠️ {batchWarning}
                   </div>
                 )}
-                <p className="text-[12px] text-gray-500">
-                  {inCart
-                    ? "Batch is locked once added to cart. Remove from cart to change batch."
-                    : "Choose your preferred batch for delivery."}
-                </p>
               </div>
             )}
 
-            {/* Quantity selector (per selected size) */}
-            <div className="grid gap-2 mt-2">
-              <h2 className="text-base font-semibold">Quantity:</h2>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  aria-label="Decrease quantity"
+            {/* Quantity Selector */}
+            <div className="flex items-center gap-6 pt-4">
+              <div className="flex items-center bg-[#f5f0e8] rounded-2xl p-1 shadow-inner border border-black/[0.03]">
+                <button
                   onClick={() => updateQty(quantity - 1)}
                   disabled={quantity <= 0}
-                  className="hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
+                  className="h-12 w-12 flex items-center justify-center rounded-xl hover:bg-white hover:shadow-sm text-[#744531] transition-all disabled:opacity-30"
                 >
-                  <Minus className="h-4 w-4" />
-                </Button>
-                <Input
+                  <Minus className="h-5 w-5" />
+                </button>
+                <input
                   type="number"
                   value={quantity}
-                  aria-label="Cart item quantity"
-                  onChange={(e) => {
-                    const v = parseInt(e.target.value, 10);
-                    updateQty(Number.isNaN(v) ? 0 : v);
-                  }}
-                  className="w-20 text-center text-[#201413] border focus:border-[#201413] focus:ring-[#201413] focus:outline-none"
-                  min="0"
+                  onChange={(e) => updateQty(parseInt(e.target.value) || 0)}
+                  className="w-16 bg-transparent text-center font-black text-lg text-[#744531] focus:outline-none"
                 />
-                <Button
-                  variant="outline"
-                  size="icon"
-                  aria-label="Increase quantity"
+                <button
                   onClick={() => updateQty(quantity + 1)}
-                  className="hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
+                  className="h-12 w-12 flex items-center justify-center rounded-xl hover:bg-white hover:shadow-sm text-[#744531] transition-all"
                 >
-                  <Plus className="h-4 w-4" />
+                  <Plus className="h-5 w-5" />
+                </button>
+              </div>
+
+              <div className="flex-1 flex gap-3">
+                <Button
+                  onClick={onAddToCartClick}
+                  className={`flex-1 h-14 rounded-2xl font-black text-sm uppercase tracking-widest transition-all duration-300 shadow-lg ${
+                    inCart ? "bg-[#744531]/10 text-[#744531] border-2 border-[#744531]/20" : "bg-[#744531] text-white hover:bg-[#5a3626] hover:-translate-y-1"
+                  }`}
+                >
+                  {inCart ? "Remove Product" : "Add to Basket"}
+                </Button>
+                <Button
+                  className="h-14 w-14 rounded-2xl bg-[#E7CE9D] text-[#744531] flex items-center justify-center border-none shadow-lg hover:bg-[#dec186] transition-all hover:scale-105 active:scale-95"
+                >
+                  <ShoppingCart className="h-6 w-6" />
                 </Button>
               </div>
             </div>
 
-            {/* Actions */}
-            <div className="flex gap-4 mt-4">
-              <Button
-                size="lg"
-                className={`flex-1 rounded-xl text-white shadow-md transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 ${
-                  inCart
-                    ? "bg-[#744531] hover:bg-[#744531]/90"
-                    : "bg-[#744531] hover:bg-[#744531]/90"
-                }`}
-                onClick={onAddToCartClick}
-                aria-pressed={inCart}
-                title={inCart ? "Remove from cart" : "Add to cart"}
-              >
-                {inCart ? "Remove From Cart" : "Add To Cart"}
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="flex-1 rounded-xl outline-[#744531] shadow-md hover:bg-[#e7ce9d] hover:shadow-lg transition-all duration-300 bg-transparent focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
-                title="Buy now"
-              >
-                Buy Now
-              </Button>
-            </div>
+            <hr className="border-[#E7CE9D]/30 my-4" />
 
-            <div className="w-full mt-6 md:mt-8">
-              <motion.div
-                className="w-full bg-white border rounded-xl p-6 shadow-md"
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-              >
-                <h3 className="text-lg font-semibold syne-bold mb-2 tracking-tight">
-                  Subscribe & Save
-                </h3>
-                <p className="text-sm text-gray-600 mb-4 leading-relaxed">
-                  Subscribe for recurring deliveries and never run out. Choose size,
-                  quantity, interval and shipping address.
-                </p>
-
-                {/* Selected size summary */}
-                <div className="mb-3">
-                  <div className="text-sm font-semibold">Packaging</div>
-                  <div className="mt-1 text-sm text-[#744531]">
-                    {selectedSize ? (
-                      <>
-                        <span className="font-medium">
-                          {selectedSize.size || "Default size"}
-                        </span>
-                        <span className="ml-2 text-gray-600">
-                          • ₹{((selectedSize.price_cents || baseCents) / 100).toFixed(2)}
-                        </span>
-                      </>
-                    ) : (
-                      <span className="text-gray-500">No packaging selected</span>
-                    )}
-                  </div>
+            {/* Subscribe & Save Section */}
+            <motion.div
+              className="bg-white rounded-3xl border-2 border-[#E7CE9D]/40 p-8 shadow-xl relative overflow-hidden group"
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+            >
+              <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                <ShieldCheck className="h-24 w-24 text-[#28543d]" />
+              </div>
+              
+              <div className="flex items-center gap-3 mb-6">
+                <div className="h-10 w-10 rounded-xl bg-[#28543d] flex items-center justify-center shadow-lg">
+                  <Award className="h-6 w-6 text-white" />
                 </div>
+                <h3 className="syne-bold text-xl text-[#1a2e1a]">Subscribe & Save Premium</h3>
+              </div>
+              
+              <p className="text-sm text-gray-500 mb-8 leading-relaxed">
+                Unlock automated deliveries and priority harvest access. Never run out of your favorite organic staples again.
+              </p>
 
-                {/* Quantity + Interval */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
-                  <div>
-                    <label className="text-xs font-semibold text-gray-700 block mb-1">
-                      Quantity
-                    </label>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        aria-label="Decrease subscription quantity"
-                        title="Decrease"
-                        onClick={() => setSubQuantity(Math.max(1, Number(subQuantity) - 1))}
-                        className="hover:bg-gray-100"
-                      >
-                        <Minus className="h-4 w-4" />
-                      </Button>
-                      <Input
-                        type="number"
-                        min={1}
-                        value={subQuantity}
-                        aria-label="Subscription quantity"
-                        onChange={(e) => setSubQuantity(Math.max(1, Number(e.target.value || 1)))}
-                        className="w-24 text-center"
-                      />
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        aria-label="Increase subscription quantity"
-                        title="Increase"
-                        onClick={() => setSubQuantity(Number(subQuantity) + 1)}
-                        className="hover:bg-gray-100"
-                      >
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="md:col-span-2">
-                    <label className="text-xs font-semibold text-gray-700 block mb-1">
-                      Interval
-                    </label>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setSubInterval("monthly")}
-                        className={`px-3 py-2 rounded-xl border-2 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 ${
-                          subInterval === "monthly"
-                            ? "bg-[#744531] text-white border-[#744531] shadow-md"
-                            : "bg-white text-[#744531] border-[#744531]/20 hover:border-[#744531]/40"
-                        }`}
-                        aria-pressed={subInterval === "monthly"}
-                        title="Monthly subscription"
-                      >
-                        Monthly
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setSubInterval("weekly")}
-                        className={`px-3 py-2 rounded-xl border-2 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 ${
-                          subInterval === "weekly"
-                            ? "bg-[#744531] text-white border-[#744531] shadow-md"
-                            : "bg-white text-[#744531] border-[#744531]/20 hover:border-[#744531]/40"
-                        }`}
-                        aria-pressed={subInterval === "weekly"}
-                        title="Weekly subscription"
-                      >
-                        Weekly
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Shipping address selector */}
-                <div className="mt-4">
-                  <label className="text-xs font-semibold text-gray-700 block mb-1">
-                    Shipping Address
-                  </label>
-                  {profileAddresses.length > 0 ? (
-                    <select
-                      value={subAddressIdx}
-                      onChange={(e) => setSubAddressIdx(Number(e.target.value))}
-                      className="w-full rounded-lg border p-2 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
-                      aria-label="Select shipping address"
-                    >
-                      {profileAddresses.map((a, i) => (
-                        <option key={i} value={i}>
-                          {a.residencyAddress} • {a.city} {a.pincode}
-                        </option>
+              <div className="grid gap-6">
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Subscription Frequency</label>
+                    <div className="flex p-1 bg-[#f5f0e8] rounded-xl">
+                      {["weekly", "monthly"].map((int) => (
+                        <button
+                          key={int}
+                          onClick={() => setSubInterval(int)}
+                          className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
+                            subInterval === int ? "bg-white text-[#28543d] shadow-sm" : "text-gray-400"
+                          }`}
+                        >
+                          {int.charAt(0).toUpperCase() + int.slice(1)}
+                        </button>
                       ))}
-                    </select>
-                  ) : (
-                    <div className="text-sm text-[#613D38]">
-                      No saved addresses.{" "}
-                      <a
-                        href="/profile"
-                        className="text-[#28543d] underline"
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Batch Quantity</label>
+                    <div className="flex items-center bg-[#f5f0e8] rounded-xl px-3 h-[40px] border border-black/[0.03]">
+                      <button onClick={() => setSubQuantity(Math.max(1, subQuantity - 1))} className="text-[#28543d]"><Minus className="h-4 w-4" /></button>
+                      <input 
+                        type="number" 
+                        value={subQuantity} 
+                        onChange={(e) => setSubQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                        className="flex-1 bg-transparent text-center font-bold text-sm text-[#28543d] focus:outline-none" 
+                      />
+                      <button onClick={() => setSubQuantity(subQuantity + 1)} className="text-[#28543d]"><Plus className="h-4 w-4" /></button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Delivery Landmark</label>
+                  {profileAddresses.length > 0 ? (
+                    <div className="relative">
+                      <select
+                        value={subAddressIdx}
+                        onChange={(e) => setSubAddressIdx(Number(e.target.value))}
+                        className="w-full bg-[#f5f0e8] rounded-xl px-4 py-3 text-sm font-bold text-[#28543d] appearance-none focus:outline-none border border-black/[0.03]"
                       >
-                        Add address in profile
-                      </a>
+                        {profileAddresses.map((a, i) => (
+                          <option key={i} value={i}>{a.city} · {a.pincode}</option>
+                        ))}
+                      </select>
+                      <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-[#28543d] pointer-events-none" />
+                    </div>
+                  ) : (
+                    <div className="p-4 rounded-xl bg-orange-50 border border-orange-100 text-xs font-bold text-orange-800 flex items-center justify-between">
+                      No saved addresses
+                      <Link to="/profile" className="text-orange-600 underline">Add Now</Link>
                     </div>
                   )}
                 </div>
 
-                {/* Error */}
-                {subError && (
-                  <div className="text-sm text-red-600 mt-3 p-2 bg-red-50 rounded">
-                    {subError}
-                  </div>
-                )}
+                {subError && <div className="p-3 bg-red-50 text-[11px] font-bold text-red-600 rounded-xl border border-red-100">{subError}</div>}
 
-                {/* Actions */}
-                <div className="flex gap-3 mt-4">
-                  <motion.div whileTap={{ scale: 0.98 }} className="flex-1">
-                    <Button
-                      onClick={handleSubscribe}
-                      size="lg"
-                      className="w-full rounded-xl bg-[#744531] text-white shadow-md hover:bg-[#744531]/90 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
-                      disabled={subLoading}
-                      aria-disabled={subLoading}
-                    >
-                      {subLoading ? "Subscribing..." : "Subscribe"}
-                    </Button>
-                  </motion.div>
+                <Button
+                  onClick={handleSubscribe}
+                  disabled={subLoading}
+                  className="w-full h-14 rounded-2xl bg-[#28543d] text-white font-black text-sm uppercase tracking-widest shadow-xl hover:bg-[#1f4230] transition-all hover:-translate-y-1"
+                >
+                  {subLoading ? "Securing Subscription..." : "Start Subscription"}
+                </Button>
+              </div>
+            </motion.div>
 
-                  <div className="flex-1">
-                    <Button
-                      variant="outline"
-                      className="w-full rounded-xl border-[#744531] hover:bg-[#e7ce9d] hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
-                      onClick={() => {
-                        // quick preview: show subscription summary modal (optional)
-                        setShowSubSuccess(false);
-                        setSubError("");
-                      }}
-                    >
-                      Learn More
-                    </Button>
-                  </div>
+            {/* ── Ratings & Reviews ────────────────────────────────────────── */}
+            <div className="space-y-6 pt-4">
+              <div className="flex items-center justify-between gap-4">
+                <h3 className="text-xs font-bold text-[#744531] uppercase tracking-widest flex items-center gap-2 flex-1">
+                  <span>Reviews & Rating</span>
+                  <span className="h-px flex-1 bg-[#E7CE9D]/30"></span>
+                </h3>
+                <div className="flex items-center gap-2 px-3 py-1 bg-[#28543d]/10 rounded-full shrink-0">
+                  <Star className="h-4 w-4 fill-[#28543d] text-[#28543d]" />
+                  <span className="text-sm font-bold text-[#28543d]">
+                    {product.average_rating?.toFixed(1) || "5.0"}
+                  </span>
+                  <span className="text-[10px] text-gray-400 font-medium">({product.review_count || 0})</span>
                 </div>
+              </div>
 
-                {/* Success Modal (OK button required to redirect) */}
-                {showSubSuccess && (
-                  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-                    <motion.div
-                      role="dialog"
-                      aria-modal="true"
-                      aria-labelledby="sub-success-title"
-                      className="bg-white rounded-xl p-6 max-w-sm text-center shadow-lg"
-                      initial={{ scale: 0.98, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                    >
-                      <h3 id="sub-success-title" className="text-lg font-semibold">
-                        Subscription Created
-                      </h3>
-                      <p className="mt-2 text-sm text-gray-600">
-                        Your subscription has been created successfully.
-                      </p>
-                      <div className="mt-4 flex gap-3 justify-center">
-                        <Button
-                          variant="outline"
-                          onClick={() => setShowSubSuccess(false)}
-                          className="rounded-xl px-4 py-2"
-                        >
-                          Close
-                        </Button>
-                        <Button
-                          onClick={handleSubSuccessOk}
-                          className="rounded-xl bg-[#744531] text-white px-4 py-2"
-                        >
-                          OK
-                        </Button>
-                      </div>
-                    </motion.div>
-                  </div>
-                )}
-              </motion.div>
+              <div className="flex items-center gap-4 p-6 rounded-2xl bg-[#E7CE9D]/10 border border-[#E7CE9D]/30 shadow-sm">
+                <div className="flex items-center gap-1">
+                  {[1, 2, 3, 4, 5].map((val) => {
+                    const active = (hoverRating || userRating) >= val;
+                    return (
+                      <button
+                        key={val}
+                        type="button"
+                        className="transition-transform active:scale-90 p-1"
+                        onMouseEnter={() => setHoverRating(val)}
+                        onMouseLeave={() => setHoverRating(0)}
+                        onClick={() => onRate(val)}
+                      >
+                        <Star
+                          className={`h-7 w-7 transition-colors duration-300 ${
+                            active ? "fill-[#744531] text-[#744531]" : "fill-transparent text-[#744531]/40"
+                          }`}
+                        />
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="text-sm font-bold text-[#744531]">
+                  {userRating > 0 ? `You rated ${userRating}/5` : "How do you like this product? Rate it now."}
+                </div>
+              </div>
             </div>
 
-            {/* Overview */}
-            <div className="mt-6 border rounded-lg p-4 shadow-sm bg-white">
-              <h2 className="syne-bold text-lg font-semibold mb-2">
-                {product.name} Overview
-              </h2>
-              <div className="text-gray-600 text-sm leading-relaxed whitespace-pre-wrap">
+            {/* Description Section */}
+            <div className="space-y-4 pt-4">
+              <h3 className="text-xs font-bold text-[#28543d] uppercase tracking-widest flex items-center gap-2">
+                <span>Product Philosophy</span>
+                <span className="h-px flex-1 bg-[#28543d]/10"></span>
+              </h3>
+              <div className="text-gray-500 text-sm leading-relaxed whitespace-pre-wrap font-medium">
                 {product.description}
               </div>
+            </div>
+            
+            {/* Features */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4">
+               {[
+                 { label: "100% Organic", icon: <CheckCircle2 className="h-4 w-4" /> },
+                 { label: "Zero Pesticides", icon: <CheckCircle2 className="h-4 w-4" /> },
+                 { label: "Lab Tested", icon: <CheckCircle2 className="h-4 w-4" /> },
+                 { label: "Farm Fresh", icon: <CheckCircle2 className="h-4 w-4" /> }
+               ].map((feat, i) => (
+                 <div key={i} className="flex items-center gap-2 text-[10px] font-black uppercase tracking-tighter text-[#28543d] py-2 px-3 rounded-xl bg-[#28543d]/5">
+                   {feat.icon}
+                   {feat.label}
+                 </div>
+               ))}
             </div>
           </div>
         </div>
       </div>
+
+      {/* Success Modal */}
+      {showSubSuccess && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-[2rem] p-10 max-w-sm w-full text-center shadow-2xl relative overflow-hidden"
+          >
+            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#28543d] to-[#744531]" />
+            <div className="h-20 w-20 rounded-full bg-[#28543d]/10 flex items-center justify-center mx-auto mb-6">
+              <CheckCircle2 className="h-10 w-10 text-[#28543d]" />
+            </div>
+            <h3 className="syne-bold text-2xl text-[#1a2e1a] mb-2">Subscription Active!</h3>
+            <p className="text-sm text-gray-500 mb-8 leading-relaxed">
+              Welcome to the family. Your recurring harvest deliveries have been secured.
+            </p>
+            <div className="flex gap-4">
+              <Button
+                variant="outline"
+                onClick={() => setShowSubSuccess(false)}
+                className="flex-1 rounded-xl h-12 text-gray-400 border-gray-200"
+              >
+                Dismiss
+              </Button>
+              <Button
+                onClick={handleSubSuccessOk}
+                className="flex-1 rounded-xl h-12 bg-[#28543d] text-white font-bold"
+              >
+                Go to Profile
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

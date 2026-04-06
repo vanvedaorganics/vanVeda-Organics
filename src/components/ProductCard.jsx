@@ -11,6 +11,7 @@ import {
   changeItemQuantity,
   selectCartItems,
 } from "../store/cartsSlice";
+import { motion, AnimatePresence } from "framer-motion";
 
 // Parse packaging_size that may contain stringified objects
 const parsePackagingSizes = (raw = []) => {
@@ -214,112 +215,107 @@ const ProductCard = ({
     const newQty = Math.max(0, quantity + delta);
     dispatch(changeItemQuantity({ slug: cartKey, qty: newQty, batch: cartBatch || selectedBatch }));
   };
-
   return (
-    <Link
-      to={`/products/${slug}`}
+    <motion.div
+      layout
       className={cn(
-        "group relative max-w-sm mx-auto overflow-hidden rounded-xl border border-[#E7CE9D]/40 bg-white text-[#744531] shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 flex flex-col",
-        // NEW: ensure dropdown can overflow parent when open
+        "group relative max-w-sm mx-auto overflow-hidden rounded-[2rem] bg-white text-[#744531] shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_50px_rgba(40,84,61,0.1)] transition-all duration-500 hover:-translate-y-2 flex flex-col border border-[#E7CE9D]/20",
         batchDropdownOpen && "overflow-visible",
         className
       )}
-      aria-label={`View product ${name}`}
     >
-      {/* Image (main image of selected packaging size) */}
-      <div className="relative w-full aspect-[5/6] overflow-hidden">
+      <Link
+        to={`/products/${slug}`}
+        className="flex flex-col h-full"
+        aria-label={`View product ${name}`}
+      >
+      {/* ── Image ────────────────────────────────────────── */}
+      <div className="relative w-full aspect-[4/5] overflow-hidden bg-[#faf8f4]">
         <img
           src={imageUrl}
           alt={name}
-          className="h-full w-full object-cover transform transition-transform duration-500 ease-in-out group-hover:scale-105"
+          className="h-full w-full object-cover transform transition-transform duration-500 ease-in-out group-hover:scale-110"
           loading="lazy"
         />
 
+        {/* Gradient scrim at bottom for text legibility */}
+        <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
+
+        {/* Discount badge */}
         {hasDiscount && (
-          <div className="absolute top-2 left-2 bg-red-600 text-white px-2 py-1 rounded-full text-[10px] font-semibold">
+          <div className="absolute top-4 left-4 flex items-center gap-1 bg-[#744531]/90 backdrop-blur-md text-white px-3 py-1 rounded-full text-[10px] font-bold shadow-lg tracking-wider border border-white/20">
             {discount}% OFF
           </div>
         )}
+        
+        {/* Category pill — top right */}
+        {categoryName && (
+          <span className="absolute top-4 right-4 px-3 py-1 rounded-full bg-white/60 backdrop-blur-md text-[#28543d] text-[10px] font-bold tracking-wider shadow-sm border border-white/40 uppercase">
+            {categoryName}
+          </span>
+        )}
       </div>
 
-      <div className="p-3 border-t border-[#E7CE9D]/40 flex flex-col flex-1">
-        {/* Title + Category pill combined */}
-        <div className="flex items-start gap-2">
-          <h3 className="text-base font-semibold line-clamp-1 flex-1">{name}</h3>
-          {categoryName && (
-            <span className="shrink-0 px-2 py-0.5 rounded-md bg-[#E7CE9D] text-[#744531] text-[10px] font-semibold tracking-wide">
-              {categoryName}
-            </span>
-          )}
-        </div>
+      {/* ── Body ─────────────────────────────────────────── */}
+      <div className="p-4 flex flex-col flex-1 gap-2">
 
-        {description ? (
-          <p className="text-xs text-[#613D38] line-clamp-2 mt-1">{description}</p>
-        ) : null}
+        {/* Name */}
+        <h3 className="text-[15px] font-bold leading-snug line-clamp-1 text-[#1a2e1a]">
+          {name}
+        </h3>
 
-        {/* Rating */}
-        <div className="mt-2 flex items-center gap-1 text-xs text-gray-500">
-          <div className="flex items-center">
-            {[...Array(5)].map((_, i) => (
-              <Star
-                key={i}
-                className={`h-3.5 w-3.5 ${
-                  i < Math.floor(average_rating)
-                    ? "fill-[#744531] text-[#744531]"
-                    : "fill-gray-200 stroke-gray-400"
-                }`}
-              />
-            ))}
-          </div>
-          <span>({review_count})</span>
-        </div>
+        {/* Description */}
+        {description && (
+          <p className="text-xs text-[#6b5c55] line-clamp-2 leading-relaxed">
+            {description}
+          </p>
+        )}
 
-        {/* Price */}
-        <div className="mt-3 flex items-center gap-2">
-          <span className="text-lg font-bold text-[#744531]">{formattedFinal}</span>
+        {/* Price row */}
+        <div className="flex items-baseline gap-2 mt-1">
+          <span className="text-2xl font-black text-[#744531] tracking-tight">{formattedFinal}</span>
           {hasDiscount && baseCents > 0 && (
-            <span className="text-xs line-through text-[#613D38]">{formattedBase}</span>
+            <span className="text-sm line-through text-gray-300 font-medium">{formattedBase}</span>
           )}
         </div>
 
         {/* Size selector */}
         {sizes.length > 0 && (
-          <div className="mt-3">
-            <div className="flex flex-wrap gap-2">
-              {sizes.map((s, idx) => {
-                const selected = idx === activeIdx;
-                return (
-                  <button
-                    key={`${s.size}-${idx}`}
-                    type="button"
-                    onClick={(e) => {
-                      stopNav(e);
-                      setActiveIdx(idx);
-                    }}
-                    className={cn(
-                      "px-2 py-1 rounded border-2 text-xs font-semibold transition tracking-wide",
-                      selected
-                        ? "bg-[#744531] text-white border-[#744531]"
-                        : "bg-white text-[#744531] border-[#744531] hover:bg-[#744531]/10"
-                    )}
-                    aria-pressed={selected}
-                    aria-label={`Select size ${s.size || idx + 1}`}
-                  >
-                    {s.size || `Size ${idx + 1}`}
-                  </button>
-                );
-              })}
-            </div>
+          <div className="flex flex-wrap gap-1.5 mt-1">
+            {sizes.map((s, idx) => {
+              const selected = idx === activeIdx;
+              return (
+                <button
+                  key={`${s.size}-${idx}`}
+                  type="button"
+                  onClick={(e) => {
+                    stopNav(e);
+                    setActiveIdx(idx);
+                  }}
+                  className={cn(
+                    "px-2.5 py-1 rounded-lg border text-[11px] font-semibold transition-all tracking-wide",
+                    selected
+                      ? "bg-[#28543d] text-white border-[#28543d] shadow-sm"
+                      : "bg-[#f5f0e8] text-[#28543d] border-[#28543d]/20 hover:border-[#28543d]/60"
+                  )}
+                  aria-pressed={selected}
+                  aria-label={`Select size ${s.size || idx + 1}`}
+                >
+                  {s.size || `Size ${idx + 1}`}
+                </button>
+              );
+            })}
           </div>
         )}
 
-        {/* NEW: Batch dropdown selector */}
+        {/* Batch dropdown */}
         {hasBatches && (
-          <div className="mt-3 relative z-10" data-batch-dropdown>
-            <div className="text-[10px] font-semibold text-[#744531] mb-1.5 uppercase tracking-wide">
-              Select Batch {inCart && cartBatch && (
-                <span className="text-emerald-600 normal-case">
-                  (Selected: {cartBatch.name})
+          <div className="mt-1 relative z-10" data-batch-dropdown>
+            <div className="text-[10px] font-semibold text-[#28543d] mb-1 uppercase tracking-wider flex items-center gap-1">
+              Select Batch
+              {inCart && cartBatch && (
+                <span className="text-emerald-600 normal-case font-medium">
+                  · {cartBatch.name}
                 </span>
               )}
             </div>
@@ -328,18 +324,16 @@ const ProductCard = ({
                 type="button"
                 onClick={(e) => {
                   stopNav(e);
-                  if (!inCart) {
-                    setBatchDropdownOpen((prev) => !prev);
-                  }
+                  if (!inCart) setBatchDropdownOpen((prev) => !prev);
                 }}
                 disabled={inCart}
                 className={cn(
-                  "w-full px-2 py-1.5 rounded-md border text-left transition text-xs flex items-center justify-between gap-1",
+                  "w-full px-3 py-1.5 rounded-xl border text-left transition text-xs flex items-center justify-between gap-1",
                   inCart
-                    ? "bg-gray-100 border-gray-300 text-gray-500 cursor-not-allowed"
+                    ? "bg-gray-50 border-gray-200 text-gray-400 cursor-not-allowed"
                     : batchDropdownOpen
-                    ? "bg-[#E7CE9D] border-[#744531] text-[#744531]"
-                    : "bg-white border-[#E7CE9D]/60 text-[#613D38] hover:border-[#E7CE9D] hover:bg-[#E7CE9D]/10"
+                    ? "bg-[#E7CE9D]/40 border-[#744531] text-[#744531]"
+                    : "bg-[#f5f0e8] border-[#E7CE9D] text-[#613D38] hover:border-[#744531]/50"
                 )}
               >
                 <span className="font-semibold truncate">
@@ -357,7 +351,7 @@ const ProductCard = ({
               </button>
 
               {batchDropdownOpen && !inCart && (
-                <div className="absolute z-50 mt-1 left-0 right-0 bg-white border border-[#E7CE9D] rounded-md shadow-xl max-h-40 overflow-y-auto overflow-x-hidden">
+                <div className="absolute z-50 mt-1 left-0 right-0 bg-white border border-[#E7CE9D] rounded-xl shadow-xl max-h-40 overflow-y-auto overflow-x-hidden">
                   {batches.map((b, idx) => (
                     <button
                       key={`batch-${idx}`}
@@ -369,14 +363,14 @@ const ProductCard = ({
                         setBatchWarning("");
                       }}
                       className={cn(
-                        "w-full px-2 py-1.5 text-left text-xs hover:bg-[#E7CE9D]/20 transition",
+                        "w-full px-3 py-2 text-left text-xs hover:bg-[#E7CE9D]/20 transition border-b border-[#E7CE9D]/30 last:border-0",
                         idx === selectedBatchIdx ? "bg-[#E7CE9D]/30" : ""
                       )}
                     >
                       <div className="flex flex-col gap-0.5">
-                        <span className="font-semibold">{b.name || "Unnamed"}</span>
+                        <span className="font-semibold text-[#1a2e1a]">{b.name || "Unnamed"}</span>
                         {b.delivery_date && (
-                          <span className="text-[9px] opacity-75">
+                          <span className="text-[9px] text-gray-500">
                             Delivery: {b.delivery_date}
                           </span>
                         )}
@@ -386,53 +380,76 @@ const ProductCard = ({
                 </div>
               )}
             </div>
+
             {batchWarning && (
-              <div className="mt-1 text-[10px] text-red-600 font-medium">
+              <div className="mt-1 text-[10px] text-red-600 font-medium bg-red-50 rounded-lg px-2 py-1">
                 {batchWarning}
               </div>
             )}
           </div>
         )}
 
-        {/* NEW: Spacer to push cart actions to bottom */}
+        {/* Spacer */}
         <div className="flex-1" />
 
         {/* Cart Actions */}
-        <div className="mt-4 flex items-center gap-2">
-          <Button
+        <div className="mt-3 flex items-center gap-2">
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={handleToggleCart}
-            size="sm"
             className={cn(
-              "flex-1 text-xs font-semibold shadow-sm transition bg-[#744531] hover:bg-[#744531]/90 text-white"
+              "flex-1 h-12 text-xs font-black uppercase tracking-widest rounded-2xl shadow-sm transition-all duration-300",
+              inCart
+                ? "bg-[#f5f0e8] text-[#744531] hover:bg-[#E7CE9D]/50 border border-[#744531]/20"
+                : "bg-[#28543d] hover:bg-[#1f4230] text-white shadow-xl shadow-[#28543d]/20"
             )}
           >
-            {inCart ? "Remove" : "Add To Cart"}
-          </Button>
+            {inCart ? "Remove" : "Add To Bag"}
+          </motion.button>
 
           {inCart && (
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 bg-[#f5f0e8] rounded-xl px-1">
               <button
                 onClick={(e) => adjustQty(e, -1)}
                 aria-label="Decrease quantity"
-                className="h-8 w-8 flex items-center justify-center rounded bg-[#E7CE9D]/40 hover:bg-[#E7CE9D]/60 text-[#744531] text-sm font-bold"
+                className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-[#E7CE9D]/60 text-[#744531] text-sm font-bold transition"
               >
-                -
+                −
               </button>
-              <span className="min-w-[1.5rem] text-center text-sm font-semibold">
+              <span className="min-w-[1.5rem] text-center text-sm font-bold text-[#744531]">
                 {quantity}
               </span>
               <button
                 onClick={(e) => adjustQty(e, 1)}
                 aria-label="Increase quantity"
-                className="h-8 w-8 flex items-center justify-center rounded bg-[#E7CE9D]/40 hover:bg-[#E7CE9D]/60 text-[#744531] text-sm font-bold"
+                className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-[#E7CE9D]/60 text-[#744531] text-sm font-bold transition"
               >
                 +
               </button>
             </div>
           )}
         </div>
+
+        {/* Rating - Moved to end */}
+        <div className="flex items-center gap-1.5 text-xs text-gray-400 mt-4 pt-3 border-t border-gray-100/50">
+          <div className="flex items-center gap-0.5">
+            {[...Array(5)].map((_, i) => (
+              <Star
+                key={i}
+                className={`h-3 w-3 ${
+                  i < Math.floor(average_rating)
+                    ? "fill-[#744531] text-[#744531]"
+                    : "fill-gray-100 stroke-gray-300"
+                }`}
+              />
+            ))}
+          </div>
+          <span className="text-[10px] font-bold uppercase tracking-tighter">({review_count} Reviews)</span>
+        </div>
       </div>
-    </Link>
+      </Link>
+    </motion.div>
   );
 };
 

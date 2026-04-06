@@ -1,8 +1,11 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Button, ProductsGrid, ImageShowcase } from "../components";
+import { Button, ProductsGrid, ImageShowcase, BlogCard } from "../components";
 import { Link } from "react-router-dom";
 import { fetchProducts, selectAllProducts } from "../store/productsSlice";
+import { motion } from "framer-motion";
+import { Leaf, Globe, Truck, FlaskConical, Quote, ArrowRight } from "lucide-react";
+import blogData from "./Blog/blogData";
 
 function Home() {
   const dispatch = useDispatch();
@@ -15,109 +18,188 @@ function Home() {
   }, []);
 
   useEffect(() => {
-    dispatch(fetchProducts()); // later: replace with featured query
+    dispatch(fetchProducts());
   }, [dispatch]);
 
-  // Pick a few hardcoded featured products for now
-  const featuredProducts = products.filter((p) =>
-    ["gir-kesar-mango", "shudh-desi-ghee"].includes(p.slug),
-  );
+  // Pick a few hardcoded featured products
+  const featuredProducts = useMemo(() => 
+    products.filter((p) =>
+      ["gir-kesar-mango", "shudh-desi-ghee", "forest-honey", "organic-haldi"].includes(p.slug)
+    ).slice(0, 4),
+  [products]);
+
+  const latestBlogs = useMemo(() => blogData.slice(0, 3), []);
 
   return (
-    <>
-      {/* ---------------- Hero Section ---------------- */}
-      <section className="relative w-full overflow-hidden" style={{ minHeight: "clamp(420px, 70vh, 700px)" }}>
-        {/* Background Image */}
-        <img
+    <div className="flex flex-col w-full overflow-hidden">
+      {/* ── 1. Hero Section ─────────────────────────────────────────── */}
+      <section className="relative w-full overflow-hidden" style={{ minHeight: "clamp(480px, 85vh, 850px)" }}>
+        <motion.img
+          initial={{ scale: 1.1, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 1.5, ease: "easeOut" }}
           src="HeroImage.png"
           alt="True Soil Organics Hero"
           className="absolute inset-0 z-0 h-full w-full object-cover object-center"
           loading="eager"
         />
+        <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
 
-        {/* Gradient overlay — strong at bottom, lighter at top for image visibility */}
-        <div
-          className="absolute inset-0 z-10"
-          style={{
-            background:
-              "linear-gradient(to top, rgba(20,16,8,0.92) 0%, rgba(20,16,8,0.55) 45%, rgba(20,16,8,0.18) 100%)",
-          }}
-        />
-
-        {/* Content */}
-        <div className="relative z-20 flex h-full w-full items-end justify-center pb-12 sm:pb-16 md:pb-20 px-4 sm:px-6"
-          style={{ minHeight: "clamp(420px, 70vh, 700px)" }}>
-          <div className="w-full max-w-3xl text-center">
-
-            {/* Pill badge */}
-            <span
-              className="mb-4 inline-block rounded-full px-4 py-1.5 text-xs font-semibold uppercase tracking-widest"
-              style={{ background: "rgba(231,206,157,0.18)", color: "#E7CE9D", border: "1px solid rgba(231,206,157,0.35)" }}
+        <div className="relative z-20 flex h-full w-full items-center justify-center px-6 pt-20"
+          style={{ minHeight: "clamp(480px, 85vh, 850px)" }}>
+          <div className="w-full max-w-4xl text-center">
+            <motion.span
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className="mb-6 inline-block rounded-full px-6 py-2 text-[10px] font-black uppercase tracking-[0.2em] bg-[#E7CE9D]/10 text-[#E7CE9D] border border-[#E7CE9D]/30 backdrop-blur-md"
             >
-              100% Certified Organic
-            </span>
+              100% Certified Organic • Soil to Soul
+            </motion.span>
 
-            {/* Main heading */}
-            <h1
-              className="syne-medium font-extrabold leading-tight tracking-tight text-white"
-              style={{ fontSize: "clamp(1.75rem, 5vw, 4rem)", textShadow: "0 2px 24px rgba(0,0,0,0.55)" }}
+            <motion.h1
+              initial={{ y: 30, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.5, duration: 0.8 }}
+              className="syne-bold font-black leading-[1.1] tracking-tight text-white mb-6"
+              style={{ fontSize: "clamp(2.5rem, 8vw, 5.5rem)" }}
             >
-              Cultivating Health,
-              <br className="hidden sm:block" />
-              {" "}Nurturing Earth
-            </h1>
+              Purely Organic,<br />Truly Soulful.
+            </motion.h1>
 
-            {/* Sub-text */}
-            <p
-              className="mx-auto mt-4 max-w-xl text-sm sm:text-base md:text-lg font-medium"
-              style={{ color: "rgba(255,255,255,0.85)", textShadow: "0 1px 8px rgba(0,0,0,0.5)" }}
+            <motion.p
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.7, duration: 0.8 }}
+              className="mx-auto max-w-2xl text-base sm:text-lg md:text-xl font-medium text-white/90 mb-10"
             >
-              Your journey to pure, wholesome, and sustainable living with
-              True Soil Organics starts here.
-            </p>
+              Discover the richness of nature through our sustainably harvested products, 
+              delivered straight from our farms to your doorstep.
+            </motion.p>
+
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.9 }}
+              className="flex flex-col sm:flex-row items-center justify-center gap-4"
+            >
+              <Button size="lg" className="rounded-full bg-[#E7CE9D] text-[#744531] font-bold px-10 h-14 hover:bg-white transition-all shadow-xl shadow-[#E7CE9D]/10">
+                <Link to="/products">Explore Harvest</Link>
+              </Button>
+              <Button variant="outline" size="lg" className="rounded-full border-white/30 bg-white/5 text-white backdrop-blur-md px-10 h-14 hover:bg-white/10 transition-all">
+                <Link to="/about-us">Our Story</Link>
+              </Button>
+            </motion.div>
           </div>
         </div>
       </section>
 
-      {/* ---------------- Product Showcase ---------------- */}
-      <section className="bg-gray-100 flex items-center justify-center bg-gradient-to-br from-background to-muted py-16 md:py-24">
-        <div className="container">
-          <h2 className="syne-bold text-center text-5xl mb-5">
-            Our Bestselling Organic Delights
-          </h2>
+      {/* ── 2. Trust Badges ─────────────────────────────────────────── */}
+      <section className="py-12 bg-white border-b border-gray-100">
+        <div className="container px-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            {[
+              { icon: Leaf, title: "100% Organic", desc: "Non-GMO & Pure" },
+              { icon: Globe, title: "Sustainable", desc: "Eco-friendly farms" },
+              { icon: Truck, title: "Direct to Table", desc: "Fresh from harvest" },
+              { icon: FlaskConical, title: "Lab Tested", desc: "Highest QC standards" }
+            ].map((feature, idx) => (
+              <div key={idx} className="flex flex-col items-center text-center group">
+                <div className="w-14 h-14 rounded-2xl bg-[#faf8f4] flex items-center justify-center mb-4 group-hover:bg-[#E7CE9D]/10 transition-colors duration-500">
+                  <feature.icon className="w-6 h-6 text-[#744531]" />
+                </div>
+                <h3 className="text-sm font-black text-[#744531] uppercase tracking-wider mb-1">{feature.title}</h3>
+                <p className="text-[11px] text-gray-400 font-medium">{feature.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── 3. Category Showcase ────────────────────────────────────────── */}
+     
+      {/* ── 4. Product Showcase (Bestsellers) ────────────────────────────────── */}
+      <section className="py-24 bg-white relative overflow-hidden">
+        <div className="container px-4">
+          <div className="text-center mb-16">
+            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#E7CE9D] mb-2 block">Bestsellers</span>
+            <h2 className="syne-bold text-4xl md:text-5xl text-[#744531]">Crafted by Nature</h2>
+          </div>
 
           {loading ? (
-            <div className="grid gap-6 sm:gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
               {Array.from({ length: 4 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="h-[350px] w-full rounded-lg bg-gray-200 animate-pulse"
-                />
+                <div key={i} className="aspect-[4/5] w-full rounded-[2.5rem] bg-[#faf8f4] animate-pulse" />
               ))}
             </div>
           ) : (
             <ProductsGrid products={featuredProducts} />
           )}
 
-          <div className="mt-12 text-center">
-            <Button
-              asChild
-              size="lg"
-              className="rounded-xl bg-[#744531] px-8 py-3 text-sm text-white shadow-md hover:shadow-lg"
-            >
-              <Link to="/products">View All Products</Link>
-            </Button>
+          <div className="mt-16 text-center">
+            <Link to="/products">
+              <Button size="lg" className="rounded-full bg-[#744531] px-12 h-14 text-sm tracking-widest text-white shadow-xl hover:bg-[#28543d] transition-all">
+                Shop All Products
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
 
-      {/* ---------------- Video Showcase ---------------- */}
-      <ImageShowcase
-        src={null}
-        title="From Farm to Your Table"
-        description="Witness the journey of our organic produce, grown with care and commitment to nature."
-      />
-    </>
+
+      {/* ── 6. Stories & Insights ─────────────────────────────────────── */}
+      <section className="py-24 bg-white">
+        <div className="container px-4">
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-16 gap-6">
+            <div>
+              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#E7CE9D] mb-2 block">Journal</span>
+              <h2 className="syne-bold text-4xl md:text-5xl text-[#744531]">Stories & Insights</h2>
+            </div>
+            <Link to="/blog" className="text-sm font-black uppercase tracking-widest text-[#28543d] hover:text-[#744531] flex items-center gap-2 transition-all">
+              Read All Stories <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+             {latestBlogs.map((blog, idx) => (
+               <BlogCard key={idx} {...blog} />
+             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── 5. Testimonials ────────────────────────────────────────── */}
+      <section className="py-24 bg-[#744531] text-white">
+        <div className="container px-4">
+          <div className="flex flex-col items-center text-center mb-16">
+            <Quote className="w-12 h-12 text-[#E7CE9D]/40 mb-6" />
+            <h2 className="syne-bold text-4xl md:text-5xl mb-4">What Our Community Says</h2>
+            <p className="text-[#E7CE9D] max-w-xl text-sm tracking-wide">Join thousands of families living the soulful organic lifestyle.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              { name: "Anjali Sharma", text: "The Giri Kesar Mangoes are a world apart. You can truly taste the Gir soil in every bite. Pure heaven!", role: "Health Enthusiast" },
+              { name: "Sameer Vora", text: "Finally found Ghee that smells like Home. vanVeda's commitment to quality is evident from the first use.", role: "Professional Chef" },
+              { name: "Priya Mehta", text: "Sustainable, organic, and truly effective. The honey from the forest section is my morning ritual now.", role: "Yoga Practitioner" }
+            ].map((t, idx) => (
+              <div key={idx} className="bg-white/5 backdrop-blur-md rounded-[2.5rem] p-10 border border-white/10 hover:bg-white/10 transition-all duration-500">
+                <p className="italic text-lg mb-8 text-white/90 leading-relaxed font-light">"{t.text}"</p>
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-full bg-[#E7CE9D]/20 flex items-center justify-center text-[10px] font-black uppercase text-[#E7CE9D]">
+                    {t.name.split(' ').map(n=>n[0]).join('')}
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-sm tracking-tight">{t.name}</h4>
+                    <p className="text-[10px] uppercase tracking-widest text-[#E7CE9D] font-bold">{t.role}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    </div>
   );
 }
 

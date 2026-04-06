@@ -9,7 +9,7 @@ import {
   Award,
   BookOpen,
   Info,
-  // Phone,
+  Phone,
 } from "lucide-react";
 import { Input } from "./index";
 import { motion, AnimatePresence } from "framer-motion";
@@ -82,6 +82,12 @@ export function Header() {
 
   const navItems = [
     {
+      name: "Products",
+      slug: "/products",
+      icon: <ShoppingCart className="h-5 w-5" />,
+      active: true,
+    },
+    {
       name: "Certificates",
       slug: "/certificates",
       icon: <Award className="h-5 w-5" />,
@@ -99,7 +105,12 @@ export function Header() {
       icon: <Info className="h-5 w-5" />,
       active: true,
     },
-    // { name: "Contact Us", slug: "/contact-us", icon: <Phone className="h-5 w-5" />, active: true },
+    {
+      name: "Contact Us",
+      slug: "/contact-us",
+      icon: <Phone className="h-5 w-5" />,
+      active: true,
+    },
     {
       name: "Profile",
       slug: "/profile",
@@ -115,7 +126,9 @@ export function Header() {
   ];
 
   const navLinkClasses = ({ isActive }) =>
-    `transition-colors hover:text-[#28543d] ${isActive ? "text-green-900 font-semibold" : "text-gray-900"}`;
+    `relative py-2 text-sm font-bold transition-all duration-300 tracking-tight group ${
+      isActive ? "text-[#28543d]" : "text-[#744531] opacity-70 hover:opacity-100"
+    }`;
 
   useEffect(() => {
     setOfferLoading(true);
@@ -220,76 +233,104 @@ export function Header() {
       {/* Main Header */}
       {/* ── Desktop layout (lg+) ── */}
       <motion.div
-        className="hidden lg:flex max-w-7xl mx-auto h-20 items-center justify-between px-6"
+        className="hidden lg:flex max-w-7xl mx-auto h-24 items-center gap-8 justify-between px-8"
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5 }}
       >
-        {/* Logo */}
+        {/* Left: Logo */}
         <Link
           to="/"
-          className="flex items-center gap-2 font-semibold text-xl text-[#744531]"
+          className="flex h-16 w-auto shrink-0 items-center overflow-hidden"
         >
           <img
             src="/Truesoil.png"
             alt="TrueSoil Organics"
-            className="h-18 w-auto object-contain"
+            className="h-full w-auto object-contain transition-transform hover:scale-105 duration-300"
           />
         </Link>
 
-        {/* Desktop Nav */}
-        <div className="flex items-center gap-6 text-sm font-medium">
-          <Input
-            type="search"
-            placeholder="Search products..."
-            className="w-[200px] lg:w-[250px] rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-green-900 focus:ring-1 focus:ring-green-900"
-          />
-          <nav className="flex items-center gap-4 xl:gap-6">
-            {navItems.map(
-              (item) =>
-                item.active && (
-                  <NavLink
-                    key={item.slug}
-                    to={item.slug}
-                    className={navLinkClasses}
-                  >
-                    {item.name}
-                  </NavLink>
-                ),
-            )}
-            {authStatus && (
-              <button
-                onClick={handleLogout}
-                className="text-sm font-medium text-gray-900 hover:text-green-900"
-              >
-                Sign Out
-              </button>
-            )}
-          </nav>
-        </div>
+        {/* Center: Desktop Nav Links */}
+        <nav className="flex items-center gap-8 xl:gap-10">
+          {navItems.map((item) => {
+            // Only show main nav items (exclude profile/login unless we specifically want them here)
+            const isMainNav = !["Profile", "Login"].includes(item.name);
+            return (
+              item.active &&
+              isMainNav && (
+                <NavLink
+                  key={item.slug}
+                  to={item.slug}
+                  className={navLinkClasses}
+                >
+                  {item.name}
+                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#28543d] transition-all duration-300 group-hover:w-full" />
+                </NavLink>
+              )
+            );
+          })}
+        </nav>
 
-        {/* Cart */}
-        <motion.button
-          onClick={() => setCartOpen(true)}
-          whileHover={{ scale: 1.1, rotate: -2 }}
-          whileTap={{ scale: 0.95 }}
-          transition={{ type: "spring", stiffness: 300, damping: 15 }}
-          className="relative p-2 rounded-full bg-white shadow-md hover:shadow-lg transition-shadow duration-300"
-          aria-label="Open cart"
-        >
-          <ShoppingCart className="h-5 w-5 text-gray-900" />
-          {cartItemCount > 0 && (
-            <motion.span
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0 }}
-              className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#e7ce9d] text-xs text-[#744531] shadow-sm"
+        {/* Right: Actions (Search, Profile/Login, Cart) */}
+        <div className="flex items-center gap-4">
+          <div className="relative group/search">
+            <Input
+              type="search"
+              placeholder="Search..."
+              className="w-48 xl:w-56 rounded-2xl border border-[#E7CE9D]/50 bg-[#faf8f4] px-4 py-2 text-xs focus:ring-1 focus:ring-[#28543d] focus:border-[#28543d] transition-all"
+            />
+          </div>
+
+          <div className="h-6 w-px bg-gray-200" />
+
+          {/* Login or Profile button */}
+          {authStatus ? (
+            <Link
+              to="/profile"
+              className="p-2 rounded-full hover:bg-[#28543d]/5 text-[#744531] transition-colors"
+              title="Profile"
             >
-              {cartItemCount}
-            </motion.span>
+              <User className="h-5 w-5" />
+            </Link>
+          ) : (
+            <Link
+              to="/login"
+              className="text-xs font-bold uppercase tracking-widest text-[#744531] hover:text-[#28543d] transition-colors px-2"
+            >
+              Sign In
+            </Link>
           )}
-          <span className="sr-only">Shopping Cart</span>
-        </motion.button>
+
+          {/* Cart Icon */}
+          <motion.button
+            onClick={() => setCartOpen(true)}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="relative p-2.5 rounded-2xl bg-[#744531] text-white shadow-lg hover:shadow-xl transition-all duration-300"
+            aria-label="Open cart"
+          >
+            <ShoppingCart className="h-5 w-5" />
+            {cartItemCount > 0 && (
+              <motion.span
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-[#E7CE9D] text-[10px] font-bold text-[#744531] border-2 border-white shadow-sm"
+              >
+                {cartItemCount}
+              </motion.span>
+            )}
+          </motion.button>
+
+          {authStatus && (
+            <button
+              onClick={handleLogout}
+              className="p-2 rounded-full text-gray-400 hover:text-red-600 transition-colors"
+              title="Sign Out"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          )}
+        </div>
       </motion.div>
 
       {/* ── Mobile layout (< lg): Hamburger | Logo | Cart ── */}
@@ -339,8 +380,7 @@ export function Header() {
             <motion.span
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              exit={{ scale: 0 }}
-              className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#e7ce9d] text-xs text-[#744531] shadow-sm"
+              className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#E7CE9D] text-[10px] font-bold text-[#744531] border border-white"
             >
               {cartItemCount}
             </motion.span>
@@ -370,47 +410,44 @@ export function Header() {
               <Input
                 type="search"
                 placeholder="Search products..."
-                className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-green-900 focus:ring-1 focus:ring-green-900"
+                className="w-full rounded-2xl border border-[#E7CE9D]/50 bg-[#faf8f4] px-4 py-2.5 text-sm focus:ring-1 focus:ring-[#28543d] focus:border-[#28543d]"
               />
 
               {/* Product Category Icons */}
-              <div className="mt-6 mb-4">
-                <h3 className="text-sm font-semibold text-gray-700 mb-3">
+              <div className="mt-6 mb-6">
+                <h3 className="text-xs font-bold text-[#744531] uppercase tracking-widest mb-4 opacity-60">
                   Shop by Category
                 </h3>
-                <div className="flex items-center justify-around gap-4">
+                <div className="flex items-center justify-around gap-4 px-2">
                   <Link
                     to="/products?category=mango"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="flex flex-col items-center gap-2 hover:opacity-80 transition-opacity"
+                    className="flex flex-col items-center gap-2 group"
                   >
-                    <img
-                      src="/mango.png"
-                      alt="Mango"
-                      className="w-14 h-14 object-contain"
-                    />
-                    <span className="text-xs text-gray-700">Mango</span>
+                    <div className="w-16 h-16 rounded-2xl bg-[#E7CE9D]/10 flex items-center justify-center p-2 group-hover:bg-[#E7CE9D]/20 transition-colors">
+                      <img
+                        src="/mango.png"
+                        alt="Mango"
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                    <span className="text-[10px] font-bold text-[#744531] uppercase tracking-tighter">Mango</span>
                   </Link>
                   <Link
                     to="/products?category=ghee"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="flex flex-col items-center gap-2 hover:opacity-80 transition-opacity"
+                    className="flex flex-col items-center gap-2 group"
                   >
-                    <img
-                      src="/ghee.png"
-                      alt="Ghee"
-                      className="w-14 h-14 object-contain"
-                    />
-                    <span className="text-xs text-gray-700">Ghee</span>
+                    <div className="w-16 h-16 rounded-2xl bg-[#E7CE9D]/10 flex items-center justify-center p-2 group-hover:bg-[#E7CE9D]/20 transition-colors">
+                      <img
+                        src="/ghee.png"
+                        alt="Ghee"
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                    <span className="text-[10px] font-bold text-[#744531] uppercase tracking-tighter">Ghee</span>
                   </Link>
                 </div>
-                <Link
-                  to="/products"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="mt-4 w-full flex items-center justify-center gap-2 rounded-md px-3 py-2.5 text-sm font-medium bg-[#28543d] text-white hover:bg-[#5a8f23] transition-colors"
-                >
-                  Shop All Products
-                </Link>
               </div>
 
               <nav className="mt-2 flex flex-col gap-2 font-semibold">
@@ -421,10 +458,10 @@ export function Header() {
                         key={item.slug}
                         to={item.slug}
                         className={({ isActive }) =>
-                          `flex items-center gap-2 rounded-md px-3 py-2 text-lg transition-colors ${
+                          `flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold transition-all ${
                             isActive
-                              ? "bg-green-100 text-green-900 font-semibold"
-                              : "text-gray-900 hover:text-green-900"
+                              ? "bg-[#28543d] text-white shadow-lg"
+                              : "text-[#744531] hover:bg-[#28543d]/5"
                           }`
                         }
                         onClick={() => setMobileMenuOpen(false)}

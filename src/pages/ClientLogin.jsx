@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
-import { Eye, EyeOff, Loader2 } from "lucide-react"; // Added Loader2 icon
+import { motion, AnimatePresence } from "framer-motion";
+import { Loader2, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { Button, Input } from "../components";
 import appwriteAuthService from "../appwrite/authService";
 import { login } from "../store/authSlice";
 import { fetchCart } from "../store/cartsSlice";
-import { fetchUsers } from "../store/usersSlice"; // NEW: hydrate users slice post-login
+import { fetchUsers } from "../store/usersSlice";
 
 export default function ClientLogin() {
   const dispatch = useDispatch();
@@ -55,89 +56,152 @@ export default function ClientLogin() {
       }
 
       console.log("[ClientLogin] Success:", user);
-      // Optional: navigate after login (left unchanged)
-
     } catch (err) {
       console.error("[ClientLogin] Error:", err);
       setError(err.message || "Login failed. Please try again.");
     } finally {
-      setLoading(false); // spinner stops only after both login & cart fetch
+      setLoading(false);
     }
   };
 
-
   return (
-    <div className="w-full bg-[#fafafa] min-h-screen flex items-center justify-center px-4">
-      <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-8">
-        {/* Title */}
-        <h1 className="syne-bold text-3xl md:text-4xl text-[#744531] text-center mb-8">
-          Login
-        </h1>
-
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Email Input */}
-          <Input
-            name="email"
-            type="email"
-            label="Email"
-            placeholder="you@example.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            disabled={loading}
-            required
+    <div className="w-full min-h-screen bg-white flex overflow-hidden font-sans">
+      {/* ── Left Side: Lifestyle Image (Desktop only) ────────────────── */}
+      <div className="hidden lg:block lg:w-1/2 relative overflow-hidden">
+        <motion.div
+          initial={{ scale: 1.1, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 1.5, ease: "easeOut" }}
+          className="absolute inset-0"
+        >
+          <img
+            src="/SignIn.jpeg"
+            alt="Organic Lifestyle"
+            className="w-full h-full object-cover"
           />
+          {/* Brand Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent flex flex-col justify-end p-16">
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.5, duration: 0.8 }}
+              className="space-y-4"
+            >
+              <h2 className="syne-bold text-5xl text-white leading-tight">
+                Purely Organic,<br />Truly Soulful.
+              </h2>
+              <p className="text-[#E7CE9D] text-lg font-medium tracking-wide">
+                Experience the essence of nature in every drop.
+              </p>
+            </motion.div>
+          </div>
+        </motion.div>
+      </div>
 
-          {/* Password Input with Eye Toggle */}
-          <Input
-            name="password"
-            type={showPassword ? "text" : "password"}
-            label="Password"
-            placeholder="••••••••"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            disabled={loading}
-            required
-            suffix={
-              <button
-                type="button"
-                onClick={() => setShowPassword((prev) => !prev)}
-                className="focus:outline-none"
-                tabIndex={-1}
+      {/* ── Right Side: Auth Form ─────────────────────────────────────────── */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 bg-[#faf8f4]">
+        <motion.div
+          initial={{ x: 20, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ duration: 0.6 }}
+          className="w-full max-w-md"
+        >
+          {/* Back button or Brand logo if needed */}
+          <div className="mb-12 flex justify-center lg:justify-start">
+            <a href="/" className="transition-transform hover:scale-105 duration-300">
+               <img src="/Truesoil.png" alt="TrueSoil" className="h-16 w-auto" />
+            </a>
+          </div>
+
+          <div className="bg-white rounded-[2.5rem] shadow-[0_20px_50px_rgba(40,84,61,0.08)] p-8 md:p-10 border border-[#E7CE9D]/20">
+            <div className="mb-8">
+              <h1 className="syne-bold text-3xl text-[#744531] mb-2">Welcome Back</h1>
+              <p className="text-gray-400 text-sm font-medium">Please enter your details to sign in.</p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <Input
+                name="email"
+                type="email"
+                label="Email Address"
+                placeholder="hello@vanveda.com"
+                className="rounded-2xl border-[#E7CE9D]/40 focus:ring-[#28543d] focus:border-[#28543d]"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={loading}
+                required
+              />
+
+              <div className="space-y-1">
+                <Input
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  label="Password"
+                  placeholder="••••••••"
+                  className="rounded-2xl border-[#E7CE9D]/40 focus:ring-[#28543d] focus:border-[#28543d]"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={loading}
+                  required
+                  suffix={
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((prev) => !prev)}
+                      className="focus:outline-none p-1 hover:bg-gray-100 rounded-full transition-colors"
+                      tabIndex={-1}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="w-5 h-5 text-gray-400" />
+                      ) : (
+                        <Eye className="w-5 h-5 text-gray-400" />
+                      )}
+                    </button>
+                  }
+                />
+                <div className="flex justify-end pr-1">
+                  <a href="/forgot-password" title="Under implementation" className="text-[10px] uppercase tracking-widest font-bold text-[#28543d] hover:text-[#744531] transition-colors">
+                    Forgot Password?
+                  </a>
+                </div>
+              </div>
+
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  className="p-3 bg-red-50 text-[11px] font-bold text-red-600 rounded-xl border border-red-100 flex items-center gap-2"
+                >
+                  <span className="h-1.5 w-1.5 rounded-full bg-red-600 animate-pulse" />
+                  {error}
+                </motion.div>
+              )}
+
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full h-14 rounded-2xl bg-[#744531] text-white font-black text-sm uppercase tracking-widest shadow-xl hover:bg-[#28543d] transition-all duration-300 flex items-center justify-center gap-2 group"
               >
-                {showPassword ? (
-                  <EyeOff className="w-5 h-5 text-gray-500" />
+                {loading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
-                  <Eye className="w-5 h-5 text-gray-500" />
+                  <>
+                    Sign In
+                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                  </>
                 )}
-              </button>
-            }
-          />
+              </Button>
+            </form>
 
-          {/* Error message */}
-          {error && (
-            <p className="text-sm text-red-600 font-medium">{error}</p>
-          )}
-
-          {/* Submit button with Loader */}
-          <Button
-            type="submit"
-            size="lg"
-            disabled={loading}
-            className="w-full rounded-xl bg-[#744531] text-white shadow-md hover:bg-[#744531]/90 hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
-          >
-            {loading && <Loader2 className="w-5 h-5 animate-spin" />}
-            {loading ? "Logging in..." : "Login"}
-          </Button>
-        </form>
-
-        {/* Extra actions */}
-        <p className="text-center text-sm text-[#613D38] mt-6">
-          Don’t have an account?{" "}
-          <a href="/signup" className="text-[#28543d] hover:underline">
-            Sign up
-          </a>
-        </p>
+            <div className="mt-10 text-center">
+              <p className="text-gray-400 text-sm font-medium">
+                Don’t have an account?{" "}
+                <a href="/signup" className="text-[#28543d] font-bold hover:underline transition-all">
+                  Join for Free
+                </a>
+              </p>
+            </div>
+          </div>
+        </motion.div>
       </div>
     </div>
   );
