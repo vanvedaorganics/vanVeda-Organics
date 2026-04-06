@@ -110,13 +110,13 @@ function Footer() {
           <h3 className="text-lg font-semibold text-[#E7CE9D]">Contact Us</h3>
           <div className="space-y-2 text-sm text-white font-semibold">
             <p className="flex items-center gap-2">
-              <Mail className="h-4 w-4" /> info@truesoilorganics.com
+              <Mail className="h-4 w-4" /> truesoilorganic@gmail.com
             </p>
             <p className="flex items-center gap-2">
-              <Phone className="h-4 w-4" /> +91 12345 67890
+              <Phone className="h-4 w-4" /> +91 9316417314
             </p>
             <p className="text-primary-foreground/80">
-              123 Organic Lane, Green City, State - 123456, India
+              Gir Gadhda, Gujarat, India
             </p>
           </div>
           <h3 className="text-lg font-semibold text-[#E7CE9D] mt-6">
