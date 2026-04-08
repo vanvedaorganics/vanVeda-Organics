@@ -122,11 +122,10 @@ function ContactUs() {
             Get In Touch
           </span>
           <h1 className="syne-medium text-4xl sm:text-5xl font-extrabold text-white leading-tight">
-            Contact True Soil Organics
+            Contact 
           </h1>
           <p className="mt-4 text-base sm:text-lg text-white/75 max-w-xl mx-auto">
-            Questions, bulk orders, or partnership enquiries — we're just a
-            message away.
+            True Soil Organics
           </p>
         </motion.div>
       </section>

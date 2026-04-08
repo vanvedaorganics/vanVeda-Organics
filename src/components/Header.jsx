@@ -6,7 +6,6 @@ import {
   Menu,
   User,
   X,
-  Award,
   BookOpen,
   Info,
   Phone,
@@ -14,10 +13,10 @@ import {
 import { Input } from "./index";
 import { motion, AnimatePresence } from "framer-motion";
 import appwriteService from "../appwrite/appwriteConfigService";
-import appwriteAuthService from "../appwrite/authService";
+
 import { Query } from "appwrite";
 import { useDispatch, useSelector } from "react-redux";
-import { logout as logoutAction } from "../store/authSlice";
+
 import {
   setEmptyCart,
   selectCartTotalCount,
@@ -87,12 +86,7 @@ export function Header() {
       icon: <ShoppingCart className="h-5 w-5" />,
       active: true,
     },
-    {
-      name: "Certificates",
-      slug: "/certificates",
-      icon: <Award className="h-5 w-5" />,
-      active: true,
-    },
+
     {
       name: "Blog",
       slug: "/blog",
@@ -145,16 +139,7 @@ export function Header() {
       .finally(() => setOfferLoading(false));
   }, []);
 
-  const handleLogout = async () => {
-    try {
-      await appwriteAuthService.logout();
-      dispatch(logoutAction());
-      dispatch(setEmptyCart());
-      navigate("/");
-    } catch (err) {
-      console.error("Logout failed:", err);
-    }
-  };
+
 
   // Build cartProducts: per packaging size using composite keys
   // [{ cartKey, product, qty, sizeIdx, sizeLabel, unitCents, imageFileId, batch }]
@@ -321,15 +306,7 @@ export function Header() {
             )}
           </motion.button>
 
-          {authStatus && (
-            <button
-              onClick={handleLogout}
-              className="p-2 rounded-full text-gray-400 hover:text-red-600 transition-colors"
-              title="Sign Out"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          )}
+
         </div>
       </motion.div>
 
@@ -471,17 +448,7 @@ export function Header() {
                       </NavLink>
                     ),
                 )}
-                {authStatus && (
-                  <button
-                    onClick={() => {
-                      handleLogout();
-                      setMobileMenuOpen(false);
-                    }}
-                    className="flex items-center gap-2 rounded-md px-3 py-2 text-lg text-gray-900 hover:text-green-900 text-left"
-                  >
-                    <X className="h-5 w-5" /> Sign Out
-                  </button>
-                )}
+
               </nav>
             </motion.div>
           </>

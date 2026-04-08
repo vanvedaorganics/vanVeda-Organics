@@ -74,12 +74,7 @@ function Footer() {
             <Link to="/blog" className="hover:text-[#E7CE9D] transition-colors">
               Blog
             </Link>
-            <Link
-              to="/certificates"
-              className="hover:text-[#E7CE9D] transition-colors"
-            >
-              Certificates
-            </Link>
+
             <Link to="/" className="hover:text-[#E7CE9D] transition-colors">
               FAQ
             </Link>

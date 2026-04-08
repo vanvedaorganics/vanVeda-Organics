@@ -226,6 +226,8 @@ function Checkout() {
   const [placing, setPlacing] = useState(false);
   const [paymentChoice, setPaymentChoice] = useState("COD");
   const [error, setError] = useState(null); // NEW: error state for toast
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [placedOrder, setPlacedOrder] = useState(null);
 
   // Pull profile + addresses
   useEffect(() => {
@@ -322,12 +324,11 @@ function Checkout() {
     };
   }, [cartRows]);
 
-  // If cart empty -> back to products
   useEffect(() => {
-    if (!loading && cartRows.length === 0) {
+    if (!loading && cartRows.length === 0 && !isSuccess) {
       navigate("/products");
     }
-  }, [loading, cartRows.length, navigate]);
+  }, [loading, cartRows.length, navigate, isSuccess]);
 
   const farthestDeliveryDate = useMemo(() => {
     // among items with batch.delivery_date pick furthest; else today+10
@@ -446,7 +447,7 @@ function Checkout() {
       const shippingAddress = JSON.stringify(selectedAddress);
 
       // Place order with error handling
-      await appwriteService.createOrder({
+      const result = await appwriteService.createOrder({
         user_id: profile.$id,
         userName: profile.displayName || "",
         items: JSON.stringify(itemsPayload),
@@ -456,19 +457,18 @@ function Checkout() {
         paymentMode,
       });
 
-      // Success: empty cart and redirect
+      // Success: empty cart and trigger success view
       dispatch(emptyUserCart());
       dispatch(setEmptyCart());
 
-      // Show success message briefly before redirect
+      setPlacedOrder(result);
+      setIsSuccess(true);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      
       setError({
         type: "success",
-        message: "Order placed successfully! Redirecting to your profile...",
+        message: "Order placed successfully!",
       });
-
-      setTimeout(() => {
-        navigate("/profile/orders"); // CHANGED: go to Orders tab route
-      }, 1500);
     } catch (e) {
       console.error("Failed to place order", e);
       setError({ type: "error", message: getUserFriendlyError(e) });
@@ -497,7 +497,7 @@ function Checkout() {
         )}
       </AnimatePresence>
 
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         {loading ? (
           <motion.div
             key="loading"
@@ -507,6 +507,59 @@ function Checkout() {
             className="flex justify-center items-center h-[60vh]"
           >
             <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-green-700"></div>
+          </motion.div>
+        ) : isSuccess ? (
+          <motion.div
+            key="success"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="max-w-2xl mx-auto bg-white rounded-3xl shadow-2xl p-8 md:p-12 text-center border border-[#E7CE9D]/30"
+          >
+            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <CheckCircle className="w-12 h-12 text-green-600" />
+            </div>
+            
+            <h2 className="syne-bold text-3xl md:text-4xl text-[#201413] mb-4">
+              Thank You for Your Order!
+            </h2>
+            <p className="ubuntu-regular text-lg text-[#613d38] mb-8">
+              Your order has been placed successfully and is now being processed by our Farmers at Gir.
+            </p>
+
+            <div className="bg-[#FAF8F4] rounded-2xl p-6 mb-8 text-left space-y-3">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500">Order ID:</span>
+                <span className="font-bold text-[#744531]">#{placedOrder?.$id?.slice(-8).toUpperCase() || "PENDING"}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500">Estimated Delivery:</span>
+                <span className="font-bold text-[#28543d]">{farthestDeliveryDate}</span>
+              </div>
+              <div className="flex justify-between text-sm pt-2 border-t border-gray-200">
+                <span className="text-gray-500">Total Amount:</span>
+                <span className="font-bold text-[#744531]">₹{(totals.subtotalCents / 100).toFixed(2)}</span>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button
+                onClick={() => navigate("/profile/orders")}
+                className="bg-[#744531] hover:bg-[#744531]/90 text-white px-8 py-3 rounded-xl shadow-lg transition-all"
+              >
+                View My Orders
+              </Button>
+              <Button
+                onClick={() => navigate("/products")}
+                variant="outline"
+                className="border-[#744531] text-[#744531] hover:bg-[#744531]/10 px-8 py-3 rounded-xl transition-all"
+              >
+                Continue Shopping
+              </Button>
+            </div>
+            
+            <p className="mt-8 text-sm text-gray-500 italic">
+              A confirmation message has been sent to your registered email.
+            </p>
           </motion.div>
         ) : (
           <motion.div

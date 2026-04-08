@@ -1,14 +1,19 @@
 import React, { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import appwriteConfigService from "../appwrite/appwriteConfigService";
 import appwriteAuthService from "../appwrite/authService";
+import { logout } from "../store/authSlice";
 import { Button, Input } from "../components";
-import { User, Phone, Mail, MapPin, X } from "lucide-react";
+import { 
+  User, Phone, Mail, MapPin, X, LogOut, Package, 
+  Calendar, CreditCard, ChevronRight, Settings,
+  Clock, CheckCircle2, AlertCircle
+} from "lucide-react";
 import { useForm } from "react-hook-form";
 import { motion, AnimatePresence } from "framer-motion";
 
-// Helper functions defined BEFORE component to avoid hoisting issues
+// Helper functions
 const parseAddressArray = (addressArray) => {
   if (!Array.isArray(addressArray) || addressArray.length === 0) return [];
   return addressArray
@@ -39,9 +44,9 @@ const safeJSONParse = (str, fallback) => {
 function Profile() {
   const authUser = useSelector((state) => state.auth.userData);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const location = useLocation();
 
-  // Use Redux orders directly (with realtime updates)
   const allOrders = useSelector((state) => state.orders.items);
   const ordersLoading = useSelector((state) => state.orders.loading);
   const products = useSelector((state) => state.products.items);
@@ -58,7 +63,6 @@ function Profile() {
   const [subscriptions, setSubscriptions] = useState([]);
   const [subsLoading, setSubsLoading] = useState(false);
 
-  // Local filtered state for orders (triggers re-render on Redux changes)
   const [currentOrders, setCurrentOrders] = useState([]);
   const [pastOrders, setPastOrders] = useState([]);
 
@@ -69,7 +73,6 @@ function Profile() {
     formState: { errors },
   } = useForm();
 
-  // Derive active tab from route (support /profile/subscriptions)
   const initialTab = location.pathname.endsWith("/orders")
     ? "orders"
     : location.pathname.endsWith("/subscriptions")
@@ -77,12 +80,10 @@ function Profile() {
     : "profile";
   const [activeTab, setActiveTab] = useState(initialTab);
 
-  // Scroll to top on mount
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
-  // Fetch Profile
   useEffect(() => {
     if (!authUser) {
       navigate("/login");
@@ -114,7 +115,6 @@ function Profile() {
     fetchProfile();
   }, [authUser, navigate, reset]);
 
-  // Filter and partition orders whenever Redux state changes
   useEffect(() => {
     if (!authUser) {
       setCurrentOrders([]);
@@ -122,10 +122,7 @@ function Profile() {
       return;
     }
 
-    // Filter orders for current user
     const userOrders = allOrders.filter((order) => order.user_id === authUser.$id);
-
-    // Partition into current and past
     const pastStatuses = new Set(["delivered", "cancelled"]);
     const current = [];
     const past = [];
@@ -141,9 +138,8 @@ function Profile() {
 
     setCurrentOrders(current);
     setPastOrders(past);
-  }, [allOrders, authUser]); // Re-run whenever allOrders or authUser changes
+  }, [allOrders, authUser]);
 
-  // Fetch subscriptions when profile available
   useEffect(() => {
     let active = true;
     const loadSubs = async () => {
@@ -155,16 +151,11 @@ function Profile() {
       try {
         const docs = await appwriteConfigService.listSubscriptions({ user_id: profile.$id });
         if (!active) return;
-        // parse shippingAddress & packaging_size for rendering
         const parsed = (docs || []).map((d) => {
           let pack = d.packaging_size;
-          try {
-            pack = typeof pack === "string" ? JSON.parse(pack) : pack;
-          } catch { pack = { sizeLabel: "", price_cents: 0 }; }
+          try { pack = typeof pack === "string" ? JSON.parse(pack) : pack; } catch { pack = { sizeLabel: "", price_cents: 0 }; }
           let ship = d.shippingAddress;
-          try {
-            ship = typeof ship === "string" ? JSON.parse(ship) : ship;
-          } catch { ship = null; }
+          try { ship = typeof ship === "string" ? JSON.parse(ship) : ship; } catch { ship = null; }
           return { ...d, parsedPackaging: pack, parsedShipping: ship };
         });
         setSubscriptions(parsed);
@@ -175,10 +166,18 @@ function Profile() {
       }
     };
     loadSubs();
-    return () => {
-      active = false;
-    };
+    return () => { active = false; };
   }, [profile]);
+
+  const handleLogout = async () => {
+    try {
+      await appwriteAuthService.logout();
+      dispatch(logout());
+      navigate("/login");
+    } catch (err) {
+      setError("Logout failed. Please try again.");
+    }
+  };
 
   const openModal = () => {
     reset({
@@ -196,7 +195,6 @@ function Profile() {
     try {
       const addressArray = addresses.map((addr) => JSON.stringify(addr));
 
-      // Handle email update separately → ask password first
       if (data.email !== profile.email) {
         setPendingEmail(data.email);
         setIsPasswordModalOpen(true);
@@ -205,14 +203,11 @@ function Profile() {
       }
 
       let isChanged = false;
-
-      // Update name in Auth if changed
       if (data.displayName !== profile.displayName) {
         await appwriteAuthService.updateName({ name: data.displayName });
         isChanged = true;
       }
 
-      // Update profile collection if any field changed
       if (
         data.displayName !== profile.displayName ||
         data.phone !== profile.phone ||
@@ -241,21 +236,15 @@ function Profile() {
     }
   };
 
-  // Confirm Email Update with Password Modal
   const handleConfirmEmailUpdate = async () => {
     if (!pendingEmail || !password) {
       setError("Password is required to update email.");
       return;
     }
-
     setSaving(true);
     setError("");
     try {
-      await appwriteAuthService.updateEmail({
-        email: pendingEmail,
-        password,
-      });
-
+      await appwriteAuthService.updateEmail({ email: pendingEmail, password });
       await appwriteConfigService.updateUserProfile({
         user_id: profile.$id,
         displayName: profile.displayName,
@@ -263,11 +252,9 @@ function Profile() {
         email: pendingEmail,
         address: profile.address,
       });
-
       const updated = await appwriteConfigService.getUserProfile(profile.$id);
       const parsedAddresses = parseAddressArray(updated.address);
       setProfile({ ...updated, parsedAddress: parsedAddresses });
-
       setIsPasswordModalOpen(false);
       setIsModalOpen(false);
       setPendingEmail("");
@@ -279,13 +266,9 @@ function Profile() {
     }
   };
 
-  // Address Handlers
   const addAddress = () => {
     if (addresses.length < 3) {
-      setAddresses([
-        ...addresses,
-        { residencyAddress: "", landmark: "", street: "", pincode: "", city: "", state: "" },
-      ]);
+      setAddresses([...addresses, { residencyAddress: "", landmark: "", street: "", pincode: "", city: "", state: "" }]);
     }
   };
 
@@ -301,585 +284,344 @@ function Profile() {
     setAddresses(updated);
   };
 
-  // Loading UI
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-green-700"></div>
+      <div className="flex justify-center items-center h-screen bg-[#faf8f4]">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-[#28543d]"></div>
       </div>
     );
   }
 
   if (!profile) {
     return (
-      <div className="flex flex-col justify-center items-center h-screen px-4 text-center">
-        <div className="text-xl font-semibold text-gray-700 mb-4">
-          Profile not found
-        </div>
-        {error && (
-          <div className="p-4 mb-6 rounded-xl bg-red-50 text-red-600 border border-red-100 max-w-md">
-            <p className="font-bold mb-1">Error details:</p>
-            <p className="text-sm">{error}</p>
+      <div className="flex flex-col justify-center items-center h-screen px-4 bg-[#faf8f4] text-center">
+        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-white p-12 rounded-[2.5rem] shadow-xl border border-[#E7CE9D]/20 max-w-md">
+          <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
+            <AlertCircle className="w-10 h-10 text-red-500" />
           </div>
-        )}
-        <p className="text-gray-500 text-sm max-w-md">
-          Please try reloading the page. If the problem persists, our team is here to help.
-        </p>
-        <button 
-          onClick={() => window.location.reload()}
-          className="mt-6 px-6 py-2 bg-[#744531] text-white rounded-xl font-bold hover:bg-[#28543d] transition-all"
-        >
-          Reload Page
-        </button>
+          <h2 className="syne-bold text-2xl text-[#201413] mb-4">Profile Not Found</h2>
+          {error && <div className="p-4 mb-6 rounded-2xl bg-red-50 text-red-600 border border-red-100 text-sm">{error}</div>}
+          <div className="flex flex-col gap-3">
+            <button onClick={() => window.location.reload()} className="w-full py-4 bg-[#744531] text-white rounded-2xl font-bold hover:bg-[#28543d] transition-all shadow-lg">Reload</button>
+            <button onClick={handleLogout} className="w-full py-4 bg-gray-100 text-gray-600 rounded-2xl font-bold">Sign Out</button>
+          </div>
+        </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="w-full px-4 sm:px-6 lg:px-12 xl:px-20 py-8 md:py-12 font-sans">
-      <div className="mx-auto max-w-5xl bg-white rounded-2xl shadow-lg p-6 md:p-8">
-        {/* Header */}
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 md:w-16 md:h-16 flex items-center justify-center rounded-full bg-[#744531] text-white shadow-md">
-            <User className="w-7 h-7 md:w-8 md:h-8" />
-          </div>
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-[#201413]">
-              {profile.displayName}
-            </h1>
-            <p className="text-[#613D38]">Your Account</p>
-          </div>
+    <div className="w-full min-h-screen bg-[#faf8f4] font-sans pb-20">
+      <div className="h-48 bg-[#28543d] w-full relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10">
+          <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <path d="M0 100 C 20 0 50 0 100 100 Z" fill="white" />
+          </svg>
         </div>
-
-        {/* Tabs */}
-        <div className="mt-6 border-b border-gray-200 flex gap-2">
-          <button
-            onClick={() => { setActiveTab("profile"); navigate("/profile"); }}
-            className={`px-4 py-2 text-sm md:text-base font-semibold transition ${
-              activeTab === "profile"
-                ? "text-[#744531] border-b-2 border-[#744531]"
-                : "text-gray-600 hover:text-[#744531]"
-            }`}
-          >
-            Profile
-          </button>
-          <button
-            onClick={() => { setActiveTab("orders"); navigate("/profile/orders"); }}
-            className={`px-4 py-2 text-sm md:text-base font-semibold transition ${
-              activeTab === "orders"
-                ? "text-[#744531] border-b-2 border-[#744531]"
-                : "text-gray-600 hover:text-[#744531]"
-            }`}
-          >
-            Orders
-          </button>
-          <button
-            onClick={() => { setActiveTab("subscriptions"); navigate("/profile/subscriptions"); }}
-            className={`px-4 py-2 text-sm md:text-base font-semibold transition ${
-              activeTab === "subscriptions"
-                ? "text-[#744531] border-b-2 border-[#744531]"
-                : "text-gray-600 hover:text-[#744531]"
-            }`}
-          >
-            Subscriptions
-          </button>
-        </div>
-
-        {/* Error Banner */}
-        {error && <div className="p-3 mt-4 rounded-lg bg-red-100 text-red-700">{error}</div>}
-
-        {/* Tab Panels */}
-        <AnimatePresence mode="wait">
-          {activeTab === "profile" ? (
-            <motion.div
-              key="tab-profile"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              className="mt-6"
-            >
-              {/* Info */}
-              <div className="space-y-6">
-                <div className="flex items-center gap-3">
-                  <Mail className="w-5 h-5 text-[#744531]" />
-                  <span className="text-lg text-[#201413]">{profile.email}</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Phone className="w-5 h-5 text-[#744531]" />
-                  <span className="text-lg text-[#201413]">{profile.phone}</span>
-                </div>
-                <div className="space-y-3">
-                  <h2 className="text-xl font-semibold text-[#201413] flex items-center gap-2">
-                    <MapPin className="w-5 h-5" /> Address
-                  </h2>
-                  {profile.parsedAddress?.length > 0 ? (
-                    profile.parsedAddress.map((addr, idx) => (
-                      <div key={idx} className="bg-gray-50 rounded-xl p-4 shadow-sm border">
-                        <p className="font-medium">{addr.residencyAddress}</p>
-                        {addr.landmark && <p>{addr.landmark}</p>}
-                        <p>{addr.street}</p>
-                        <p>
-                          {addr.pincode}, {addr.city}, {addr.state}
-                        </p>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-[#613D38]">No address available</p>
-                  )}
-                </div>
-              </div>
-
-              {/* Edit Profile Action */}
-              <div className="flex gap-4 mt-8">
-                <Button
-                  size="lg"
-                  className="flex-1 rounded-xl bg-[#744531] text-white shadow-md hover:bg-[#744531]/90 hover:shadow-lg"
-                  onClick={openModal}
-                >
-                  Edit Profile
-                </Button>
-              </div>
-            </motion.div>
-          ) : activeTab === "subscriptions" ? (
-            <motion.div
-              key="tab-subscriptions"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              className="mt-6"
-            >
-              <h3 className="syne-bold text-xl mb-3 text-[#201413]">Your Subscriptions</h3>
-              {subsLoading ? (
-                <div className="flex justify-center py-8">
-                  <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-green-700"></div>
-                </div>
-              ) : subscriptions.length === 0 ? (
-                <p className="text-sm text-[#613D38]">No active subscriptions.</p>
-              ) : (
-                <div className="space-y-4">
-                  {subscriptions.map((s) => {
-                    // Find product name
-                    const product = products?.find((p) => p.slug === s.product_id);
-                    const productName = product?.name || s.product_id;
-                    const priceCents = Number(s.parsedPackaging?.price_cents || 0);
-
-                    return (
-                      <div key={s.$id} className="border rounded-xl p-4 bg-white shadow-sm">
-                        <div className="flex justify-between items-start gap-4">
-                          <div>
-                            <div className="text-sm text-[#613D38]">Product:
-                              <span className="font-semibold text-[#744531] ml-2">{productName}</span>
-                            </div>
-                            <div className="text-sm text-[#613D38] mt-1">Size:
-                              <span className="font-semibold ml-2">{s.parsedPackaging?.sizeLabel || "-"}</span>
-                            </div>
-                            <div className="text-sm text-[#613D38] mt-1">Quantity:
-                              <span className="font-semibold ml-2">{s.quantity}</span>
-                            </div>
-                            <div className="text-sm text-[#613D38] mt-1">Interval:
-                              <span className="font-semibold ml-2">{s.interval}</span>
-                            </div>
-                          </div>
-
-                          <div className="text-right">
-                            <div className="text-xs text-gray-500">Price</div>
-                            <div className="font-semibold text-lg">{formatINR(priceCents)}</div>
-                            <div className="text-xs text-gray-500 mt-3">Status</div>
-                            <div className="font-semibold">{s.status}</div>
-                          </div>
-                        </div>
-
-                        <div className="mt-3 text-sm text-[#744531] bg-white p-3 rounded">
-                          <div className="text-xs text-gray-500">Next Order</div>
-                          <div className="font-medium">{s.nextOrderAt ? new Date(s.nextOrderAt).toLocaleString() : "-"}</div>
-                          <div className="mt-2 text-xs text-gray-500">Shipping Address</div>
-                          {s.parsedShipping ? (
-                            <div className="mt-1 text-sm">
-                              <div>{s.parsedShipping.residencyAddress}</div>
-                              {s.parsedShipping.landmark && <div>{s.parsedShipping.landmark}</div>}
-                              <div>{s.parsedShipping.street}</div>
-                              <div>{s.parsedShipping.pincode}, {s.parsedShipping.city}, {s.parsedShipping.state}</div>
-                            </div>
-                          ) : (
-                            <div className="text-sm text-gray-500">No address</div>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </motion.div>
-          ) : (
-            <motion.div
-              key="tab-orders"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              className="mt-6"
-            >
-              {/* Orders Loading */}
-              {ordersLoading && (
-                <div className="flex justify-center items-center py-12">
-                  <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-green-700"></div>
-                </div>
-              )}
-
-              {/* Current Orders */}
-              <section>
-                <h3 className="syne-bold text-xl mb-3 text-[#201413]">Current Orders</h3>
-                {currentOrders.length === 0 ? (
-                  <p className="text-sm text-[#613D38]">No current orders.</p>
-                ) : (
-                  <div className="space-y-4">
-                    {currentOrders.map((order) => (
-                      <OrderCard
-                        key={order.$id}
-                        order={order}
-                        formatINR={formatINR}
-                        safeJSONParse={safeJSONParse}
-                        normalizeStatus={normalizeStatus}
-                      />
-                    ))}
-                  </div>
-                )}
-              </section>
-
-              {/* Past Orders */}
-              <section className="mt-8">
-                <h3 className="syne-bold text-xl mb-3 text-[#201413]">Past Orders</h3>
-                {pastOrders.length === 0 ? (
-                  <p className="text-sm text-[#613D38]">No past orders.</p>
-                ) : (
-                  <div className="space-y-4">
-                    {pastOrders.map((order) => (
-                      <OrderCard
-                        key={order.$id}
-                        order={order}
-                        formatINR={formatINR}
-                        safeJSONParse={safeJSONParse}
-                        normalizeStatus={normalizeStatus}
-                      />
-                    ))}
-                  </div>
-                )}
-              </section>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
 
-      {/* ✨ Edit Profile Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white w-full max-w-2xl rounded-xl shadow-lg relative max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <button
-                className="absolute top-3 right-3 text-gray-500 hover:text-black"
-                onClick={() => setIsModalOpen(false)}
-              >
-                <X className="w-6 h-6" />
-              </button>
-
-              <h2 className="text-2xl font-bold mb-4">Edit Profile</h2>
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                {/* Display Name */}
-                <div>
-                  <Input
-                    label="Display Name"
-                    placeholder="Enter your full name"
-                    {...register("displayName", { required: "Name is required" })}
-                  />
-                  {errors.displayName && (
-                    <p className="text-sm text-red-600">{errors.displayName.message}</p>
-                  )}
+      <div className="mx-auto max-w-5xl px-4 sm:px-6 -mt-24 relative z-10">
+        <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="bg-white rounded-[2.5rem] shadow-[0_20px_50px_rgba(40,84,61,0.08)] overflow-hidden border border-[#E7CE9D]/20">
+          {/* Header */}
+          <div className="p-8 md:p-12 flex flex-col md:flex-row items-center md:items-end justify-between gap-8 border-b border-[#E7CE9D]/10">
+            <div className="flex flex-col md:flex-row items-center md:items-end gap-6 text-center md:text-left">
+              <div className="relative group">
+                <div className="w-32 h-32 rounded-[2rem] bg-gradient-to-br from-[#744531] to-[#28543d] flex items-center justify-center text-white shadow-2xl relative z-10">
+                  <User className="w-16 h-16" />
                 </div>
-
-                {/* Email */}
-                <div>
-                  <Input
-                    label="Email"
-                    type="email"
-                    placeholder="you@example.com"
-                    {...register("email", {
-                      required: "Email is required",
-                      pattern: {
-                        value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                        message: "Invalid email format",
-                      },
-                    })}
-                  />
-                  {errors.email && (
-                    <p className="text-sm text-red-600">{errors.email.message}</p>
-                  )}
+                <div className="absolute inset-0 bg-[#E7CE9D] rounded-[2rem] rotate-6 -z-0 opacity-20 group-hover:rotate-12 transition-transform duration-500" />
+              </div>
+              <div className="space-y-2">
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-green-50 text-[#28543d] rounded-full text-[10px] font-black uppercase tracking-widest mb-2 border border-green-100">
+                  Member Since {new Date(profile.$createdAt).getFullYear()}
                 </div>
-
-                {/* Phone */}
-                <div>
-                  <Input
-                    label="Phone"
-                    type="tel"
-                    placeholder="Enter your mobile number"
-                    {...register("phone", {
-                      required: "Phone is required",
-                      pattern: {
-                        value: /^[0-9]{10}$/,
-                        message: "Phone must be 10 digits",
-                      },
-                    })}
-                  />
-                  {errors.phone && (
-                    <p className="text-sm text-red-600">{errors.phone.message}</p>
-                  )}
-                </div>
-
-                {/* Address Management */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Addresses</h3>
-                  {addresses.map((addr, idx) => (
-                    <div key={idx} className="border rounded-lg p-4 flex flex-col gap-2">
-                      <Input
-                        label="Residency Address"
-                        placeholder="Flat / Building / Residency"
-                        value={addr.residencyAddress}
-                        onChange={(e) => updateAddressField(idx, "residencyAddress", e.target.value)}
-                      />
-                      <Input
-                        label="Landmark"
-                        placeholder="Near park, mall..."
-                        value={addr.landmark}
-                        onChange={(e) => updateAddressField(idx, "landmark", e.target.value)}
-                      />
-                      <Input
-                        label="Street"
-                        placeholder="Street / Area"
-                        value={addr.street}
-                        onChange={(e) => updateAddressField(idx, "street", e.target.value)}
-                      />
-                      <Input
-                        label="Pincode"
-                        placeholder="Enter pincode"
-                        value={addr.pincode}
-                        onChange={(e) => updateAddressField(idx, "pincode", e.target.value)}
-                      />
-                      <Input
-                        label="City"
-                        placeholder="Enter city"
-                        value={addr.city}
-                        onChange={(e) => updateAddressField(idx, "city", e.target.value)}
-                      />
-                      <Input
-                        label="State"
-                        placeholder="Enter state"
-                        value={addr.state}
-                        onChange={(e) => updateAddressField(idx, "state", e.target.value)}
-                      />
-                      {addresses.length > 1 && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="text-red-600 border-red-600 hover:bg-red-50"
-                          onClick={() => removeAddress(idx)}
-                        >
-                          Remove
-                        </Button>
-                      )}
-                    </div>
-                  ))}
-                  {addresses.length < 3 && (
-                    <Button
-                      type="button"
-                      onClick={addAddress}
-                      className="bg-green-600 text-white"
-                    >
-                      Add Address
-                    </Button>
-                  )}
-                </div>
-
-                <Button
-                  type="submit"
-                  className="w-full bg-[#744531] text-white rounded-xl hover:bg-[#744531]/90"
-                  disabled={saving}
-                >
-                  {saving ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <span className="animate-spin rounded-full h-4 w-4 border-t-2 border-white"></span>
-                      Saving...
-                    </span>
-                  ) : (
-                    "Save Changes"
-                  )}
-                </Button>
-              </form>
+                <h1 className="syne-bold text-4xl md:text-5xl text-[#201413]">{profile.displayName}</h1>
+                <p className="text-gray-400 font-medium flex items-center gap-2 justify-center md:justify-start italic"><Mail className="w-4 h-4" /> {profile.email}</p>
+              </div>
+            </div>
+            <div className="flex gap-4">
+              <button onClick={openModal} className="flex items-center gap-2 px-6 py-3 bg-white border border-[#E7CE9D]/40 rounded-2xl text-[#744531] font-bold text-sm transition-all hover:bg-gray-50 active:scale-95"><Settings className="w-4 h-4" /> Edit</button>
+              <button onClick={handleLogout} className="flex items-center gap-2 px-6 py-3 bg-red-50 rounded-2xl text-red-600 font-bold text-sm transition-all hover:bg-red-100 active:scale-95"><LogOut className="w-4 h-4" /> Sign Out</button>
             </div>
           </div>
+
+          {/* Nav */}
+          <div className="px-8 pt-6">
+            <div className="flex gap-4 overflow-x-auto no-scrollbar">
+              {[
+                { id: "profile", label: "My Profile", icon: User },
+                { id: "orders", label: "Orders", icon: Package },
+                { id: "subscriptions", label: "Subscriptions", icon: Calendar },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => { setActiveTab(tab.id); navigate(`/profile${tab.id === 'profile' ? '' : '/' + tab.id}`); }}
+                  className={`flex items-center gap-2 px-6 py-4 rounded-t-2xl font-bold text-sm transition-all relative ${activeTab === tab.id ? "text-[#28543d] bg-[#faf8f4] border-t border-x border-[#E7CE9D]/20 shadow-[0_-5px_15px_rgba(0,0,0,0.02)]" : "text-gray-400 hover:text-[#744531] hover:bg-gray-50"}`}
+                >
+                  <tab.icon className={`w-4 h-4 ${activeTab === tab.id ? 'text-[#28543d]' : 'text-gray-400'}`} />
+                  {tab.label}
+                  {activeTab === tab.id && <motion.div layoutId="active-tab" className="absolute bottom-0 left-0 right-0 h-1 bg-[#28543d] rounded-t-full" />}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="p-8 md:p-12 bg-[#faf8f4]">
+            <AnimatePresence mode="wait">
+              {activeTab === "profile" ? (
+                <motion.div key="tab-profile" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                  <div className="lg:col-span-1 space-y-6">
+                    <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-[#E7CE9D]/10">
+                      <h3 className="syne-bold text-[#744531] uppercase text-[10px] tracking-[0.2em] mb-6 flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-[#E7CE9D]" />Verified</h3>
+                      <div className="space-y-6">
+                        <div className="p-4 bg-gray-50 rounded-2xl flex items-center gap-4">
+                          <div className="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center"><Mail className="w-5 h-5 text-[#28543d]" /></div>
+                          <div><p className="text-[10px] uppercase font-black text-gray-400">Email</p><p className="text-sm font-bold text-[#201413]">{profile.email}</p></div>
+                        </div>
+                        <div className="p-4 bg-gray-50 rounded-2xl flex items-center gap-4">
+                          <div className="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center"><Phone className="w-5 h-5 text-[#28543d]" /></div>
+                          <div><p className="text-[10px] uppercase font-black text-gray-400">Phone</p><p className="text-sm font-bold text-[#201413]">{profile.phone}</p></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="lg:col-span-2">
+                    <div className="bg-white p-6 md:p-8 rounded-[2rem] shadow-sm border border-[#E7CE9D]/10 h-full">
+                      <div className="flex items-center justify-between mb-8">
+                        <h2 className="syne-bold text-2xl text-[#201413] flex items-center gap-3"><MapPin className="w-6 h-6 text-[#744531]" />Address Book</h2>
+                        <button onClick={openModal} className="text-[#28543d] text-sm font-black hover:underline">Manage</button>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {profile.parsedAddress?.length > 0 ? profile.parsedAddress.map((addr, idx) => (
+                          <div key={idx} className="group relative bg-[#faf8f4] rounded-3xl p-6 border border-transparent hover:border-[#E7CE9D]/30 transition-all duration-300">
+                            <div className="absolute top-4 right-4 text-[10px] font-black uppercase tracking-widest text-[#E7CE9D]">{idx === 0 ? 'Primary' : `Address ${idx + 1}`}</div>
+                            <div className="space-y-2 pt-2">
+                              <p className="font-bold text-[#201413] text-lg leading-tight uppercase tracking-tight syne-bold">{addr.residencyAddress}</p>
+                              {addr.landmark && <p className="text-xs text-[#744531]/70 font-medium">Near {addr.landmark}</p>}
+                              <div className="pt-2 text-sm text-gray-500 font-medium space-y-1">
+                                <p>{addr.street}</p>
+                                <p className="text-[#28543d] font-bold">{addr.city}, {addr.state} — {addr.pincode}</p>
+                              </div>
+                            </div>
+                          </div>
+                        )) : (
+                          <div className="col-span-2 py-12 text-center border-2 border-dashed border-[#E7CE9D]/20 rounded-[2rem]">
+                            <p className="text-gray-400 font-medium">No saved addresses.</p>
+                            <button onClick={openModal} className="mt-4 text-[#744531] font-bold text-sm hover:underline">+ Add Address</button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              ) : activeTab === "subscriptions" ? (
+                <motion.div key="tab-subscriptions" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="syne-bold text-2xl text-[#201413]">Active Subscriptions</h3>
+                  </div>
+                  {subsLoading ? (
+                    <div className="flex flex-col items-center justify-center py-20 bg-white rounded-[2rem] border border-[#E7CE9D]/10">
+                      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#28543d]"></div>
+                    </div>
+                  ) : subscriptions.length === 0 ? (
+                    <div className="bg-white p-12 rounded-[2rem] border border-[#E7CE9D]/10 text-center">
+                      <Calendar className="w-12 h-12 text-[#E7CE9D]/40 mx-auto mb-4" />
+                      <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">No recurring plans</p>
+                      <Link to="/" className="inline-block mt-6 text-[#744531] font-black hover:underline">Explore Products</Link>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {subscriptions.map((s) => {
+                        const product = products?.find((p) => p.slug === s.product_id);
+                        const productName = product?.name || s.product_id;
+                        const priceCents = Number(s.parsedPackaging?.price_cents || 0);
+                        return (
+                          <div key={s.$id} className="bg-white rounded-[2.5rem] p-6 shadow-sm border border-[#E7CE9D]/10 flex flex-col h-full group hover:shadow-xl transition-all duration-300">
+                            <div className="flex justify-between items-start mb-6">
+                              <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 bg-green-50 rounded-2xl flex items-center justify-center"><Package className="w-6 h-6 text-[#28543d]" /></div>
+                                <div>
+                                  <h4 className="syne-bold text-lg text-[#201413] leading-tight">{productName}</h4>
+                                  <p className="text-[10px] font-black uppercase tracking-widest text-[#744531]/60">{s.interval} Delivery</p>
+                                </div>
+                              </div>
+                              <div className="px-3 py-1 bg-green-100 text-[#28543d] rounded-full text-[9px] font-black uppercase tracking-widest">{s.status}</div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4 mb-6">
+                              <div className="p-3 bg-gray-50 rounded-2xl">
+                                <p className="text-[9px] uppercase font-black text-gray-400 mb-1">Quantity</p>
+                                <p className="text-sm font-bold text-[#201413]">{s.quantity} Units</p>
+                              </div>
+                              <div className="p-3 bg-gray-50 rounded-2xl">
+                                <p className="text-[9px] uppercase font-black text-gray-400 mb-1">Size</p>
+                                <p className="text-sm font-bold text-[#201413]">{s.parsedPackaging?.sizeLabel || "-"}</p>
+                              </div>
+                            </div>
+                            <div className="mt-auto space-y-4">
+                              <div className="flex items-center justify-between border-t border-gray-100 pt-4">
+                                <div className="text-xs font-bold text-[#744531] uppercase tracking-widest">Next Delivery</div>
+                                <div className="text-xs font-black text-[#28543d]">{s.nextOrderAt ? new Date(s.nextOrderAt).toLocaleDateString() : "-"}</div>
+                              </div>
+                              <div className="p-4 bg-[#744531] rounded-2xl text-white flex justify-between items-center group-hover:bg-[#28543d] transition-colors">
+                                <span className="text-[11px] font-black tracking-widest uppercase opacity-75">Subscription Price</span>
+                                <span className="syne-bold text-lg">{formatINR(priceCents * s.quantity)}</span>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </motion.div>
+              ) : (
+                <motion.div key="tab-orders" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-12">
+                  {ordersLoading && <div className="flex justify-center items-center py-20 bg-white rounded-[2rem]"><div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[#28543d]"></div></div>}
+                  <section>
+                    <div className="flex items-center gap-3 mb-6"><div className="w-8 h-8 bg-amber-50 rounded-full flex items-center justify-center"><Clock className="w-4 h-4 text-amber-600" /></div><h3 className="syne-bold text-xl text-[#201413]">Active Orders</h3><div className="h-px flex-1 bg-gray-100" /></div>
+                    {currentOrders.length === 0 ? <div className="bg-white p-12 rounded-[2rem] border border-[#E7CE9D]/10 text-center"><p className="text-sm font-bold text-gray-400 uppercase tracking-widest">No active shipments</p></div> : (
+                      <div className="space-y-6">{currentOrders.map((o) => <OrderCard key={o.$id} order={o} formatINR={formatINR} safeJSONParse={safeJSONParse} normalizeStatus={normalizeStatus} />)}</div>
+                    )}
+                  </section>
+                  <section>
+                    <div className="flex items-center gap-3 mb-6"><div className="w-8 h-8 bg-green-50 rounded-full flex items-center justify-center"><CheckCircle2 className="w-4 h-4 text-green-600" /></div><h3 className="syne-bold text-xl text-[#201413]">Complete History</h3><div className="h-px flex-1 bg-gray-100" /></div>
+                    {pastOrders.length === 0 ? <div className="bg-white p-12 rounded-[2rem] border border-[#E7CE9D]/10 text-center"><p className="text-sm font-bold text-gray-400 uppercase tracking-widest">History is empty</p></div> : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">{pastOrders.map((o) => <OrderCard key={o.$id} order={o} formatINR={formatINR} safeJSONParse={safeJSONParse} normalizeStatus={normalizeStatus} />)}</div>
+                    )}
+                  </section>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Edit Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl relative max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="p-8 border-b border-gray-100 flex justify-between items-center bg-[#faf8f4]">
+              <h2 className="syne-bold text-2xl text-[#201413]">Edit Profile</h2>
+              <button className="text-gray-400 hover:text-black transition-colors" onClick={() => setIsModalOpen(false)}><X className="w-6 h-6" /></button>
+            </div>
+            <div className="p-8 overflow-y-auto no-scrollbar flex-1">
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                <Input label="Name" placeholder="Full Name" {...register("displayName", { required: "Required" })} error={errors.displayName?.message} />
+                <Input label="Email" type="email" placeholder="Email" {...register("email", { required: "Required" })} error={errors.email?.message} />
+                <Input label="Phone" type="tel" placeholder="Phone" {...register("phone", { required: "Required", pattern: { value: /^[0-9]{10}$/, message: "10 digits required" } })} error={errors.phone?.message} />
+                
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between"><h3 className="syne-bold text-lg">Addresses</h3><button type="button" onClick={addAddress} className="text-sm font-black text-[#28543d] hover:underline">+ Add New</button></div>
+                  {addresses.map((addr, idx) => (
+                    <div key={idx} className="bg-gray-50 rounded-[2rem] p-6 border border-gray-100 space-y-4 relative">
+                      {addresses.length > 1 && <button type="button" onClick={() => removeAddress(idx)} className="absolute top-6 right-6 text-red-400 hover:text-red-600 transition-colors"><X className="w-4 h-4" /></button>}
+                      <Input label="Residency Address" value={addr.residencyAddress} onChange={(e) => updateAddressField(idx, "residencyAddress", e.target.value)} />
+                      <div className="grid grid-cols-2 gap-4">
+                        <Input label="Landmark" value={addr.landmark} onChange={(e) => updateAddressField(idx, "landmark", e.target.value)} />
+                        <Input label="Street" value={addr.street} onChange={(e) => updateAddressField(idx, "street", e.target.value)} />
+                      </div>
+                      <div className="grid grid-cols-3 gap-4">
+                        <Input label="Pincode" value={addr.pincode} onChange={(e) => updateAddressField(idx, "pincode", e.target.value)} />
+                        <Input label="City" value={addr.city} onChange={(e) => updateAddressField(idx, "city", e.target.value)} />
+                        <Input label="State" value={addr.state} onChange={(e) => updateAddressField(idx, "state", e.target.value)} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="sticky bottom-0 bg-white pt-4 pb-2 border-t mt-8">
+                  <Button type="submit" className="w-full bg-[#744531] text-white rounded-2xl py-4 flex items-center justify-center gap-2 hover:bg-[#28543d] transition-all" disabled={saving}>
+                    {saving ? <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-white"></div> : "Apply Changes"}
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </motion.div>
         </div>
       )}
 
-      {/* ✨ Password Modal for Email Update */}
+      {/* Email Confirm Modal */}
       {isPasswordModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white w-full max-w-md rounded-xl shadow-lg p-6 relative">
-            <button
-              className="absolute top-3 right-3 text-gray-500 hover:text-black"
-              onClick={() => setIsPasswordModalOpen(false)}
-            >
-              <X className="w-6 h-6" />
-            </button>
-            <h2 className="text-xl font-bold mb-4">Confirm Email Update</h2>
-            <p className="text-gray-600 mb-4">
-              To update your email to <b>{pendingEmail}</b>, please enter your current password.
-            </p>
-            <Input
-              type="password"
-              placeholder="Enter current password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-            <div className="flex justify-end gap-3 mt-4">
-              <Button variant="outline" onClick={() => setIsPasswordModalOpen(false)}>
-                Cancel
-              </Button>
-              <Button
-                onClick={handleConfirmEmailUpdate}
-                disabled={saving}
-                className="bg-[#744531] text-white"
-              >
-                {saving ? "Updating..." : "Confirm"}
-              </Button>
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-white max-w-md w-full rounded-[2.5rem] p-8 shadow-2xl overflow-hidden relative">
+            <button className="absolute top-6 right-6 text-gray-400 hover:text-black" onClick={() => setIsPasswordModalOpen(false)}><X className="w-6 h-6" /></button>
+            <h2 className="syne-bold text-2xl mb-4">Confirm Email</h2>
+            <p className="text-gray-500 mb-6 font-medium">Please enter your password to change email to <span className="text-[#744531] font-bold">{pendingEmail}</span></p>
+            <Input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} />
+            <div className="flex gap-4 mt-8">
+              <Button variant="outline" className="flex-1 rounded-2xl py-4 text-gray-600" onClick={() => setIsPasswordModalOpen(false)}>Cancel</Button>
+              <Button className="flex-1 rounded-2xl py-4 bg-[#744531] text-white hover:bg-[#28543d]" onClick={handleConfirmEmailUpdate} disabled={saving}>{saving ? "Updating..." : "Confirm"}</Button>
             </div>
-          </div>
+          </motion.div>
         </div>
       )}
     </div>
   );
 }
 
-// OrderCard component
+// Subcomponent: OrderCard
 function OrderCard({ order, formatINR, safeJSONParse, normalizeStatus }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const orderItems = safeJSONParse(order.items, { items: [], summary: {} });
   const shippingAddr = safeJSONParse(order.shippingAddress, null);
 
   const getStatusBadge = (status) => {
-    const normalizedStatus = normalizeStatus(status);
-    const badgeConfig = {
-      delivered: { label: "Delivered", color: "bg-emerald-100 text-emerald-700" },
-      shipped: { label: "Shipped", color: "bg-blue-100 text-blue-700" },
-      cancelled: { label: "Cancelled", color: "bg-red-100 text-red-700" },
-      processing: { label: "Processing", color: "bg-yellow-100 text-yellow-700" },
-      pending: { label: "Pending", color: "bg-amber-100 text-amber-700" },
-    };
-    const config = badgeConfig[normalizedStatus] || badgeConfig.pending;
-    return (
-      <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${config.color}`}>
-        {config.label}
-      </span>
-    );
+    const s = normalizeStatus(status);
+    const config = {
+      delivered: "bg-emerald-50 text-emerald-600 border-emerald-100",
+      shipped: "bg-blue-50 text-blue-600 border-blue-100",
+      cancelled: "bg-red-50 text-red-600 border-red-100",
+      processing: "bg-amber-50 text-amber-600 border-amber-100",
+      pending: "bg-orange-50 text-orange-600 border-orange-100",
+    }[s] || "bg-gray-50 text-gray-600 border-gray-100";
+
+    return <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${config}`}>{s}</span>;
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 6 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="border rounded-xl p-4 bg-white shadow-sm"
-    >
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-[2rem] p-6 shadow-sm border border-[#E7CE9D]/10 hover:shadow-xl transition-all duration-300">
+      <div className="flex flex-col md:flex-row justify-between gap-6 mb-6">
         <div className="space-y-1">
-          <div className="text-sm text-[#613D38]">
-            Order ID: <span className="font-semibold text-[#744531]">{order.$id}</span>
-          </div>
-          <div className="text-xs text-gray-500">
-            Placed on {new Date(order.$createdAt).toLocaleString()}
-          </div>
-          <div className="text-sm flex items-center gap-2">
-            {getStatusBadge(order.fulfillmentStatus)}
-            <span className="text-xs text-gray-600">
-              Payment: {order.paymentMode || "COD"} ({order.paymentStatus || "Pending"})
-            </span>
-          </div>
+          <div className="flex items-center gap-3"><h4 className="syne-bold text-[#201413]">Order #{order.$id.slice(-6).toUpperCase()}</h4>{getStatusBadge(order.fulfillmentStatus)}</div>
+          <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest">{new Date(order.$createdAt).toLocaleDateString()}</p>
         </div>
-        <div className="text-right">
-          <div className="text-sm text-[#744531] font-semibold">Total</div>
-          <div className="text-lg font-bold">{formatINR(order.total_cents)}</div>
+        <div className="flex items-center gap-4 text-right">
+          <div><p className="text-[10px] font-black uppercase text-gray-400">Total Paid</p><p className="syne-bold text-2xl text-[#28543d]">{formatINR(order.total_cents)}</p></div>
+          <button onClick={() => setIsExpanded(!isExpanded)} className={`w-10 h-10 bg-[#faf8f4] flex items-center justify-center rounded-xl text-[#744531] transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}><ChevronRight className="w-5 h-5" /></button>
         </div>
       </div>
 
-      {/* Address */}
-      {shippingAddr && (
-        <div className="mt-3 text-xs text-[#744531] bg-[#E7CE9D]/20 border border-[#744531]/10 rounded-md p-3">
-          <div className="font-semibold mb-1">Shipping Address</div>
-          <div>{shippingAddr.residencyAddress}</div>
-          {shippingAddr.landmark && <div>{shippingAddr.landmark}</div>}
-          <div>{shippingAddr.street}</div>
-          <div>
-            {shippingAddr.pincode}, {shippingAddr.city}, {shippingAddr.state}
-          </div>
-        </div>
-      )}
-
-      {/* Items toggle */}
-      <div className="mt-3">
-        <button
-          onClick={() => setIsExpanded((prev) => !prev)}
-          className="text-sm font-semibold text-[#744531] hover:underline"
-        >
-          {isExpanded ? "Hide items" : "View items"}
-        </button>
-        <AnimatePresence initial={false}>
-          {isExpanded && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="overflow-hidden"
-            >
-              <div className="mt-3 grid gap-2">
-                {Array.isArray(orderItems.items) && orderItems.items.length > 0 ? (
-                  orderItems.items.map((item, idx) => (
-                    <div key={idx} className="border rounded-lg p-3 flex items-start justify-between">
-                      <div className="text-sm">
-                        <div className="font-semibold">{item.name}</div>
-                        {item.packaging_size?.sizeLabel && (
-                          <div className="text-xs text-gray-600">
-                            Size: {item.packaging_size.sizeLabel}
-                          </div>
-                        )}
-                        {item.batch && (item.batch.name || item.batch.delivery_date) && (
-                          <div className="text-xs text-gray-700">
-                            Batch: {item.batch.name}
-                            {item.batch.delivery_date && ` • Delivery: ${item.batch.delivery_date}`}
-                          </div>
-                        )}
-                        <div className="text-xs text-gray-600">Qty: {item.qty}</div>
-                        <div className="text-xs text-gray-600">
-                          Category: {item.categories || "-"}
-                        </div>
-                      </div>
-                      <div className="text-right text-sm">
-                        <div>Unit: {formatINR(item.price_cents)}</div>
-                        <div className="font-semibold">Line: {formatINR(item.item_total_cents)}</div>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-sm text-[#613D38]">No items to display.</div>
-                )}
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+            <div className="pt-6 border-t border-gray-50 space-y-6">
+              <div className="grid grid-cols-2 gap-6 text-sm">
+                <div><p className="text-[10px] font-black uppercase text-gray-400 mb-1">Status</p><p className="font-bold text-[#201413] tracking-wide uppercase">{order.paymentStatus || "Paid"}</p></div>
+                <div><p className="text-[10px] font-black uppercase text-gray-400 mb-1">Method</p><p className="font-bold text-[#201413] tracking-wide uppercase">{order.paymentMode || "COD"}</p></div>
               </div>
-              {/* Summary */}
-              {orderItems.summary && (
-                <div className="mt-3 text-right text-sm text-[#744531]">
-                  Subtotal:{" "}
-                  <span className="font-semibold">
-                    {formatINR(orderItems.summary.subtotal_cents)}
-                  </span>
+              <div className="space-y-3">
+                <p className="text-[10px] font-black uppercase text-gray-400">Order Items</p>
+                {Array.isArray(orderItems.items) && orderItems.items.map((item, id) => (
+                  <div key={id} className="flex justify-between items-center text-sm p-3 bg-gray-50 rounded-xl">
+                    <div><span className="font-bold text-[#201413]">{item.name}</span><span className="ml-2 text-xs text-[#744531]">({item.qty}x)</span></div>
+                    <p className="font-black text-[#28543d]">{formatINR(item.item_total_cents)}</p>
+                  </div>
+                ))}
+              </div>
+              {shippingAddr && (
+                <div className="p-5 bg-green-50/30 rounded-[1.5rem] border border-green-100 flex items-start gap-3">
+                  <MapPin className="w-4 h-4 text-[#28543d] mt-1" />
+                  <div>
+                    <p className="text-[10px] font-black uppercase text-[#28543d] tracking-widest mb-1">Shipping To</p>
+                    <p className="text-sm font-bold text-[#201413] leading-tight">{shippingAddr.residencyAddress}</p>
+                    <p className="text-xs text-gray-500 mt-1 italic">{shippingAddr.street}, {shippingAddr.city} {shippingAddr.pincode}</p>
+                  </div>
                 </div>
               )}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
