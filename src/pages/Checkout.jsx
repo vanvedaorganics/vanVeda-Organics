@@ -17,6 +17,7 @@ import {
   X,
 } from "lucide-react";
 import appwriteService from "../appwrite/appwriteConfigService";
+import conf from "../conf/conf";
 import {
   selectCartItems,
   emptyUserCart,
@@ -436,44 +437,96 @@ function Checkout() {
         },
       };
 
-      // Simplified payment mode selection
-      const paymentMode =
-        paymentChoice === "RAZORPAY"
-          ? Math.random() < 0.5
-            ? "UPI"
-            : "Card"
-          : "COD";
-
       const shippingAddress = JSON.stringify(selectedAddress);
 
-      // Place order with error handling
-      const result = await appwriteService.createOrder({
-        user_id: profile.$id,
-        userName: profile.displayName || "",
-        items: JSON.stringify(itemsPayload),
-        shippingAddress,
-        total_cents: totals.subtotalCents,
-        delivery_date: farthestDeliveryDate,
-        paymentMode,
-      });
+      // Function to handle the actual Appwrite document creation
+      const submitOrderToAppwrite = async (paymentId = null, pMode = "COD") => {
+        const result = await appwriteService.createOrder({
+          user_id: profile.$id,
+          userName: profile.displayName || "",
+          items: JSON.stringify(itemsPayload),
+          shippingAddress,
+          total_cents: totals.subtotalCents,
+          delivery_date: farthestDeliveryDate,
+          paymentMode: pMode,
+          payment_id: paymentId,
+          paymentStatus: paymentId ? "paid" : "pending",
+        });
 
-      // Success: empty cart and trigger success view
-      dispatch(emptyUserCart());
-      dispatch(setEmptyCart());
+        dispatch(emptyUserCart());
+        dispatch(setEmptyCart());
 
-      setPlacedOrder(result);
-      setIsSuccess(true);
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      
-      setError({
-        type: "success",
-        message: "Order placed successfully!",
-      });
+        setPlacedOrder(result);
+        setIsSuccess(true);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+
+        setError({
+          type: "success",
+          message: "Order placed successfully!",
+        });
+      };
+
+      if (paymentChoice === "COD") {
+        await submitOrderToAppwrite(null, "COD");
+      } else {
+        // Razorpay Integration
+        const options = {
+          key: conf.razorpayKeyId,
+          amount: totals.subtotalCents, // Amount is in currency subunits (paise)
+          currency: "INR",
+          name: "True Soil Organics",
+          description: `Order for ${totals.itemCount} items`,
+          image: "/Truesoil.png",
+          handler: async function (response) {
+            try {
+              setPlacing(true);
+              // response.razorpay_payment_id
+              await submitOrderToAppwrite(
+                response.razorpay_payment_id,
+                "Razorpay Online"
+              );
+            } catch (err) {
+              console.error("Razorpay inner error", err);
+              setError({
+                type: "error",
+                message: "Payment captured but failed to save order. Please contact support.",
+              });
+            } finally {
+              setPlacing(false);
+            }
+          },
+          prefill: {
+            name: profile.displayName || "",
+            email: authUser.email || "",
+          },
+          theme: {
+            color: "#744531",
+          },
+          modal: {
+            ondismiss: function () {
+              setPlacing(false);
+            },
+          },
+        };
+
+        const rzp = new window.Razorpay(options);
+        rzp.on("payment.failed", function (response) {
+          setError({
+            type: "error",
+            message: `Payment Failed: ${response.error.description}`,
+          });
+          setPlacing(false);
+        });
+        rzp.open();
+      }
     } catch (e) {
       console.error("Failed to place order", e);
       setError({ type: "error", message: getUserFriendlyError(e) });
     } finally {
-      setPlacing(false);
+      // For COD, we stop loading here. For Razorpay, the modal handler handles it.
+      if (paymentChoice === "COD") {
+        setPlacing(false);
+      }
     }
   };
 

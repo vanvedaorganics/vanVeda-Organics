@@ -14,6 +14,7 @@ const conf = {
     appwriteReviewCollection: String(import.meta.env.VITE_APPWRITE_REVIEW_COLLECTION_ID),
     appwriteBucketId: String(import.meta.env.VITE_APPWRITE_BUCKET_ID),
     appwriteTeamsId: String(import.meta.env.VITE_APPWRITE_TEAMS_ID),
+    razorpayKeyId: String(import.meta.env.VITE_RAZORPAY_KEY_ID),
 }
 
 export default conf;

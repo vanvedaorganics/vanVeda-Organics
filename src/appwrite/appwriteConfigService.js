@@ -472,6 +472,7 @@ export class appwriteConfigService {
     fulfillmentStatus,
     delivery_date,
     paymentMode,
+    payment_id,
     auto_order = false,
   }) {
     try {
@@ -491,6 +492,8 @@ export class appwriteConfigService {
         payload.paymentStatus = paymentStatus;
       if (typeof fulfillmentStatus !== "undefined")
         payload.fulfillmentStatus = fulfillmentStatus;
+      if (typeof payment_id !== "undefined")
+        payload.payment_id = payment_id;
 
       return await this.databases.createDocument(
         conf.appwriteDatabaseId,
