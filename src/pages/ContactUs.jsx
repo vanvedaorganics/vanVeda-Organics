@@ -25,41 +25,18 @@ const fadeUp = {
 // ── Company data ───────────────────────────────────────────────────────────
 const COMPANY = {
   name: "True Soil Organics",
-  legalName: "True Soil Organics Pvt. Ltd.",
+  legalName: "True Soil Organics",
   gst: "24AABCT1234C1Z5",           // ← replace with real GST
   fssai: "12423000000012",           // ← replace with real FSSAI
-  address: "Gir Gadhda, Junagadh District, Gujarat – 362 030, India",
-  email: "truesoilorganics@gmail.com",
+  address: "Gir Gadhda, Junagadh District, Gujarat – 362530, India",
+  email: "truesoilorganic@gmail.com",
   phone: "+91 93164 17314",
   mapSrc:
     "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d14836.7!2d70.6!3d21.5!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2sGir+Gadhda!5e0!3m2!1sen!2sin!4v1699000000000",
 };
 
 const CERTIFICATES = [
-  {
-    icon: <Award className="h-7 w-7" />,
-    title: "Organic India Certification",
-    body: "Our farms and produce are certified organic by Organic India, ensuring zero synthetic pesticides and fertilisers.",
-    color: "#28543d",
-  },
-  {
-    icon: <ShieldCheck className="h-7 w-7" />,
-    title: "FSSAI Licensed",
-    body: `License No. ${COMPANY.fssai} — issued by the Food Safety and Standards Authority of India.`,
-    color: "#744531",
-  },
-  {
-    icon: <FileText className="h-7 w-7" />,
-    title: "GST Registered",
-    body: `GSTIN: ${COMPANY.gst} — registered under the Government of India's Goods & Services Tax framework.`,
-    color: "#28543d",
-  },
-  {
-    icon: <CheckCircle2 className="h-7 w-7" />,
-    title: "Third-Party Lab Tested",
-    body: "Every batch is tested at NABL-accredited laboratories for purity, quality, and safety before dispatch.",
-    color: "#744531",
-  },
+ 
 ];
 
 // ── Page Component ─────────────────────────────────────────────────────────
@@ -154,11 +131,7 @@ function ContactUs() {
               label: "GSTIN",
               value: COMPANY.gst,
             },
-            {
-              icon: <ShieldCheck className="h-6 w-6" />,
-              label: "FSSAI License",
-              value: COMPANY.fssai,
-            },
+            
             {
               icon: <MapPin className="h-6 w-6" />,
               label: "Registered Address",
@@ -211,62 +184,7 @@ function ContactUs() {
         </div>
       </section>
 
-      {/* ── Certificates Section ──────────────────────────────────────── */}
-      <section className="bg-[#f1ede6] py-14 px-4 sm:px-6">
-        <div className="max-w-6xl mx-auto">
-          <motion.div
-            className="text-center mb-10"
-            variants={fadeUp}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-          >
-            <span className="inline-block mb-3 rounded-full border border-[#28543d]/30 bg-[#28543d]/10 px-4 py-1 text-xs font-semibold uppercase tracking-widest text-[#28543d]">
-              Trust &amp; Compliance
-            </span>
-            <h2 className="syne-medium text-2xl sm:text-3xl font-bold text-[#1a3628]">
-              Our Certifications
-            </h2>
-            <p className="mt-2 text-sm text-gray-600 max-w-lg mx-auto">
-              Every product we sell is backed by stringent quality certifications
-              so you can shop with complete confidence.
-            </p>
-          </motion.div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            {CERTIFICATES.map((cert, i) => (
-              <motion.div
-                key={cert.title}
-                className="flex items-start gap-5 rounded-2xl bg-white border border-[#e0ddd5] p-6 shadow-sm hover:shadow-md transition-shadow"
-                variants={fadeUp}
-                initial="hidden"
-                whileInView="visible"
-                custom={i}
-                viewport={{ once: true }}
-              >
-                <span
-                  className="mt-0.5 flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl"
-                  style={{
-                    background: `${cert.color}15`,
-                    color: cert.color,
-                  }}
-                >
-                  {cert.icon}
-                </span>
-                <div>
-                  <h3 className="font-semibold text-[#1a3628] mb-1">
-                    {cert.title}
-                  </h3>
-                  <p className="text-sm text-gray-600 leading-relaxed">
-                    {cert.body}
-                  </p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
+     
       {/* ── Contact Form + Map ────────────────────────────────────────── */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 py-16">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
