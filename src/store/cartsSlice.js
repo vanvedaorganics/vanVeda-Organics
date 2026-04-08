@@ -254,14 +254,23 @@ export const removeItemCompletely = (slug) => (dispatch) => {
 
 /* ---------- Selectors ---------- */
 
-export const selectCartItems = (state) =>
-  normalizeItems(state.carts.cart?.items ?? {});
-export const selectCartTotalCount = (state) => {
-  const items = selectCartItems(state);
-  return Object.values(items).reduce((acc, v) => {
-    const qty = typeof v === "number" ? v : (v?.qty ?? 0);
-    return acc + Number(qty || 0);
-  }, 0);
-};
+import { createSelector } from "@reduxjs/toolkit";
+
+const selectCartsState = (state) => state.carts;
+
+export const selectCartItems = createSelector(
+  [selectCartsState],
+  (carts) => normalizeItems(carts.cart?.items ?? {})
+);
+
+export const selectCartTotalCount = createSelector(
+  [selectCartItems],
+  (items) => {
+    return Object.values(items).reduce((acc, v) => {
+      const qty = typeof v === "number" ? v : (v?.qty ?? 0);
+      return acc + Number(qty || 0);
+    }, 0);
+  }
+);
 
 export default cartsSlice.reducer;

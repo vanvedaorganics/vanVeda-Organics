@@ -441,25 +441,58 @@ function Checkout() {
 
       // Function to handle the actual Appwrite document creation
       const submitOrderToAppwrite = async (paymentId = null, pMode = "COD") => {
-        const result = await appwriteService.createOrder({
-          user_id: profile.$id,
-          userName: profile.displayName || "",
-          items: JSON.stringify(itemsPayload),
-          shippingAddress,
-          total_cents: totals.subtotalCents,
-          delivery_date: farthestDeliveryDate,
-          paymentMode: pMode,
-          payment_id: paymentId,
-          paymentStatus: paymentId ? "paid" : "pending",
-        });
+        const createOrderPayload = (includePaymentId) => {
+          const payload = {
+            user_id: profile.$id,
+            userName: profile.displayName || "",
+            items: JSON.stringify({
+              ...itemsPayload,
+              payment_info: paymentId ? { razorpay_id: paymentId, mode: pMode } : null,
+            }),
+            shippingAddress,
+            total_cents: totals.subtotalCents,
+            delivery_date: farthestDeliveryDate,
+            paymentMode: pMode,
+            paymentStatus: paymentId ? "Paid" : "Pending",
+            fulfillmentStatus: "pending",
+          };
+          if (includePaymentId && paymentId) {
+            payload.payment_id = paymentId;
+          }
+          return payload;
+        };
 
+        try {
+          // Attempt 1: Standard save with payment_id
+          const result = await appwriteService.createOrder(createOrderPayload(true));
+          finalizeSuccess(result);
+        } catch (err) {
+          const errMsg = err?.message || "";
+          // Check if failure is due to missing attribute "payment_id"
+          if (errMsg.includes("payment_id") || errMsg.includes("Unknown attribute")) {
+            console.warn("DEBUG: payment_id attribute missing in Appwrite. Retrying without it...");
+            try {
+              // Attempt 2: Fallback save without payment_id field
+              // Note: payment info is still preserved inside the "items" JSON string as a backup
+              const result = await appwriteService.createOrder(createOrderPayload(false));
+              finalizeSuccess(result);
+            } catch (retryErr) {
+              console.error("DEBUG: Fallback order placement failed.", retryErr);
+              throw retryErr;
+            }
+          } else {
+            console.error("DEBUG: Order placement failed for other reason.", err);
+            throw err;
+          }
+        }
+      };
+
+      const finalizeSuccess = (result) => {
         dispatch(emptyUserCart());
         dispatch(setEmptyCart());
-
         setPlacedOrder(result);
         setIsSuccess(true);
         window.scrollTo({ top: 0, behavior: "smooth" });
-
         setError({
           type: "success",
           message: "Order placed successfully!",
@@ -476,17 +509,20 @@ function Checkout() {
           currency: "INR",
           name: "True Soil Organics",
           description: `Order for ${totals.itemCount} items`,
-          image: "/Truesoil.png",
+          image: "https://truesoilorganics.com/Truesoil.png", // Use a hosted URL to avoid Mixed Content/CORS warnings
           handler: async function (response) {
             try {
               setPlacing(true);
               // response.razorpay_payment_id
               await submitOrderToAppwrite(
                 response.razorpay_payment_id,
-                "Razorpay Online"
+                "Card" // Changed from "Razorpay Online" to match Appwrite enum (UPI, Card, COD)
               );
             } catch (err) {
-              console.error("Razorpay inner error", err);
+              console.error("DEBUG: Order placement failed after Razorpay success.");
+              console.error("DEBUG: Error Details:", err);
+              console.error("DEBUG: Response Code:", err?.code || err?.response?.code);
+              console.error("DEBUG: Response Message:", err?.message || err?.response?.message);
               setError({
                 type: "error",
                 message: "Payment captured but failed to save order. Please contact support.",
