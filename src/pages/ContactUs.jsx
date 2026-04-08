@@ -26,7 +26,8 @@ const fadeUp = {
 const COMPANY = {
   name: "True Soil Organics",
   legalName: "True Soil Organics",
-  gst: "24AABCT1234C1Z5",           // ← replace with real GST
+  gst: "24KPBPS4180H1ZM
+",           // ← replace with real GST
   fssai: "12423000000012",           // ← replace with real FSSAI
   address: "Gir Gadhda, Junagadh District, Gujarat – 362530, India",
   email: "truesoilorganic@gmail.com",
