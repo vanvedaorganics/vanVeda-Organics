@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
+import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { Button, Input } from "../components";
@@ -159,9 +160,9 @@ export default function ClientLogin() {
                   }
                 />
                 <div className="flex justify-end pr-1">
-                  <a href="/forgot-password" title="Under implementation" className="text-[10px] uppercase tracking-widest font-bold text-[#28543d] hover:text-[#744531] transition-colors">
+                  <Link to="/forgot-password"  className="text-[10px] uppercase tracking-widest font-bold text-[#28543d] hover:text-[#744531] transition-colors">
                     Forgot Password?
-                  </a>
+                  </Link>
                 </div>
               </div>
 

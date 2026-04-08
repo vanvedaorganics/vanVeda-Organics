@@ -139,6 +139,30 @@ export class AuthService {
       return false;
     }
   }
+
+  async createPasswordRecovery(email) {
+    try {
+      return await this.account.createRecovery(
+        email,
+        `${window.location.origin}/reset-password`
+      );
+    } catch (error) {
+      throw new Error("Appwrite Error :: Create Recovery :: " + error.message);
+    }
+  }
+
+  async updatePasswordRecovery(userId, secret, password, passwordAgain) {
+    try {
+      return await this.account.updateRecovery(
+        userId,
+        secret,
+        password,
+        passwordAgain
+      );
+    } catch (error) {
+      throw new Error("Appwrite Error :: Update Recovery :: " + error.message);
+    }
+  }
 }
 const appwriteAuthService = new AuthService();
 export default appwriteAuthService;
