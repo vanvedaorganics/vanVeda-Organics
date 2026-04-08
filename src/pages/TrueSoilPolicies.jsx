@@ -71,7 +71,7 @@ function TrueSoilPolicies() {
 
   return (
     <motion.div
-      className="container py-8 md:py-12 font-sans"
+      className="container mx-auto py-8 md:py-12 font-sans"
       initial="hidden"
       animate="visible"
       exit="hidden"

@@ -13,7 +13,7 @@ import {
 function Footer() {
   return (
     <footer className="bg-[#744531] text-primary-foreground py-12 md:py-16 font-sans">
-      <div className="container grid grid-cols-1 md:grid-cols-4 gap-8 px-4 md:px-6">
+      <div className="container mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 px-4 md:px-6">
         {/* Brand Info */}
         <div className="space-y-4">
           <Link href="/" className="flex items-center gap-2 font-semibold">
@@ -132,7 +132,7 @@ function Footer() {
           </form>
         </div>
       </div>
-      <div className="container text-center text-sm text-white/60 mt-8 pt-8 border-t border-white/20">
+      <div className="container mx-auto text-center text-sm text-white/60 mt-8 pt-8 border-t border-white/20">
         &copy; {new Date().getFullYear()} True Soil Organics. All rights
         reserved.
       </div>

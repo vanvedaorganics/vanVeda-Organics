@@ -96,7 +96,7 @@ function Home() {
 
       {/* ── 2. Trust Badges ─────────────────────────────────────────── */}
       <section className="py-12 bg-white border-b border-gray-100">
-        <div className="container px-4">
+        <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {[
               { icon: Leaf, title: "100% Organic", desc: "Non-GMO & Pure" },
@@ -120,7 +120,7 @@ function Home() {
      
       {/* ── 4. Product Showcase (Bestsellers) ────────────────────────────────── */}
       <section className="py-24 bg-white relative overflow-hidden">
-        <div className="container px-4">
+        <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#E7CE9D] mb-2 block">Bestsellers</span>
             <h2 className="syne-bold text-4xl md:text-5xl text-[#744531]">Crafted by Nature</h2>
@@ -149,7 +149,7 @@ function Home() {
 
       {/* ── 6. Stories & Insights ─────────────────────────────────────── */}
       <section className="py-24 bg-white">
-        <div className="container px-4">
+        <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-16 gap-6">
             <div>
               <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#E7CE9D] mb-2 block">Journal</span>
@@ -170,7 +170,7 @@ function Home() {
 
       {/* ── 5. Testimonials ────────────────────────────────────────── */}
       <section className="py-24 bg-[#744531] text-white">
-        <div className="container px-4">
+        <div className="container mx-auto px-4">
           <div className="flex flex-col items-center text-center mb-16">
             <Quote className="w-12 h-12 text-[#E7CE9D]/40 mb-6" />
             <h2 className="syne-bold text-4xl md:text-5xl mb-4">What Our Community Says</h2>

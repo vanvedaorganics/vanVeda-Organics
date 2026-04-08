@@ -39,7 +39,7 @@ function ClientProducts() {
 
   return (
     <section className="bg-gray-100 flex items-center justify-center bg-gradient-to-br from-background to-muted py-16 md:py-12 animate-fadeInUp">
-      <div className="container">
+      <div className="container mx-auto">
         {/* Category Filter Icons */}
         <div className="flex justify-center items-center gap-6 mb-8">
           <button
