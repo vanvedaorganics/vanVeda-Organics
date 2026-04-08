@@ -627,6 +627,19 @@ export class appwriteConfigService {
     }
   }
 
+  async deleteCart(user_id) {
+    try {
+      return await this.databases.deleteDocument(
+        conf.appwriteDatabaseId,
+        conf.appwriteCartsCollection,
+        user_id
+      );
+    } catch (error) {
+      console.log("Appwrite :: deleteCart error ::", error);
+      throw error;
+    }
+  }
+
   async uploadFile(file) {
     try {
       return await this.storage.createFile(
@@ -686,6 +699,19 @@ export class appwriteConfigService {
     }
   }
 
+  async deleteUserProfile(user_id) {
+    try {
+      return await this.databases.deleteDocument(
+        conf.appwriteDatabaseId,
+        conf.appwriteUsersCollection,
+        user_id
+      );
+    } catch (error) {
+      console.log("Appwrite :: deleteUserProfile error ::", error);
+      throw error;
+    }
+  }
+
   async updateUserProfile({ user_id, displayName, phone, address, email }) {
     try {
       return await this.databases.updateDocument(
@@ -721,11 +747,15 @@ export class appwriteConfigService {
 
   async getUserProfile(userId) {
     try {
-      return await this.databases.getDocument(
+      // Use listDocuments with a query for robustness
+      const res = await this.databases.listDocuments(
         conf.appwriteDatabaseId,
         conf.appwriteUsersCollection,
-        userId
+        [Query.equal("user_id", userId)]
       );
+      
+      // Return the first matching document
+      return res.documents[0] || null;
     } catch (error) {
       console.log("Appwrite :: getUserProfile error ::", error);
       throw error;

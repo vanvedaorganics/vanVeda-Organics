@@ -42,6 +42,14 @@ export class AuthService {
     }
   }
 
+  async deleteAccount() {
+    try {
+      await this.account.delete();
+    } catch (error) {
+      throw new Error("Appwrite Error :: Delete Account :: " + error.message);
+    }
+  }
+
   async logout() {
     try {
       await this.account.deleteSession("current");

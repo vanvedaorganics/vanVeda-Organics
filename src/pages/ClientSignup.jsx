@@ -18,7 +18,9 @@ function ClientSignup() {
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { register, handleSubmit, reset } = useForm();
+  const { register, handleSubmit, reset, watch, formState: { errors } } = useForm();
+
+  const password = watch("password");
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -27,20 +29,21 @@ function ClientSignup() {
   const create = async (data) => {
     setError("");
     setLoading(true);
+    let createdUserId = null;
+    let isProfileCreated = false;
+    let isCartCreated = false;
 
     try {
-      if (data.password !== data.confirmPassword) {
-        setError("Passwords do not match.");
-        return;
-      }
-
+      // 1. Create Account
       const account = await appwriteAuthService.createAccount({
         email: data.email,
         password: data.password,
         name: data.username,
       });
       if (!account) throw new Error("Account creation failed.");
+      createdUserId = account.$id;
 
+      // 2. Login to get session (required for some operations)
       const session = await appwriteAuthService.login({
         email: data.email,
         password: data.password,
@@ -50,6 +53,7 @@ function ClientSignup() {
       const user = await appwriteAuthService.getUser();
       if (!user) throw new Error("Unable to get user after signup.");
 
+      // 3. Create Profile
       const addressObj = {
         residencyAddress: data.residencyAddress,
         landmark: data.landmark || "",
@@ -58,32 +62,49 @@ function ClientSignup() {
         city: data.city,
         state: data.state,
       };
-      const addressArray = [JSON.stringify(addressObj)];
-
+      
       const profile = await appwriteConfigService.createUserProfile({
         user_id: user.$id,
         displayName: data.username,
         phone: data.phone,
         email: data.email,
-        address: addressArray,
+        address: [JSON.stringify(addressObj)],
       });
       if (!profile) throw new Error("User profile creation failed.");
+      isProfileCreated = true;
 
+      // 4. Create Cart
       const cart = await appwriteConfigService.createCart({
         user_id: user.$id,
         items: {},
       });
       if (!cart) throw new Error("Cart creation failed.");
+      isCartCreated = true;
 
+      // 5. Finalize
       dispatch(login(user));
-      const fetchedCart = await dispatch(fetchCart()).unwrap();
-      if (!fetchedCart) throw new Error("Cart fetch failed.");
+      await dispatch(fetchCart()).unwrap();
 
       reset();
       navigate("/");
     } catch (err) {
       console.error("[Signup] Error:", err);
       setError(err.message || "Something went wrong during signup.");
+
+      // ROLLBACK SAFETY
+      try {
+        if (createdUserId) {
+          console.log("[Rollback] Cleaning up resources for user:", createdUserId);
+          if (isCartCreated) await appwriteConfigService.deleteCart(createdUserId);
+          if (isProfileCreated) await appwriteConfigService.deleteUserProfile(createdUserId);
+          
+          // Delete account last (requires active session, which we have if login succeeded)
+          await appwriteAuthService.deleteAccount();
+          console.log("[Rollback] Cleanup successful.");
+        }
+      } catch (rollbackErr) {
+        console.error("[Rollback] Critical failure during cleanup:", rollbackErr);
+      }
     } finally {
       setLoading(false);
     }
@@ -161,15 +182,26 @@ function ClientSignup() {
                   label="Username"
                   placeholder="John Doe"
                   className="rounded-2xl border-[#E7CE9D]/40 focus:ring-[#28543d] focus:border-[#28543d]"
-                  {...register("username", { required: true })}
+                  error={errors.username?.message}
+                  {...register("username", { 
+                    required: "Username is required",
+                    minLength: { value: 3, message: "Minimum 3 characters" }
+                  })}
                   disabled={loading}
                 />
                 <Input
                   label="Phone"
                   type="tel"
-                  placeholder="+91 98765 43210"
+                  placeholder="9876543210"
                   className="rounded-2xl border-[#E7CE9D]/40 focus:ring-[#28543d] focus:border-[#28543d]"
-                  {...register("phone", { required: true })}
+                  error={errors.phone?.message}
+                  {...register("phone", { 
+                    required: "Phone number is required",
+                    pattern: {
+                      value: /^\d{10}$/,
+                      message: "Must be exactly 10 digits"
+                    }
+                  })}
                   disabled={loading}
                 />
               </div>
@@ -179,13 +211,13 @@ function ClientSignup() {
                 type="email"
                 placeholder="hello@vanveda.com"
                 className="rounded-2xl border-[#E7CE9D]/40 focus:ring-[#28543d] focus:border-[#28543d]"
+                error={errors.email?.message}
                 {...register("email", {
-                  required: true,
-                  validate: {
-                    matchPattern: (value) =>
-                      /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(value) ||
-                      "Email address must be valid",
-                  },
+                  required: "Email is required",
+                  pattern: {
+                    value: /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/,
+                    message: "Invalid email address"
+                  }
                 })}
                 disabled={loading}
               />
@@ -201,7 +233,8 @@ function ClientSignup() {
                     label="Building / Flat"
                     placeholder="Residency details"
                     className="rounded-2xl border-[#E7CE9D]/40 focus:ring-[#28543d] focus:border-[#28543d]"
-                    {...register("residencyAddress", { required: true })}
+                    error={errors.residencyAddress?.message}
+                    {...register("residencyAddress", { required: "Address is required" })}
                     disabled={loading}
                   />
                   <Input
@@ -215,28 +248,38 @@ function ClientSignup() {
                     label="Street / Area"
                     placeholder="Street name"
                     className="rounded-2xl border-[#E7CE9D]/40 focus:ring-[#28543d] focus:border-[#28543d]"
-                    {...register("street", { required: true })}
+                    error={errors.street?.message}
+                    {...register("street", { required: "Street is required" })}
                     disabled={loading}
                   />
                   <Input
                     label="Pincode"
                     placeholder="110001"
                     className="rounded-2xl border-[#E7CE9D]/40 focus:ring-[#28543d] focus:border-[#28543d]"
-                    {...register("pincode", { required: true })}
+                    error={errors.pincode?.message}
+                    {...register("pincode", { 
+                      required: "Pincode is required",
+                      pattern: {
+                        value: /^\d{6}$/,
+                        message: "Must be 6 digits"
+                      }
+                    })}
                     disabled={loading}
                   />
                   <Input
                     label="City"
                     placeholder="Select City"
                     className="rounded-2xl border-[#E7CE9D]/40 focus:ring-[#28543d] focus:border-[#28543d]"
-                    {...register("city", { required: true })}
+                    error={errors.city?.message}
+                    {...register("city", { required: "City is required" })}
                     disabled={loading}
                   />
                   <Input
                     label="State"
                     placeholder="Select State"
                     className="rounded-2xl border-[#E7CE9D]/40 focus:ring-[#28543d] focus:border-[#28543d]"
-                    {...register("state", { required: true })}
+                    error={errors.state?.message}
+                    {...register("state", { required: "State is required" })}
                     disabled={loading}
                   />
                 </div>
@@ -254,7 +297,11 @@ function ClientSignup() {
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
                     className="rounded-2xl border-[#E7CE9D]/40 focus:ring-[#28543d] focus:border-[#28543d]"
-                    {...register("password", { required: true })}
+                    error={errors.password?.message}
+                    {...register("password", { 
+                      required: "Password is required",
+                      minLength: { value: 8, message: "Minimum 8 characters" }
+                    })}
                     disabled={loading}
                     suffix={
                       <button
@@ -276,7 +323,11 @@ function ClientSignup() {
                     type={showConfirmPassword ? "text" : "password"}
                     placeholder="••••••••"
                     className="rounded-2xl border-[#E7CE9D]/40 focus:ring-[#28543d] focus:border-[#28543d]"
-                    {...register("confirmPassword", { required: true })}
+                    error={errors.confirmPassword?.message}
+                    {...register("confirmPassword", { 
+                      required: "Please confirm your password",
+                      validate: (val) => val === password || "Passwords do not match"
+                    })}
                     disabled={loading}
                     suffix={
                       <button
