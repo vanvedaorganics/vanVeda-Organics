@@ -515,7 +515,7 @@ function Checkout() {
       const sendOrderNotifications = async (order) => {
         try {
           const orderId = order.$id?.slice(-8).toUpperCase();
-          const amount = (totals.subtotalCents / 100).toFixed(2);
+          const amount = (order.total_cents / 100).toFixed(2);
           const customerName = profile.displayName || "Customer";
           const customerEmail = authUser.email || "";
 
@@ -669,7 +669,7 @@ function Checkout() {
               </div>
               <div className="flex justify-between text-sm pt-2 border-t border-gray-200">
                 <span className="text-gray-500">Total Amount:</span>
-                <span className="font-bold text-[#744531]">₹{(totals.subtotalCents / 100).toFixed(2)}</span>
+                <span className="font-bold text-[#744531]">₹{((placedOrder?.total_cents || totals.subtotalCents) / 100).toFixed(2)}</span>
               </div>
             </div>
 
@@ -683,7 +683,7 @@ function Checkout() {
               <Button
                 onClick={() => {
                   const orderId = placedOrder?.$id?.slice(-8).toUpperCase();
-                  const amount = (totals.subtotalCents / 100).toFixed(2);
+                  const amount = (placedOrder.total_cents / 100).toFixed(2);
                   const msg = encodeURIComponent(
                     `Hello True Soil Organics, I just placed an order!\n\nOrder ID: #${orderId}\nCustomer: ${profile.displayName}\nAmount: ₹${amount}\n\nPlease confirm my order. Thank you!`
                   );
