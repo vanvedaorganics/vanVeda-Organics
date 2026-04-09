@@ -124,10 +124,7 @@ function ProductDetails() {
       .filter(Boolean);
   };
 
-  const profileAddresses = useMemo(() => {
-    if (profileFromStore) return parseAddressArray(profileFromStore.address);
-    return [];
-  }, [profileFromStore]);
+
 
   // Subscription form state
   const [subQuantity, setSubQuantity] = useState(1);
@@ -525,7 +522,7 @@ function ProductDetails() {
           await finalizeSubscription(null, "pending");
         } else {
           // Razorpay integration for subscriptions
-          const amount = Math.round(quantity * (unitCents)); // total in cents (paise)
+          const amount = Math.round(quantity * (discountedCents)); // total in cents (paise)
           
           const options = {
             key: conf.razorpayKeyId,
@@ -939,7 +936,7 @@ function ProductDetails() {
                 <div className="bg-[#f5f0e8] p-4 rounded-xl border border-black/[0.03]">
                   <div className="flex justify-between items-center mb-1">
                     <span className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Total per {subInterval === 'weekly' ? 'week' : 'month'}</span>
-                    <span className="text-sm font-black text-[#28543d]">₹{((subQuantity * unitCents) / 100).toFixed(2)}</span>
+                    <span className="text-sm font-black text-[#28543d]">₹{((subQuantity * discountedCents) / 100).toFixed(2)}</span>
                   </div>
                   <p className="text-[9px] text-gray-400 leading-tight">Price includes all taxes. Cancel anytime from your profile.</p>
                 </div>
