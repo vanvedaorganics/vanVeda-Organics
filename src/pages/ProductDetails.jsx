@@ -784,9 +784,10 @@ function ProductDetails() {
               </div>
             )}
 
-            {/* Quantity Selector */}
-            <div className="flex items-center gap-6 pt-4">
-              <div className="flex items-center bg-[#f5f0e8] rounded-2xl p-1 shadow-inner border border-black/[0.03]">
+            {/* Quantity and Action Buttons Section */}
+            <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-4 pt-6">
+              {/* Quantity Selector - Full width on mobile, auto on desktop */}
+              <div className="flex items-center justify-between bg-[#f5f0e8] rounded-2xl p-1.5 shadow-inner border border-black/[0.03] w-full lg:w-max">
                 <button
                   onClick={() => updateQty(quantity - 1)}
                   disabled={quantity <= 0}
@@ -808,28 +809,34 @@ function ProductDetails() {
                 </button>
               </div>
 
+              {/* Action Buttons Group */}
               <div className="flex-1 flex flex-col sm:flex-row gap-3">
                 <Button
                   onClick={onAddToCartClick}
-                  className={`flex-1 h-14 rounded-2xl font-black text-sm uppercase tracking-widest transition-all duration-300 shadow-lg ${
-                    inCart ? "bg-[#744531]/10 text-[#744531] border-2 border-[#744531]/20" : "bg-[#28543d] text-white hover:bg-[#1f4230] hover:-translate-y-1"
+                  className={`flex-1 min-h-[56px] rounded-2xl font-black text-sm uppercase tracking-widest transition-all duration-300 shadow-lg ${
+                    inCart ? "bg-[#744531]/10 text-[#744531] border-2 border-[#744531]/20" : "bg-[#28543d] text-white hover:bg-[#1f4230]"
                   }`}
                 >
                   {inCart ? "Remove Product" : "Add to Bag"}
                 </Button>
+                
                 {!inCart && (
                   <Button
                     onClick={onBuyNowClick}
-                    className="flex-1 h-14 rounded-2xl font-black text-sm uppercase tracking-widest bg-[#E7CE9D] text-[#744531] hover:bg-[#dec186] shadow-lg hover:-translate-y-1 transition-all duration-300"
+                    className="flex-1 min-h-[56px] rounded-2xl font-black text-sm uppercase tracking-widest bg-[#E7CE9D] text-[#744531] hover:bg-[#dec186] shadow-lg transition-all duration-300"
                   >
                     Buy Now
                   </Button>
                 )}
+
+                {/* Cart Toggle Button - Icon only */}
                 <Button
                   onClick={() => dispatch(setCartOpen(true))}
-                  className="h-14 w-14 rounded-2xl bg-[#f5f0e8] text-[#744531] flex items-center justify-center border-none shadow-lg hover:bg-[#E7CE9D]/30 transition-all hover:scale-105 active:scale-95"
+                  className="h-14 w-full sm:w-14 rounded-2xl bg-[#f5f0e8] text-[#744531] flex items-center justify-center border-none shadow-lg hover:bg-[#E7CE9D]/30 transition-all active:scale-95"
+                  title="Open Shopping Cart"
                 >
                   <ShoppingCart className="h-6 w-6" />
+                  <span className="sm:hidden ml-2 font-bold uppercase text-xs">View Cart</span>
                 </Button>
               </div>
             </div>
