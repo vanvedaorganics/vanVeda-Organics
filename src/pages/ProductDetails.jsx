@@ -332,6 +332,40 @@ function ProductDetails() {
     });
   };
 
+  const onBuyNowClick = () => {
+    setBatchWarning("");
+
+    ensureLoggedInThen(() => {
+      const key = cartKeyForSelected || product.slug;
+
+      // Require batch selection if product has batches
+      if (hasBatches && !selectedBatch && quantity === 0) {
+        setBatchWarning("Please select a batch before buying now");
+        return;
+      }
+
+      // Check if product already in cart with different batch
+      const existingBatch = getProductBatchInCart();
+      if (existingBatch && selectedBatch) {
+        const isSameBatch =
+          existingBatch.name === selectedBatch.name &&
+          existingBatch.delivery_date === selectedBatch.delivery_date;
+
+        if (!isSameBatch) {
+          setBatchWarning(
+            `This product is already in your cart with batch "${existingBatch.name}". Please remove existing items first or select the same batch.`
+          );
+          return;
+        }
+      }
+
+      if (quantity === 0) {
+        dispatch(addItemOne(key, selectedBatch));
+      }
+      navigate("/checkout");
+    });
+  };
+
   // ⭐ Rate handler
   const onRate = async (value) => {
     if (value < 1 || value > 5 || !product) return;
@@ -724,17 +758,26 @@ function ProductDetails() {
                 </button>
               </div>
 
-              <div className="flex-1 flex gap-3">
+              <div className="flex-1 flex flex-col sm:flex-row gap-3">
                 <Button
                   onClick={onAddToCartClick}
                   className={`flex-1 h-14 rounded-2xl font-black text-sm uppercase tracking-widest transition-all duration-300 shadow-lg ${
-                    inCart ? "bg-[#744531]/10 text-[#744531] border-2 border-[#744531]/20" : "bg-[#744531] text-white hover:bg-[#5a3626] hover:-translate-y-1"
+                    inCart ? "bg-[#744531]/10 text-[#744531] border-2 border-[#744531]/20" : "bg-[#28543d] text-white hover:bg-[#1f4230] hover:-translate-y-1"
                   }`}
                 >
-                  {inCart ? "Remove Product" : "Add to Basket"}
+                  {inCart ? "Remove Product" : "Add to Bag"}
                 </Button>
+                {!inCart && (
+                  <Button
+                    onClick={onBuyNowClick}
+                    className="flex-1 h-14 rounded-2xl font-black text-sm uppercase tracking-widest bg-[#E7CE9D] text-[#744531] hover:bg-[#dec186] shadow-lg hover:-translate-y-1 transition-all duration-300"
+                  >
+                    Buy Now
+                  </Button>
+                )}
                 <Button
-                  className="h-14 w-14 rounded-2xl bg-[#E7CE9D] text-[#744531] flex items-center justify-center border-none shadow-lg hover:bg-[#dec186] transition-all hover:scale-105 active:scale-95"
+                  onClick={() => setCartOpen && setCartOpen(true)}
+                  className="h-14 w-14 rounded-2xl bg-[#f5f0e8] text-[#744531] flex items-center justify-center border-none shadow-lg hover:bg-[#E7CE9D]/30 transition-all hover:scale-105 active:scale-95"
                 >
                   <ShoppingCart className="h-6 w-6" />
                 </Button>

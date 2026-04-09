@@ -28,7 +28,7 @@ const COMPANY = {
   legalName: "True Soil Organics",
   gst: "24KPBPS4180H1ZM",
   fssai: "12423000000012",           // ← replace with real FSSAI
-  address: "Gir Gadhda, Junagadh District, Gujarat – 362530, India",
+  address: "Gir Gadhda, Somnath District, Gujarat – 362530, India",
   email: "truesoilorganic@gmail.com",
   phone: "+91 93164 17314",
   mapSrc:
@@ -55,7 +55,7 @@ function ContactUs() {
     const data = new FormData(form);
 
     try {
-      await fetch("https://formsubmit.co/truesoilorganics@gmail.com", {
+      await fetch("https://formsubmit.co/truesoilorganic@gmail.com", {
         method: "POST",
         body: data,
       });

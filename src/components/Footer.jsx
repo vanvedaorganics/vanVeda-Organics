@@ -2,9 +2,7 @@ import React from "react";
 import { NavLink, Link } from "react-router-dom";
 import { Input, Button } from "./index";
 import {
-  Facebook,
   Instagram,
-  Twitter,
   Youtube,
   Mail,
   Phone,
@@ -32,19 +30,7 @@ function Footer() {
               href="#"
               className="text-white hover:text-[#E7CE9D] transition-colors"
             >
-              <Facebook className="h-6 w-6" />
-            </Link>
-            <Link
-              href="#"
-              className="text-white hover:text-[#E7CE9D] transition-colors"
-            >
               <Instagram className="h-6 w-6" />
-            </Link>
-            <Link
-              href="#"
-              className="text-white hover:text-[#E7CE9D] transition-colors"
-            >
-              <Twitter className="h-6 w-6" />
             </Link>
             <Link
               href="#"

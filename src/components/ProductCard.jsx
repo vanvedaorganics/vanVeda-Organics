@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Star, ChevronDown } from "lucide-react";
 import { cn } from "../../utils/lib";
 import { useSelector, useDispatch } from "react-redux";
@@ -135,6 +135,7 @@ const ProductCard = ({
   };
 
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const items = useSelector(selectCartItems);
 
   // Build cart key for active size
@@ -208,6 +209,37 @@ const ProductCard = ({
 
       dispatch(addItemOne(cartKey, selectedBatch));
     }
+  };
+
+  const handleBuyNow = (e) => {
+    stopNav(e);
+    setBatchWarning("");
+
+    // Require batch selection if product has batches
+    if (hasBatches && !selectedBatch) {
+      setBatchWarning("Please select a batch before buying now");
+      return;
+    }
+
+    // Check if product already in cart with different batch
+    const existingBatch = getProductBatchInCart();
+    if (existingBatch && selectedBatch) {
+      const isSameBatch =
+        existingBatch.name === selectedBatch.name &&
+        existingBatch.delivery_date === selectedBatch.delivery_date;
+
+      if (!isSameBatch) {
+        setBatchWarning(
+          `This product is already in cart with batch "${existingBatch.name}". Please remove it first or select the same batch.`
+        );
+        return;
+      }
+    }
+
+    if (!inCart) {
+      dispatch(addItemOne(cartKey, selectedBatch));
+    }
+    navigate("/checkout");
   };
 
   const adjustQty = (e, delta) => {
@@ -399,7 +431,7 @@ const ProductCard = ({
             whileTap={{ scale: 0.98 }}
             onClick={handleToggleCart}
             className={cn(
-              "flex-1 h-12 text-xs font-black uppercase tracking-widest rounded-2xl shadow-sm transition-all duration-300",
+              "flex-1 h-12 text-[10px] font-black uppercase tracking-widest rounded-2xl shadow-sm transition-all duration-300",
               inCart
                 ? "bg-[#f5f0e8] text-[#744531] hover:bg-[#E7CE9D]/50 border border-[#744531]/20"
                 : "bg-[#28543d] hover:bg-[#1f4230] text-white shadow-xl shadow-[#28543d]/20"
@@ -407,6 +439,17 @@ const ProductCard = ({
           >
             {inCart ? "Remove" : "Add To Bag"}
           </motion.button>
+
+          {!inCart && (
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handleBuyNow}
+              className="flex-1 h-12 text-[10px] font-black uppercase tracking-widest rounded-2xl bg-[#E7CE9D] text-[#744531] hover:bg-[#dec186] shadow-xl shadow-[#E7CE9D]/20 transition-all duration-300"
+            >
+              Buy Now
+            </motion.button>
+          )}
 
           {inCart && (
             <div className="flex items-center gap-1 bg-[#f5f0e8] rounded-xl px-1">
