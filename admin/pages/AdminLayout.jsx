@@ -24,23 +24,32 @@ export default function AdminLayout() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let active = true;
     authService
       .getUser()
       .then((userData) => {
+        if (!active) return;
         if (userData && userData.$id) {
           authService.isAdmin().then((isAdmin) => {
+            if (!active) return;
             if (isAdmin) {
               dispatch(login(userData));
               setUsername(userData.name);
             } else {
               dispatch(logout());
+              navigate("/admin/login");
             }
             setLoading(false);
           });
+        } else {
+          setLoading(false);
         }
       })
-      .finally(() => setLoading(false));
-  });
+      .catch(() => {
+        if (active) setLoading(false);
+      });
+    return () => { active = false; };
+  }, [dispatch, navigate]);
 
   const userLogout = async () => {
     authService.logout().then(() => {
