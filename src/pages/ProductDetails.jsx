@@ -11,9 +11,11 @@ import {
   removeItemCompletely,
   selectCartItems,
 } from "../store/cartsSlice";
+import { setCartOpen } from "../store/uiSlice";
 import appwriteService from "../appwrite/appwriteConfigService";
+import conf from "../conf/conf";
 import { Query } from "appwrite"; // used for advanced queries (optional)
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 // Helpers for new schema
 const parsePackagingSizes = (raw = []) => {
@@ -131,14 +133,35 @@ function ProductDetails() {
   const [subQuantity, setSubQuantity] = useState(1);
   const [subInterval, setSubInterval] = useState("monthly"); // monthly | weekly
   const [subAddressIdx, setSubAddressIdx] = useState(0);
+  const [subPaymentMethod, setSubPaymentMethod] = useState("COD"); // COD | Online
   const [subLoading, setSubLoading] = useState(false);
   const [subError, setSubError] = useState("");
   const [showSubSuccess, setShowSubSuccess] = useState(false);
+  const [profile, setProfile] = useState(null);
 
   // Scroll to top on mount
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+
+  // Sync profile and addresses
+  useEffect(() => {
+    if (authStatus && userData?.$id) {
+       appwriteService.getUserProfile(userData.$id)
+         .then(res => {
+           setProfile(res);
+         })
+         .catch(err => console.error("Failed to fetch profile in ProductDetails", err));
+    } else {
+       setProfile(null);
+    }
+  }, [authStatus, userData]);
+
+  const profileAddresses = useMemo(() => {
+    if (profile?.address) return parseAddressArray(profile.address);
+    if (profileFromStore) return parseAddressArray(profileFromStore.address);
+    return [];
+  }, [profile, profileFromStore]);
 
   // Resolve product by slug (kept same)
   useEffect(() => {
@@ -472,35 +495,65 @@ function ProductDetails() {
 
         setSubLoading(true);
 
-        // Prevent duplicate subscription: query for exact match
-        const existing = await appwriteService.listSubscriptions({
-          user_id: userData?.$id,
-          product_id: product.slug,
-          packaging_size: packaging_str,
-          interval: subInterval,
-        });
+        const finalizeSubscription = async (paymentId = null, paymentStatus = "pending") => {
+          try {
+            await appwriteService.createSubscription({
+              user_id: userData?.$id,
+              product_id: product.slug,
+              packaging_size: packaging_str,
+              quantity,
+              interval: subInterval,
+              shippingAddress: shippingAddressStr,
+              paymentMode: subPaymentMethod,
+              paymentStatus: paymentStatus,
+              payment_id: paymentId,
+            });
 
-        if (Array.isArray(existing) && existing.length > 0) {
-          setSubError("A subscription with same product, size and interval already exists.");
-          setSubLoading(false);
-          return;
+            setShowSubSuccess(true);
+            setTimeout(() => {
+              navigate("/profile/subscriptions");
+            }, 1100);
+          } catch (err) {
+            console.error("Subscription finalization failed", err);
+            setSubError(err?.message || "Failed to complete subscription.");
+          } finally {
+            setSubLoading(false);
+          }
+        };
+
+        if (subPaymentMethod === "COD") {
+          await finalizeSubscription(null, "pending");
+        } else {
+          // Razorpay integration for subscriptions
+          const amount = Math.round(quantity * (unitCents)); // total in cents (paise)
+          
+          const options = {
+            key: conf.razorpayKeyId,
+            amount: amount,
+            currency: "INR",
+            name: "True Soil Organics",
+            description: `Subscription: ${product.name} (${subInterval})`,
+            image: "/Truesoil.png",
+            handler: async function (response) {
+              await finalizeSubscription(response.razorpay_payment_id, "paid");
+            },
+            prefill: {
+              name: userData?.name || "",
+              email: userData?.email || "",
+            },
+            theme: { color: "#28543d" },
+            modal: {
+              ondismiss: () => setSubLoading(false),
+            },
+          };
+
+          const rzp = new window.Razorpay(options);
+          rzp.on("payment.failed", (response) => {
+            setSubError(`Payment Failed: ${response.error.description}`);
+            setSubLoading(false);
+          });
+          rzp.open();
         }
-
-        // Create subscription
-        await appwriteService.createSubscription({
-          user_id: userData?.$id,
-          product_id: product.slug,
-          packaging_size: packaging_str,
-          quantity,
-          interval: subInterval,
-          shippingAddress: shippingAddressStr,
-        });
-
-        setShowSubSuccess(true);
-        // small delay then redirect to profile subscriptions tab
-        setTimeout(() => {
-          navigate("/profile/subscriptions");
-        }, 1100);
       } catch (err) {
         console.error("Subscription failed", err);
         setSubError(err?.message || "Failed to create subscription.");
@@ -776,7 +829,7 @@ function ProductDetails() {
                   </Button>
                 )}
                 <Button
-                  onClick={() => setCartOpen && setCartOpen(true)}
+                  onClick={() => dispatch(setCartOpen(true))}
                   className="h-14 w-14 rounded-2xl bg-[#f5f0e8] text-[#744531] flex items-center justify-center border-none shadow-lg hover:bg-[#E7CE9D]/30 transition-all hover:scale-105 active:scale-95"
                 >
                   <ShoppingCart className="h-6 w-6" />
@@ -861,6 +914,34 @@ function ProductDetails() {
                       <Link to="/profile" className="text-orange-600 underline">Add Now</Link>
                     </div>
                   )}
+                </div>
+
+                {/* Payment Method Selection */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Payment Method</label>
+                  <div className="flex gap-3">
+                    {["COD", "Online"].map((m) => (
+                      <button
+                        key={m}
+                        onClick={() => setSubPaymentMethod(m)}
+                        className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border-2 transition-all ${
+                          subPaymentMethod === m 
+                            ? "border-[#28543d] bg-[#28543d]/5 text-[#28543d]" 
+                            : "border-gray-200 text-gray-400 opacity-60 hover:opacity-100"
+                        }`}
+                      >
+                        <span className="text-xs font-bold uppercase tracking-wider">{m === "COD" ? "Cash on Delivery" : "Online Payment"}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="bg-[#f5f0e8] p-4 rounded-xl border border-black/[0.03]">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Total per {subInterval === 'weekly' ? 'week' : 'month'}</span>
+                    <span className="text-sm font-black text-[#28543d]">₹{((subQuantity * unitCents) / 100).toFixed(2)}</span>
+                  </div>
+                  <p className="text-[9px] text-gray-400 leading-tight">Price includes all taxes. Cancel anytime from your profile.</p>
                 </div>
 
                 {subError && <div className="p-3 bg-red-50 text-[11px] font-bold text-red-600 rounded-xl border border-red-100">{subError}</div>}

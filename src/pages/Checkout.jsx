@@ -23,6 +23,7 @@ import {
   emptyUserCart,
   setEmptyCart,
 } from "../store/cartsSlice";
+import { fetchProducts } from "../store/productsSlice";
 
 // Helpers copied to keep in sync with cart structure
 const CART_KEY_SEP = "::";
@@ -209,6 +210,8 @@ function Checkout() {
   const authStatus = useSelector((s) => s.auth.status);
   const items = useSelector(selectCartItems);
   const products = useSelector((s) => s.products.items);
+  const productsFetched = useSelector((s) => s.products.fetched);
+  const productsLoading = useSelector((s) => s.products.loading);
 
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState(null);
@@ -267,6 +270,13 @@ function Checkout() {
     };
     boot();
   }, [authStatus, authUser, navigate]);
+
+  // NEW: Fetch products if not available
+  useEffect(() => {
+    if (!productsFetched && !productsLoading) {
+      dispatch(fetchProducts());
+    }
+  }, [dispatch, productsFetched, productsLoading]);
 
   // Build cart rows (read-only)
   const cartRows = useMemo(() => {
@@ -497,6 +507,39 @@ function Checkout() {
           type: "success",
           message: "Order placed successfully!",
         });
+        
+        // NEW: Send Order Notifications
+        sendOrderNotifications(result);
+      };
+
+      const sendOrderNotifications = async (order) => {
+        try {
+          const orderId = order.$id?.slice(-8).toUpperCase();
+          const amount = (totals.subtotalCents / 100).toFixed(2);
+          const customerName = profile.displayName || "Customer";
+          const customerEmail = authUser.email || "";
+
+          // 1. Email via FormSubmit.co
+          const emailData = new FormData();
+          emailData.append("Order ID", `#${orderId}`);
+          emailData.append("Customer", customerName);
+          emailData.append("Email", customerEmail);
+          emailData.append("Total Amount", `₹${amount}`);
+          emailData.append("Delivery Date", farthestDeliveryDate);
+          emailData.append("Items", JSON.stringify(orderItems, null, 2));
+          emailData.append("Address", JSON.stringify(selectedAddress, null, 2));
+          emailData.append("_subject", `New Order Received: #${orderId}`);
+          emailData.append("_cc", customerEmail); // CC to customer
+          emailData.append("_template", "table");
+
+          fetch("https://formsubmit.co/ajax/truesoilorganic@gmail.com", {
+            method: "POST",
+            body: emailData,
+          }).catch(err => console.error("Email notification failed", err));
+
+        } catch (err) {
+          console.error("Failed to trigger notifications", err);
+        }
       };
 
       if (paymentChoice === "COD") {
@@ -587,7 +630,7 @@ function Checkout() {
       </AnimatePresence>
 
       <AnimatePresence mode="wait">
-        {loading ? (
+        {loading || productsLoading ? (
           <motion.div
             key="loading"
             initial={{ opacity: 0 }}
@@ -628,6 +671,29 @@ function Checkout() {
                 <span className="text-gray-500">Total Amount:</span>
                 <span className="font-bold text-[#744531]">₹{(totals.subtotalCents / 100).toFixed(2)}</span>
               </div>
+            </div>
+
+            <div className="bg-[#E7CE9D]/20 border border-[#E7CE9D] rounded-2xl p-6 mb-8">
+              <h3 className="text-sm font-bold text-[#744531] uppercase tracking-wider mb-3">
+                Quick Action
+              </h3>
+              <p className="text-sm text-[#613d38] mb-4">
+                Please notify us on WhatsApp for faster processing of your order.
+              </p>
+              <Button
+                onClick={() => {
+                  const orderId = placedOrder?.$id?.slice(-8).toUpperCase();
+                  const amount = (totals.subtotalCents / 100).toFixed(2);
+                  const msg = encodeURIComponent(
+                    `Hello True Soil Organics, I just placed an order!\n\nOrder ID: #${orderId}\nCustomer: ${profile.displayName}\nAmount: ₹${amount}\n\nPlease confirm my order. Thank you!`
+                  );
+                  window.open(`https://wa.me/919316417314?text=${msg}`, "_blank");
+                }}
+                className="w-full bg-[#28543d] hover:bg-[#1f4230] text-white py-3 rounded-xl flex items-center justify-center gap-2"
+              >
+                <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" className="w-5 h-5" alt="WA" />
+                Notify on WhatsApp
+              </Button>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">

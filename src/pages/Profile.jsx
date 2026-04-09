@@ -90,6 +90,7 @@ function Profile() {
       return;
     }
     const fetchProfile = async () => {
+      if (!authUser?.$id) return;
       try {
         const res = await appwriteConfigService.getUserProfile(authUser.$id);
         
@@ -168,6 +169,29 @@ function Profile() {
     loadSubs();
     return () => { active = false; };
   }, [profile]);
+
+  const handleUnsubscribe = async (subscriptionId) => {
+    if (!window.confirm("Are you sure you want to cancel this subscription?")) return;
+    try {
+      setSubsLoading(true);
+      await appwriteConfigService.deleteSubscription(subscriptionId);
+      // Refresh list
+      const docs = await appwriteConfigService.listSubscriptions({ user_id: profile.$id });
+      const parsed = (docs || []).map((d) => {
+        let pack = d.packaging_size;
+        try { pack = typeof pack === "string" ? JSON.parse(pack) : pack; } catch { pack = { sizeLabel: "", price_cents: 0 }; }
+        let ship = d.shippingAddress;
+        try { ship = typeof ship === "string" ? JSON.parse(ship) : ship; } catch { ship = null; }
+        return { ...d, parsedPackaging: pack, parsedShipping: ship };
+      });
+      setSubscriptions(parsed);
+    } catch (err) {
+      console.error("Failed to unsubscribe", err);
+      alert("Failed to unsubscribe. Please try again.");
+    } finally {
+      setSubsLoading(false);
+    }
+  };
 
   const handleLogout = async () => {
     try {
@@ -467,6 +491,12 @@ function Profile() {
                                 <span className="text-[11px] font-black tracking-widest uppercase opacity-75">Subscription Price</span>
                                 <span className="syne-bold text-lg">{formatINR(priceCents * s.quantity)}</span>
                               </div>
+                              <button
+                                onClick={() => handleUnsubscribe(s.$id)}
+                                className="w-full py-3 text-xs font-black uppercase tracking-widest text-red-500 hover:text-red-700 transition-colors border-2 border-transparent hover:border-red-100 rounded-2xl"
+                              >
+                                Cancel Subscription
+                              </button>
                             </div>
                           </div>
                         );

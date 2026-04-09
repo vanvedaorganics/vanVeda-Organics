@@ -316,13 +316,13 @@ export class appwriteConfigService {
   } = {}) {
     try {
       const q = Array.isArray(queries) ? [...queries] : [];
-      if (typeof user_id !== "undefined")
+      if (user_id)
         q.push(Query.equal("user_id", user_id));
-      if (typeof product_id !== "undefined")
+      if (product_id)
         q.push(Query.equal("product_id", product_id));
-      if (typeof packaging_size !== "undefined")
+      if (packaging_size)
         q.push(Query.equal("packaging_size", packaging_size));
-      if (typeof interval !== "undefined")
+      if (interval)
         q.push(Query.equal("interval", interval));
 
       const res = await this.databases.listDocuments(
@@ -351,6 +351,19 @@ export class appwriteConfigService {
     }
   }
 
+  async deleteSubscription(subscriptionId) {
+    try {
+      return await this.databases.deleteDocument(
+        conf.appwriteDatabaseId,
+        conf.appwriteSubscriptionCollection,
+        subscriptionId
+      );
+    } catch (error) {
+      console.log("Appwrite :: deleteSubscription error ::", error);
+      throw error;
+    }
+  }
+
   async updateProductDiscount(productId, discount) {
     try {
       return await this.databases.updateDocument(
@@ -368,6 +381,7 @@ export class appwriteConfigService {
   // 🟢 Update average rating and review count for a product
   async updateProductReviewStats(productId) {
     try {
+      if (!productId) return null;
       // 1️⃣ Get all reviews for this product (indexed using productID string)
       const reviewsRes = await this.databases.listDocuments(
         conf.appwriteDatabaseId,
@@ -749,6 +763,7 @@ export class appwriteConfigService {
   }
 
   async getUserProfile(userId) {
+    if (!userId) return null;
     try {
       // Use listDocuments with a query for robustness
       const res = await this.databases.listDocuments(

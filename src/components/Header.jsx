@@ -23,6 +23,7 @@ import {
   selectCartItems,
   emptyUserCart,
 } from "../store/cartsSlice";
+import { setCartOpen, selectIsCartOpen } from "../store/uiSlice";
 import { CartCard } from "./index";
 
 // ---- Helpers for new schema + cart keys ----
@@ -71,7 +72,7 @@ export function Header() {
   const products = useSelector((state) => state.products.items);
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [cartOpen, setCartOpen] = useState(false);
+  const cartOpen = useSelector(selectIsCartOpen);
   const [offerLoading, setOfferLoading] = useState(true);
   const [offer, setOffer] = useState(null);
 
@@ -288,7 +289,7 @@ export function Header() {
 
           {/* Cart Icon */}
           <motion.button
-            onClick={() => setCartOpen(true)}
+            onClick={() => dispatch(setCartOpen(true))}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="relative p-2.5 rounded-2xl bg-[#744531] text-white shadow-lg hover:shadow-xl transition-all duration-300"
@@ -345,7 +346,7 @@ export function Header() {
 
         {/* Right: Cart */}
         <motion.button
-          onClick={() => setCartOpen(true)}
+          onClick={() => dispatch(setCartOpen(true))}
           whileHover={{ scale: 1.1, rotate: -2 }}
           whileTap={{ scale: 0.95 }}
           transition={{ type: "spring", stiffness: 300, damping: 15 }}
@@ -464,7 +465,7 @@ export function Header() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => setCartOpen(false)}
+              onClick={() => dispatch(setCartOpen(false))}
             />
 
             {/* Desktop Sidebar */}
@@ -521,7 +522,7 @@ export function Header() {
                   <button
                     onClick={() => {
                       navigate("/checkout");
-                      setCartOpen(false);
+                      dispatch(setCartOpen(false));
                     }}
                     className="flex-1 py-2 px-4 ubuntu-medium bg-[#744531] hover:bg-[#744531]/90 text-white rounded-md"
                   >
@@ -542,7 +543,7 @@ export function Header() {
               {/* Header */}
               <div className="flex items-center justify-between p-4 border-b">
                 <h2 className="text-lg font-semibold">Your Cart</h2>
-                <button onClick={() => setCartOpen(false)}>
+                <button onClick={() => dispatch(setCartOpen(false))}>
                   <X className="h-6 w-6 text-gray-700" />
                 </button>
               </div>
@@ -587,7 +588,7 @@ export function Header() {
                   <button
                     onClick={() => {
                       navigate("/checkout");
-                      setCartOpen(false);
+                      dispatch(setCartOpen(false));
                     }}
                     className="flex-1 py-2 px-4 ubuntu-medium bg-[#744531] hover:bg-[#744531]/90 text-white rounded-md"
                   >
