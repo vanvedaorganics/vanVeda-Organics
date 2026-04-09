@@ -181,6 +181,7 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
             ? initialData.categories
             : "") ??
           "",
+        allowed_payment_modes: initialData?.allowed_payment_modes || ["COD", "ONLINE"],
       });
       setPackagingSizes(parsePackagingSizes(initialData.packaging_size));
       // NEW: reset batches from initial data
@@ -404,6 +405,7 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
         packaging_size,
         // currency omitted (defaults to "INR" server-side)
         batch, // NEW
+        allowed_payment_modes: formData.allowed_payment_modes, // NEW
       };
 
       if (isEdit) {
@@ -433,6 +435,7 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
           description: "",
           discount: 0,
           category: "",
+          allowed_payment_modes: ["COD", "ONLINE"],
         });
         // New: after creating a product, keep one default row instead of empty
         setPackagingSizes([createEmptyPackagingSize()]);
@@ -639,6 +642,48 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
               {errors.category.message}
             </div>
           )}
+        </div>
+
+        {/* Payment Modes Selection */}
+        <div className="md:col-span-2 bg-emerald-50/30 p-4 rounded-xl border border-emerald-100 space-y-3">
+          <Label required>Allowed Payment Modes</Label>
+          <div className="flex gap-6">
+            <label className="flex items-center gap-2 cursor-pointer group">
+              <input
+                type="checkbox"
+                value="COD"
+                className="w-4 h-4 rounded border-emerald-300 text-emerald-600 focus:ring-emerald-500"
+                checked={watch("allowed_payment_modes")?.includes("COD")}
+                onChange={(e) => {
+                  const current = watch("allowed_payment_modes") || [];
+                  if (e.target.checked) {
+                    setValue("allowed_payment_modes", [...current, "COD"]);
+                  } else {
+                    setValue("allowed_payment_modes", current.filter(m => m !== "COD"));
+                  }
+                }}
+              />
+              <span className="text-sm font-semibold text-[#084629] group-hover:text-emerald-700">Cash on Delivery (COD)</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer group">
+              <input
+                type="checkbox"
+                value="ONLINE"
+                className="w-4 h-4 rounded border-emerald-300 text-emerald-600 focus:ring-emerald-500"
+                checked={watch("allowed_payment_modes")?.includes("ONLINE")}
+                onChange={(e) => {
+                  const current = watch("allowed_payment_modes") || [];
+                  if (e.target.checked) {
+                    setValue("allowed_payment_modes", [...current, "ONLINE"]);
+                  } else {
+                    setValue("allowed_payment_modes", current.filter(m => m !== "ONLINE"));
+                  }
+                }}
+              />
+              <span className="text-sm font-semibold text-[#084629] group-hover:text-emerald-700">Online Payment (Razorpay)</span>
+            </label>
+          </div>
+          <p className="text-[11px] text-gray-500 italic">Select which payment methods are available for this product.</p>
         </div>
       </div>
 

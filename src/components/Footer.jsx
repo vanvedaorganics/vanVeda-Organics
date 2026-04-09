@@ -26,18 +26,22 @@ function Footer() {
             products, sustainably sourced from nature's bounty.
           </p>
           <div className="flex space-x-4">
-            <Link
+            <a
               href="https://www.instagram.com/truesoilorganics?igsh=aWZ6ZnptOW5kaHRj"
+              target="_blank"
+              rel="noopener noreferrer"
               className="text-white hover:text-[#E7CE9D] transition-colors"
             >
               <Instagram className="h-6 w-6" />
-            </Link>
-            <Link
+            </a>
+            <a
               href="https://youtube.com/@truesoilorganics?si=pUAYYc5LJDDia5Dc"
+              target="_blank"
+              rel="noopener noreferrer"
               className="text-white hover:text-[#E7CE9D] transition-colors"
             >
               <Youtube className="h-6 w-6" />
-            </Link>
+            </a>
           </div>
         </div>
 

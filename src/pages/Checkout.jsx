@@ -318,6 +318,7 @@ function Checkout() {
           baseCents,
           batch: typeof itemData === "object" ? itemData?.batch : null,
           categories: product?.categories || null, // reuse later
+          allowed_payment_modes: product?.allowed_payment_modes || ["COD", "ONLINE"], // NEW
         };
       })
       .filter(Boolean);
@@ -363,6 +364,17 @@ function Checkout() {
     if (selectedAddressIdx === null) return null;
     return addresses[selectedAddressIdx] || null;
   }, [useNewAddress, selectedAddressIdx, addresses, newAddress]);
+
+  const isCODAllowed = useMemo(() => {
+    return cartRows.every((row) => row.allowed_payment_modes?.includes("COD"));
+  }, [cartRows]);
+
+  // If COD is not allowed but selected, switch to Card
+  useEffect(() => {
+    if (!isCODAllowed && paymentChoice === "COD") {
+      setPaymentChoice("Card");
+    }
+  }, [isCODAllowed, paymentChoice]);
 
   const canPlace =
     !placing &&
@@ -931,18 +943,21 @@ function Checkout() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <button
-                    onClick={() => setPaymentChoice("COD")}
+                    onClick={() => isCODAllowed && setPaymentChoice("COD")}
+                    disabled={!isCODAllowed}
                     className={`flex items-center gap-3 p-4 rounded-xl border transition ${
-                      paymentChoice === "COD"
-                        ? "border-[#744531] bg-[#E7CE9D]/20"
-                        : "border-gray-200 hover:bg-gray-50"
+                      !isCODAllowed 
+                        ? "opacity-50 cursor-not-allowed bg-gray-50 border-gray-200"
+                        : paymentChoice === "COD"
+                          ? "border-[#744531] bg-[#E7CE9D]/20"
+                          : "border-gray-200 hover:bg-gray-50"
                     }`}
                   >
-                    <Wallet className="w-6 h-6 text-[#744531]" />
+                    <Wallet className={`w-6 h-6 ${!isCODAllowed ? "text-gray-400" : "text-[#744531]"}`} />
                     <div className="text-left">
-                      <div className="font-semibold">Cash on Delivery</div>
+                      <div className={`font-semibold ${!isCODAllowed ? "text-gray-400" : ""}`}>Cash on Delivery</div>
                       <div className="text-xs text-gray-600">
-                        Pay when the order arrives
+                        {isCODAllowed ? "Pay when the order arrives" : "Not available for one or more items"}
                       </div>
                     </div>
                   </button>

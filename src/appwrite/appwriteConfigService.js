@@ -36,6 +36,7 @@ export class appwriteConfigService {
     currency = "INR",
     discount = 0,
     batch = null,
+    allowed_payment_modes = ["COD", "ONLINE"], // NEW
   }) {
     const serialized = (
       Array.isArray(packaging_size) ? packaging_size : []
@@ -79,7 +80,8 @@ export class appwriteConfigService {
         packaging_size: serialized,
         currency,
         discount,
-        batch: batchPayload, // NEW
+        batch: batchPayload,
+        allowed_payment_modes,
       }
     );
   }
@@ -95,6 +97,7 @@ export class appwriteConfigService {
       currency = "INR",
       discount = 0,
       batch,
+      allowed_payment_modes = ["COD", "ONLINE"], // NEW
     }
   ) {
     const serialized = (
@@ -138,7 +141,8 @@ export class appwriteConfigService {
         packaging_size: serialized,
         currency,
         discount,
-        batch: batchPayload, // NEW
+        batch: batchPayload,
+        allowed_payment_modes,
       }
     );
   }

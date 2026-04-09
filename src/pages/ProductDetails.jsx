@@ -130,7 +130,7 @@ function ProductDetails() {
   const [subQuantity, setSubQuantity] = useState(1);
   const [subInterval, setSubInterval] = useState("monthly"); // monthly | weekly
   const [subAddressIdx, setSubAddressIdx] = useState(0);
-  const [subPaymentMethod, setSubPaymentMethod] = useState("COD"); // COD | Online
+  const [subPaymentMethod, setSubPaymentMethod] = useState("Online"); // Online only for Subscriptions
   const [subLoading, setSubLoading] = useState(false);
   const [subError, setSubError] = useState("");
   const [showSubSuccess, setShowSubSuccess] = useState(false);
@@ -920,24 +920,15 @@ function ProductDetails() {
                   )}
                 </div>
 
-                {/* Payment Method Selection */}
+                {/* Payment Method - Forced Online for Subscriptions */}
                 <div className="space-y-2">
                   <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Payment Method</label>
                   <div className="flex gap-3">
-                    {["COD", "Online"].map((m) => (
-                      <button
-                        key={m}
-                        onClick={() => setSubPaymentMethod(m)}
-                        className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border-2 transition-all ${
-                          subPaymentMethod === m 
-                            ? "border-[#28543d] bg-[#28543d]/5 text-[#28543d]" 
-                            : "border-gray-200 text-gray-400 opacity-60 hover:opacity-100"
-                        }`}
-                      >
-                        <span className="text-xs font-bold uppercase tracking-wider">{m === "COD" ? "Cash on Delivery" : "Online Payment"}</span>
-                      </button>
-                    ))}
+                    <div className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-[#28543d] bg-[#28543d]/5 text-[#28543d]">
+                      <span className="text-xs font-bold uppercase tracking-wider">Online Payment Only</span>
+                    </div>
                   </div>
+                  <p className="text-[10px] text-gray-400 italic">COD is not available for recurring plans.</p>
                 </div>
 
                 <div className="bg-[#f5f0e8] p-4 rounded-xl border border-black/[0.03]">
