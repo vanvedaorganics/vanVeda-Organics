@@ -186,8 +186,9 @@ function Profile() {
       });
       setSubscriptions(parsed);
     } catch (err) {
-      console.error("Failed to unsubscribe", err);
-      alert("Failed to unsubscribe. Please try again.");
+      console.error("Failed to unsubscribe:", err);
+      setError("Failed to unsubscribe: " + (err.message || "Unknown error"));
+      alert("Failed to unsubscribe. " + (err.message || "Please try again."));
     } finally {
       setSubsLoading(false);
     }
@@ -219,42 +220,75 @@ function Profile() {
     try {
       const addressArray = addresses.map((addr) => JSON.stringify(addr));
 
-      if (data.email !== profile.email) {
+      // 1. Handle Email update (requires password confirmation)
+      if (profile && data.email !== profile.email) {
         setPendingEmail(data.email);
         setIsPasswordModalOpen(true);
         setSaving(false);
         return;
       }
 
-      let isChanged = false;
-      if (data.displayName !== profile.displayName) {
-        await appwriteAuthService.updateName({ name: data.displayName });
-        isChanged = true;
+      const userId = profile?.$id || authUser?.$id;
+      if (!userId) throw new Error("User ID missing");
+
+      // Validation: All address fields are mandatory except Landmark
+      for (let i = 0; i < addresses.length; i++) {
+        const addr = addresses[i];
+        if (
+          !addr.residencyAddress?.trim() ||
+          !addr.street?.trim() ||
+          !addr.pincode?.trim() ||
+          !addr.city?.trim() ||
+          !addr.state?.trim()
+        ) {
+          throw new Error(
+            `Incomplete address details in Address ${i + 1}. Please fill all fields except Landmark.`
+          );
+        }
       }
 
-      if (
-        data.displayName !== profile.displayName ||
-        data.phone !== profile.phone ||
-        JSON.stringify(addressArray) !== JSON.stringify(profile.address)
-      ) {
-        await appwriteConfigService.updateUserProfile({
-          user_id: profile.$id,
+      // 2. Determine if we are creating or updating
+      if (!profile) {
+        // Create Profile
+        await appwriteConfigService.createUserProfile({
+          user_id: userId,
           displayName: data.displayName,
           phone: data.phone,
           email: data.email,
           address: addressArray,
         });
-        isChanged = true;
+      } else {
+        // Update Profile
+        let isChanged = false;
+        if (data.displayName !== profile.displayName) {
+          await appwriteAuthService.updateName({ name: data.displayName });
+          isChanged = true;
+        }
+
+        if (
+          data.displayName !== profile.displayName ||
+          data.phone !== profile.phone ||
+          JSON.stringify(addressArray) !== JSON.stringify(profile.address)
+        ) {
+          await appwriteConfigService.updateUserProfile({
+            user_id: userId,
+            displayName: data.displayName,
+            phone: data.phone,
+            email: data.email,
+            address: addressArray,
+          });
+          isChanged = true;
+        }
       }
 
-      if (isChanged) {
-        const updated = await appwriteConfigService.getUserProfile(profile.$id);
-        const parsedAddresses = parseAddressArray(updated.address);
-        setProfile({ ...updated, parsedAddress: parsedAddresses });
-        setIsModalOpen(false);
-      }
+      // 3. Refresh profile data
+      const updated = await appwriteConfigService.getUserProfile(userId);
+      const parsedAddresses = parseAddressArray(updated?.address || []);
+      setProfile({ ...updated, parsedAddress: parsedAddresses });
+      setIsModalOpen(false);
+      
     } catch (err) {
-      setError(err.message || "Failed to update profile");
+      setError(err.message || "Failed to save profile");
     } finally {
       setSaving(false);
     }
@@ -316,20 +350,80 @@ function Profile() {
     );
   }
 
-  if (!profile) {
+  if (!profile && !loading) {
     return (
-      <div className="flex flex-col justify-center items-center h-screen px-4 bg-[#faf8f4] text-center">
-        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-white p-12 rounded-[2.5rem] shadow-xl border border-[#E7CE9D]/20 max-w-md">
-          <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
-            <AlertCircle className="w-10 h-10 text-red-500" />
+      <div className="flex flex-col justify-center items-center min-h-screen px-4 bg-[#faf8f4] text-center pt-20 pb-20">
+        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-white p-12 rounded-[2.5rem] shadow-xl border border-[#E7CE9D]/20 max-w-md w-full">
+          <div className="w-20 h-20 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-6">
+            <User className="w-10 h-10 text-amber-500" />
           </div>
-          <h2 className="syne-bold text-2xl text-[#201413] mb-4">Profile Not Found</h2>
-          {error && <div className="p-4 mb-6 rounded-2xl bg-red-50 text-red-600 border border-red-100 text-sm">{error}</div>}
+          <h2 className="syne-bold text-2xl text-[#201413] mb-4">Welcome, {authUser?.name || "User"}!</h2>
+          <p className="text-gray-500 mb-8 font-medium">It looks like your profile details are missing. Click below to complete your setup.</p>
+          
+          {error && <div className="p-4 mb-6 rounded-2xl bg-red-50 text-red-600 border border-red-100 text-sm font-bold">{error}</div>}
+          
           <div className="flex flex-col gap-3">
-            <button onClick={() => window.location.reload()} className="w-full py-4 bg-[#744531] text-white rounded-2xl font-bold hover:bg-[#28543d] transition-all shadow-lg">Reload</button>
-            <button onClick={handleLogout} className="w-full py-4 bg-gray-100 text-gray-600 rounded-2xl font-bold">Sign Out</button>
+            <button 
+              onClick={() => {
+                reset({
+                  displayName: authUser?.name || "",
+                  email: authUser?.email || "",
+                  phone: "",
+                });
+                setAddresses([{ residencyAddress: "", landmark: "", street: "", pincode: "", city: "", state: "" }]);
+                setIsModalOpen(true);
+              }} 
+              className="w-full py-4 bg-[#28543d] text-white rounded-2xl font-bold hover:bg-[#744531] transition-all shadow-lg active:scale-95"
+            >
+              Complete Profile
+            </button>
+            <button onClick={handleLogout} className="w-full py-4 bg-gray-100 text-gray-600 rounded-2xl font-bold active:scale-95 transition-all">Sign Out</button>
           </div>
         </motion.div>
+        
+        {/* Render Modal even if profile is missing so we can create it */}
+        {isModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 text-left">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl relative max-h-[90vh] overflow-hidden flex flex-col">
+              <div className="p-8 border-b border-gray-100 flex justify-between items-center bg-[#faf8f4]">
+                <h2 className="syne-bold text-2xl text-[#201413]">Complete Profile</h2>
+                <button className="text-gray-400 hover:text-black transition-colors" onClick={() => setIsModalOpen(false)}><X className="w-6 h-6" /></button>
+              </div>
+              <div className="p-8 overflow-y-auto no-scrollbar flex-1">
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                  <Input label="Name" placeholder="Full Name" {...register("displayName", { required: "Required" })} error={errors.displayName?.message} />
+                  <Input label="Email" type="email" placeholder="Email" {...register("email", { required: "Required" })} error={errors.email?.message} />
+                  <Input label="Phone" type="tel" placeholder="Phone" {...register("phone", { required: "Required", pattern: { value: /^[0-9]{10}$/, message: "10 digits required" } })} error={errors.phone?.message} />
+                  
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between"><h3 className="syne-bold text-lg">Shipping Addresses</h3><button type="button" onClick={addAddress} className="text-sm font-black text-[#28543d] hover:underline">+ Add New</button></div>
+                    {addresses.map((addr, idx) => (
+                      <div key={idx} className="bg-gray-50 rounded-[2rem] p-6 border border-gray-100 space-y-4 relative">
+                        {addresses.length > 1 && <button type="button" onClick={() => removeAddress(idx)} className="absolute top-6 right-6 text-red-400 hover:text-red-600 transition-colors"><X className="w-4 h-4" /></button>}
+                        <Input label="Residency Address" value={addr.residencyAddress} onChange={(e) => updateAddressField(idx, "residencyAddress", e.target.value)} />
+                        <div className="grid grid-cols-2 gap-4">
+                          <Input label="Landmark" value={addr.landmark} onChange={(e) => updateAddressField(idx, "landmark", e.target.value)} />
+                          <Input label="Street" value={addr.street} onChange={(e) => updateAddressField(idx, "street", e.target.value)} />
+                        </div>
+                        <div className="grid grid-cols-3 gap-4">
+                          <Input label="Pincode" value={addr.pincode} onChange={(e) => updateAddressField(idx, "pincode", e.target.value)} />
+                          <Input label="City" value={addr.city} onChange={(e) => updateAddressField(idx, "city", e.target.value)} />
+                          <Input label="State" value={addr.state} onChange={(e) => updateAddressField(idx, "state", e.target.value)} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="sticky bottom-0 bg-white pt-4 pb-2 border-t mt-8">
+                    <Button type="submit" className="w-full bg-[#744531] text-white rounded-2xl py-4 flex items-center justify-center gap-2 hover:bg-[#28543d] transition-all" disabled={saving}>
+                      {saving ? <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-white"></div> : "Save & Continue"}
+                    </Button>
+                  </div>
+                </form>
+              </div>
+            </motion.div>
+          </div>
+        )}
       </div>
     );
   }
@@ -545,15 +639,15 @@ function Profile() {
                   {addresses.map((addr, idx) => (
                     <div key={idx} className="bg-gray-50 rounded-[2rem] p-6 border border-gray-100 space-y-4 relative">
                       {addresses.length > 1 && <button type="button" onClick={() => removeAddress(idx)} className="absolute top-6 right-6 text-red-400 hover:text-red-600 transition-colors"><X className="w-4 h-4" /></button>}
-                      <Input label="Residency Address" value={addr.residencyAddress} onChange={(e) => updateAddressField(idx, "residencyAddress", e.target.value)} />
+                      <Input label="Residency Address *" value={addr.residencyAddress} onChange={(e) => updateAddressField(idx, "residencyAddress", e.target.value)} />
                       <div className="grid grid-cols-2 gap-4">
-                        <Input label="Landmark" value={addr.landmark} onChange={(e) => updateAddressField(idx, "landmark", e.target.value)} />
-                        <Input label="Street" value={addr.street} onChange={(e) => updateAddressField(idx, "street", e.target.value)} />
+                        <Input label="Landmark (Optional)" value={addr.landmark} onChange={(e) => updateAddressField(idx, "landmark", e.target.value)} />
+                        <Input label="Street / Area *" value={addr.street} onChange={(e) => updateAddressField(idx, "street", e.target.value)} />
                       </div>
                       <div className="grid grid-cols-3 gap-4">
-                        <Input label="Pincode" value={addr.pincode} onChange={(e) => updateAddressField(idx, "pincode", e.target.value)} />
-                        <Input label="City" value={addr.city} onChange={(e) => updateAddressField(idx, "city", e.target.value)} />
-                        <Input label="State" value={addr.state} onChange={(e) => updateAddressField(idx, "state", e.target.value)} />
+                        <Input label="Pincode *" value={addr.pincode} onChange={(e) => updateAddressField(idx, "pincode", e.target.value)} />
+                        <Input label="City *" value={addr.city} onChange={(e) => updateAddressField(idx, "city", e.target.value)} />
+                        <Input label="State *" value={addr.state} onChange={(e) => updateAddressField(idx, "state", e.target.value)} />
                       </div>
                     </div>
                   ))}

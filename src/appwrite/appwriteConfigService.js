@@ -605,6 +605,10 @@ export class appwriteConfigService {
       // Return items parsed for frontend
       return { ...updatedDoc, items };
     } catch (error) {
+      if (error.code === 404) {
+        // Doc doesn't exist, create it
+        return await this.createCart({ user_id, items });
+      }
       console.error("Appwrite :: updateCart error ::", error);
       throw error;
     }
@@ -612,11 +616,16 @@ export class appwriteConfigService {
 
   async getCart(user_id) {
     try {
-      const doc = await this.databases.getDocument(
+      const res = await this.databases.listDocuments(
         conf.appwriteDatabaseId,
         conf.appwriteCartsCollection,
-        user_id
+        [Query.equal("user_id", user_id)]
       );
+
+      const doc = res.documents[0];
+      if (!doc) {
+        return { items: {} };
+      }
 
       return {
         ...doc,
@@ -639,6 +648,9 @@ export class appwriteConfigService {
 
       return { ...updatedDoc, items: {} }; // return empty object
     } catch (error) {
+      if (error.code === 404) {
+        return { items: {} };
+      }
       console.error("Appwrite :: emptyCart error ::", error);
       throw error;
     }
