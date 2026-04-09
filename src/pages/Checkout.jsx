@@ -520,24 +520,43 @@ function Checkout() {
           const amount = (order.total_cents / 100).toFixed(2);
           const customerName = profile.displayName || "Customer";
           const customerEmail = authUser.email || "";
+          const paymentMode = order.paymentMode || "COD";
 
-          // 1. Email via FormSubmit.co
-          const emailData = new FormData();
-          emailData.append("Order ID", `#${orderId}`);
-          emailData.append("Customer", customerName);
-          emailData.append("Email", customerEmail);
-          emailData.append("Total Amount", `₹${amount}`);
-          emailData.append("Delivery Date", farthestDeliveryDate);
-          emailData.append("Items", JSON.stringify(orderItems, null, 2));
-          emailData.append("Address", JSON.stringify(selectedAddress, null, 2));
-          emailData.append("_subject", `New Order Received: #${orderId}`);
-          emailData.append("_cc", customerEmail); // CC to customer
-          emailData.append("_template", "table");
+          // Format items for a readable email list
+          const itemsListText = orderItems.map(item => 
+            `${item.name} x ${item.qty} (₹${(item.item_total_cents / 100).toFixed(2)})`
+          ).join("\n");
+
+          // 1. Email via FormSubmit.co (AJAX Version)
+          const payload = {
+            _subject: `New ${paymentMode} Order: #${orderId}`,
+            "Order ID": `#${orderId}`,
+            "Customer Name": customerName,
+            "Customer Email": customerEmail,
+            "Total Amount": `₹${amount}`,
+            "Payment Method": paymentMode,
+            "Delivery Date": farthestDeliveryDate,
+            "Order Items": itemsListText,
+            "Shipping Address": JSON.stringify(selectedAddress, null, 2),
+            _template: "table",
+            _captcha: "false"
+          };
+
+          // CC the customer for their confirmation
+          if (customerEmail) {
+            payload._cc = customerEmail;
+          }
 
           fetch("https://formsubmit.co/ajax/truesoilorganic@gmail.com", {
             method: "POST",
-            body: emailData,
-          }).catch(err => console.error("Email notification failed", err));
+            headers: { 
+              "Content-Type": "application/json",
+              "Accept": "application/json"
+            },
+            body: JSON.stringify(payload),
+          })
+          .then(res => res.json())
+          .catch(err => console.error("Email notification failed", err));
 
         } catch (err) {
           console.error("Failed to trigger notifications", err);
