@@ -56,7 +56,6 @@ export default function ClientLogin() {
         setError("Logged in but failed to fetch cart.");
       }
 
-      console.log("[ClientLogin] Success:", user);
     } catch (err) {
       console.error("[ClientLogin] Error:", err);
       setError(err.message || "Login failed. Please try again.");

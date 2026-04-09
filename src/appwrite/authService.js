@@ -23,10 +23,8 @@ export class AuthService {
         name
       );
       if (userAccount) {
-        console.log("User Created Successfully");
         return userAccount;
       } else {
-        console.log("An Error Occurred While Creating User");
         return userAccount;
       }
     } catch (error) {
@@ -135,7 +133,7 @@ export class AuthService {
         (m) => m.userId === user.$id && m.confirm
       );
     } catch (error) {
-      console.log("Appwrite Error :: isAdmin :: " + error.message);
+      console.error("Appwrite Error :: isAdmin :: " + error.message);
       return false;
     }
   }

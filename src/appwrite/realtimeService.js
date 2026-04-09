@@ -66,5 +66,4 @@ export const initRealtimeSubscriptions = () => {
       }
     );
   });
-  console.log("[Realtime] Subscriptions initialized for collections:", Object.keys(collectionHandlers));
 };

@@ -180,7 +180,7 @@ export class appwriteConfigService {
         slug
       );
     } catch (error) {
-      console.log("Appwrite :: deleteProduct error ::", error);
+      console.error("Appwrite :: deleteProduct error ::", error);
       throw error;
     }
   }
@@ -252,7 +252,7 @@ export class appwriteConfigService {
 
       return { ...res, documents };
     } catch (error) {
-      console.log("Appwrite :: listProducts error ::", error);
+      console.error("Appwrite :: listProducts error ::", error);
       throw error;
     }
   }
@@ -297,7 +297,7 @@ export class appwriteConfigService {
         ]
       );
     } catch (error) {
-      console.log("Appwrite :: createSubscription error ::", error);
+      console.error("Appwrite :: createSubscription error ::", error);
       throw error;
     }
   }
@@ -332,7 +332,7 @@ export class appwriteConfigService {
       );
       return res.documents || [];
     } catch (error) {
-      console.log("Appwrite :: listSubscriptions error ::", error);
+      console.error("Appwrite :: listSubscriptions error ::", error);
       throw error;
     }
   }
@@ -346,7 +346,7 @@ export class appwriteConfigService {
         updates
       );
     } catch (error) {
-      console.log("Appwrite :: updateSubscription error ::", error);
+      console.error("Appwrite :: updateSubscription error ::", error);
       throw error;
     }
   }
@@ -359,7 +359,7 @@ export class appwriteConfigService {
         subscriptionId
       );
     } catch (error) {
-      console.log("Appwrite :: deleteSubscription error ::", error);
+      console.error("Appwrite :: deleteSubscription error ::", error);
       throw error;
     }
   }
@@ -373,7 +373,7 @@ export class appwriteConfigService {
         { discount }
       );
     } catch (error) {
-      console.log("Appwrite :: updateProductDiscount error ::", error);
+      console.error("Appwrite :: updateProductDiscount error ::", error);
       throw error;
     }
   }
@@ -429,7 +429,7 @@ export class appwriteConfigService {
         }
       );
     } catch (error) {
-      console.log("Appwrite :: createCategory error ::", error);
+      console.error("Appwrite :: createCategory error ::", error);
       throw error;
     }
   }
@@ -445,7 +445,7 @@ export class appwriteConfigService {
         }
       );
     } catch (error) {
-      console.log("Appwrite :: updateCategory error ::", error);
+      console.error("Appwrite :: updateCategory error ::", error);
       throw error;
     }
   }
@@ -458,7 +458,7 @@ export class appwriteConfigService {
         slug
       );
     } catch (error) {
-      console.log("Appwrite :: deleteCategory error ::", error);
+      console.error("Appwrite :: deleteCategory error ::", error);
       throw error;
     }
   }
@@ -471,7 +471,7 @@ export class appwriteConfigService {
         queries
       );
     } catch (error) {
-      console.log("Appwrite :: listCategories error ::", error);
+      console.error("Appwrite :: listCategories error ::", error);
       throw error;
     }
   }
@@ -517,7 +517,7 @@ export class appwriteConfigService {
         [Permission.read(Role.user(user_id))]
       );
     } catch (error) {
-      console.log("Appwrite :: createOrder error ::", error);
+      console.error("Appwrite :: createOrder error ::", error);
       throw error;
     }
   }
@@ -534,7 +534,7 @@ export class appwriteConfigService {
         }
       );
     } catch (error) {
-      console.log("Appwrite :: updateOrder error ::", error);
+      console.error("Appwrite :: updateOrder error ::", error);
       throw error;
     }
   }
@@ -546,7 +546,7 @@ export class appwriteConfigService {
         conf.appwriteOrdersCollection
       );
     } catch (error) {
-      console.log("Appwrite :: listOrders error ::", error);
+      console.error("Appwrite :: listOrders error ::", error);
       throw error;
     }
   }
@@ -559,7 +559,7 @@ export class appwriteConfigService {
         orderNumber
       );
     } catch (error) {
-      console.log("Appwrite :: getOrder error ::", error);
+      console.error("Appwrite :: getOrder error ::", error);
       throw error;
     }
   }
@@ -583,7 +583,7 @@ export class appwriteConfigService {
         ]
       );
     } catch (error) {
-      console.log("Appwrite :: createCart error ::", error);
+      console.error("Appwrite :: createCart error ::", error);
       throw error;
     }
   }
@@ -605,7 +605,7 @@ export class appwriteConfigService {
       // Return items parsed for frontend
       return { ...updatedDoc, items };
     } catch (error) {
-      console.log("Appwrite :: updateCart error ::", error);
+      console.error("Appwrite :: updateCart error ::", error);
       throw error;
     }
   }
@@ -623,7 +623,7 @@ export class appwriteConfigService {
         items: doc.items ? JSON.parse(doc.items) : {}, // auto parse
       };
     } catch (error) {
-      console.log("Appwrite :: getCart error ::", error);
+      console.error("Appwrite :: getCart error ::", error);
       throw error;
     }
   }
@@ -639,7 +639,7 @@ export class appwriteConfigService {
 
       return { ...updatedDoc, items: {} }; // return empty object
     } catch (error) {
-      console.log("Appwrite :: emptyCart error ::", error);
+      console.error("Appwrite :: emptyCart error ::", error);
       throw error;
     }
   }
@@ -652,7 +652,7 @@ export class appwriteConfigService {
         user_id
       );
     } catch (error) {
-      console.log("Appwrite :: deleteCart error ::", error);
+      console.error("Appwrite :: deleteCart error ::", error);
       throw error;
     }
   }
@@ -665,7 +665,7 @@ export class appwriteConfigService {
         file
       );
     } catch (error) {
-      console.log("Appwrite :: uploadFile error ::", error);
+      console.error("Appwrite :: uploadFile error ::", error);
       return false;
     }
   }
@@ -675,7 +675,7 @@ export class appwriteConfigService {
       await this.storage.deleteFile(conf.appwriteBucketId, fileId);
       return true;
     } catch (error) {
-      console.log("Appwrite :: deleteFile error ::", error);
+      console.error("Appwrite :: deleteFile error ::", error);
       return false;
     }
   }
@@ -711,7 +711,7 @@ export class appwriteConfigService {
         ]
       );
     } catch (error) {
-      console.log("Appwrite :: createUserProfile error ::", error);
+      console.error("Appwrite :: createUserProfile error ::", error);
       throw error;
     }
   }
@@ -724,7 +724,7 @@ export class appwriteConfigService {
         user_id
       );
     } catch (error) {
-      console.log("Appwrite :: deleteUserProfile error ::", error);
+      console.error("Appwrite :: deleteUserProfile error ::", error);
       throw error;
     }
   }
@@ -744,7 +744,7 @@ export class appwriteConfigService {
         }
       );
     } catch (error) {
-      console.log("Appwrite :: updateUserProfile error ::", error);
+      console.error("Appwrite :: updateUserProfile error ::", error);
       throw error;
     }
   }
@@ -757,7 +757,7 @@ export class appwriteConfigService {
         queries
       );
     } catch (error) {
-      console.log("Appwrite :: listUserProfiles error ::", error);
+      console.error("Appwrite :: listUserProfiles error ::", error);
       throw error;
     }
   }
@@ -775,7 +775,7 @@ export class appwriteConfigService {
       // Return the first matching document
       return res.documents[0] || null;
     } catch (error) {
-      console.log("Appwrite :: getUserProfile error ::", error);
+      console.error("Appwrite :: getUserProfile error ::", error);
       throw error;
     }
   }
@@ -790,7 +790,7 @@ export class appwriteConfigService {
         { title, description }
       );
     } catch (error) {
-      console.log("Appwrite :: createAd error ::", error);
+      console.error("Appwrite :: createAd error ::", error);
       throw error;
     }
   }
@@ -804,7 +804,7 @@ export class appwriteConfigService {
         { title, description }
       );
     } catch (error) {
-      console.log("Appwrite :: updateAd error ::", error);
+      console.error("Appwrite :: updateAd error ::", error);
       throw error;
     }
   }
@@ -817,7 +817,7 @@ export class appwriteConfigService {
         adId
       );
     } catch (error) {
-      console.log("Appwrite :: deleteAd error ::", error);
+      console.error("Appwrite :: deleteAd error ::", error);
       throw error;
     }
   }
@@ -830,7 +830,7 @@ export class appwriteConfigService {
         queries
       );
     } catch (error) {
-      console.log("Appwrite :: listAds error ::", error);
+      console.error("Appwrite :: listAds error ::", error);
       throw error;
     }
   }
@@ -845,7 +845,7 @@ export class appwriteConfigService {
       );
       return res.documents[0] ?? null;
     } catch (error) {
-      console.log("Appwrite :: getActiveAd error ::", error);
+      console.error("Appwrite :: getActiveAd error ::", error);
       throw error;
     }
   }
@@ -872,7 +872,7 @@ export class appwriteConfigService {
         );
       }
     } catch (error) {
-      console.log("Appwrite :: setActiveAd error ::", error);
+      console.error("Appwrite :: setActiveAd error ::", error);
       throw error;
     }
   }
@@ -889,7 +889,7 @@ export class appwriteConfigService {
         );
       }
     } catch (error) {
-      console.log("Appwrite :: clearActiveAd error ::", error);
+      console.error("Appwrite :: clearActiveAd error ::", error);
       throw error;
     }
   }
@@ -931,7 +931,7 @@ export class appwriteConfigService {
         { rating }
       );
     } catch (error) {
-      console.log("Appwrite :: updateReview error ::", error);
+      console.error("Appwrite :: updateReview error ::", error);
       throw error;
     }
   }
@@ -944,7 +944,7 @@ export class appwriteConfigService {
         [Query.equal("productID", productId)]
       );
     } catch (error) {
-      console.log("Appwrite :: listReview error ::", error);
+      console.error("Appwrite :: listReview error ::", error);
       throw error;
     }
   }
@@ -960,7 +960,7 @@ export class appwriteConfigService {
       );
     } catch (error) {
       if (error?.code === 404) return null;
-      console.log("Appwrite :: getUserReview error ::", error);
+      console.error("Appwrite :: getUserReview error ::", error);
       throw error;
     }
   }
@@ -971,7 +971,7 @@ export class appwriteConfigService {
       await this.createReview({ product_id, user_id, rating });
       return await this.updateProductReviewStats(product_id);
     } catch (error) {
-      console.log("Appwrite :: rateProduct error ::", error);
+      console.error("Appwrite :: rateProduct error ::", error);
       throw error;
     }
   }

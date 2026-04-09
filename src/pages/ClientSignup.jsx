@@ -94,13 +94,11 @@ function ClientSignup() {
       // ROLLBACK SAFETY
       try {
         if (createdUserId) {
-          console.log("[Rollback] Cleaning up resources for user:", createdUserId);
           if (isCartCreated) await appwriteConfigService.deleteCart(createdUserId);
           if (isProfileCreated) await appwriteConfigService.deleteUserProfile(createdUserId);
           
           // Delete account last (requires active session, which we have if login succeeded)
           await appwriteAuthService.deleteAccount();
-          console.log("[Rollback] Cleanup successful.");
         }
       } catch (rollbackErr) {
         console.error("[Rollback] Critical failure during cleanup:", rollbackErr);
