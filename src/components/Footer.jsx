@@ -27,13 +27,13 @@ function Footer() {
           </p>
           <div className="flex space-x-4">
             <Link
-              href="#"
+              href="https://www.instagram.com/truesoilorganics?igsh=aWZ6ZnptOW5kaHRj"
               className="text-white hover:text-[#E7CE9D] transition-colors"
             >
               <Instagram className="h-6 w-6" />
             </Link>
             <Link
-              href="#"
+              href="https://youtube.com/@truesoilorganics?si=pUAYYc5LJDDia5Dc"
               className="text-white hover:text-[#E7CE9D] transition-colors"
             >
               <Youtube className="h-6 w-6" />
