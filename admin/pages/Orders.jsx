@@ -2,7 +2,9 @@ import React, { useEffect, useState } from "react";
 import { DataTable } from "../components";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchOrders } from "../../src/store/ordersSlice";
+import { fetchUsers } from "../../src/store/usersSlice";
 import appwriteService from "../../src/appwrite/appwriteConfigService";
+import { MessageCircle, Mail } from "lucide-react";
 
 function Orders() {
   const dispatch = useDispatch();
@@ -13,11 +15,60 @@ function Orders() {
     fetched,
   } = useSelector((state) => state.orders);
 
+  const {
+    items: usersList,
+    fetched: usersFetched,
+    loading: usersLoading,
+  } = useSelector((state) => state.users);
+
   const [rows, setRows] = useState([]);
   const [rowLoading, setRowLoading] = useState({});
 
   const paymentStatusOptions = ["Pending", "Paid", "Failed"];
   const orderStatusOptions = ["pending", "cancelled", "delivered", "shipped"];
+  
+  const getCommunicationTemplates = (order) => {
+    const orderId = order.$id?.slice(-8).toUpperCase();
+    const customerName = order.userName || "Customer";
+    const status = (order.fulfillmentStatus || "pending").toLowerCase();
+    const payment = (order.paymentStatus || "Pending").toLowerCase();
+
+    let waMessage = "";
+    let emailSubject = "";
+    let emailBody = "";
+
+    if (status === "cancelled") {
+      waMessage = `Hello ${customerName}, we regret to inform you that your order #${orderId} has been cancelled. If you have any questions, please let us know.`;
+      emailSubject = `Order Cancellation - #${orderId}`;
+      emailBody = `Hello ${customerName},\n\nYour order #${orderId} has been cancelled. If you didn't request this or have any questions, please contact our support team.`;
+    } else if (status === "delivered") {
+      waMessage = `Hello ${customerName}, your order #${orderId} has been delivered! We hope you love your True Soil products. Please leave us a review!`;
+      emailSubject = `Order Delivered! - #${orderId}`;
+      emailBody = `Hello ${customerName},\n\nGreat news! Your order #${orderId} has been delivered. We hope you enjoy your farm-fresh products.\n\nCould you take a moment to leave us a review? Your feedback helps our farmers!`;
+    } else if (status === "shipped") {
+      waMessage = `Hello ${customerName}, your order #${orderId} is on its way! It has been shipped and should reach you soon.`;
+      emailSubject = `Your Order is Out for Delivery! - #${orderId}`;
+      emailBody = `Hello ${customerName},\n\nYour order #${orderId} has been shipped and is on its way to your destination.\n\nThank you for choosing True Soil Organics!`;
+    } else {
+      // Pending
+      if (payment === "pending") {
+        waMessage = `Hello ${customerName}, thank you for your order #${orderId}. We are waiting to confirm your payment to begin processing.`;
+        emailSubject = `Action Required: Payment Pending for Order #${orderId}`;
+        emailBody = `Hello ${customerName},\n\nThank you for your order #${orderId}. We noticed the payment is still pending. Please complete the payment so our farmers can start preparing your fresh harvest.`;
+      } else {
+        waMessage = `Hello ${customerName}, we've received your order #${orderId} and our farmers are now preparing your items!`;
+        emailSubject = `Order Confirmed - #${orderId}`;
+        emailBody = `Hello ${customerName},\n\nYour order #${orderId} is confirmed and our farmers at Gir are now preparing your items for shipment. We will notify you once it's on the way!`;
+      }
+    }
+
+    return { 
+      wa: encodeURIComponent(waMessage), 
+      emailSub: encodeURIComponent(emailSubject), 
+      emailBody: encodeURIComponent(emailBody) 
+    };
+  };
+
   const capitalizeFirst = (str = "") =>
     str ? str.charAt(0).toUpperCase() + str.slice(1).toLowerCase() : "";
   const getPaymentStatusClass = (status = "") => {
@@ -198,6 +249,64 @@ function Orders() {
     },
     { header: "Payment Mode", accessor: "paymentMode" },
     {
+      header: "Contact",
+      accessor: "actions",
+      render: (row) => {
+        const templates = getCommunicationTemplates(row);
+        
+        // Find matching use in global users list as fallback for old orders
+        const linkedUser = usersList?.find(u => u.$id === row.user_id || u.user_id === row.user_id);
+        
+        // Use userPhone if available, else try simple phone field, then linked user profile
+        const rawPhoneInput = (row.userPhone || row.phone || linkedUser?.phone || "").toString();
+        let rawPhone = rawPhoneInput.replace(/\D/g, "");
+        if (rawPhone.startsWith("91") && rawPhone.length > 10) rawPhone = rawPhone.slice(2);
+        if (rawPhone.startsWith("0")) rawPhone = rawPhone.slice(1);
+        
+        const phone = rawPhone.length === 10 ? rawPhone : null;
+        const waUrl = phone ? `https://wa.me/91${phone}?text=${templates.wa}` : "#";
+        
+        // Use userEmail if available, else try email field, then linked user profile
+        const destinationEmail = row.userEmail || row.email || linkedUser?.email || "";
+        const gmailUrl = destinationEmail 
+          ? `https://mail.google.com/mail/u/truesoilorganic@gmail.com/compose?view=cm&fs=1&to=${destinationEmail}&su=${templates.emailSub}&body=${templates.emailBody}`
+          : "#";
+
+        return (
+          <div className="flex items-center gap-3">
+            <a
+              href={waUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              title={phone ? "Message on WhatsApp" : "Phone number missing in order & profile"}
+              onClick={(e) => e.stopPropagation()}
+              className={`p-1.5 rounded-lg transition-all shadow-sm ${
+                phone 
+                ? "bg-green-50 text-green-600 hover:bg-green-600 hover:text-white" 
+                : "bg-gray-100 text-gray-400 cursor-not-allowed"
+              }`}
+            >
+              <MessageCircle size={16} />
+            </a>
+            <a
+              href={gmailUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              title={destinationEmail ? "Send via Gmail (truesoilorganic@gmail.com)" : "Email missing in order & profile"}
+              onClick={(e) => e.stopPropagation()}
+              className={`p-1.5 rounded-lg transition-all shadow-sm ${
+                destinationEmail
+                ? "bg-blue-50 text-[#DB4437] hover:bg-[#DB4437] hover:text-white"
+                : "bg-gray-100 text-gray-400 cursor-not-allowed"
+              }`}
+            >
+              <Mail size={16} />
+            </a>
+          </div>
+        );
+      },
+    },
+    {
       header: "",
       accessor: "__rowLoader",
       render: (row) =>
@@ -215,7 +324,10 @@ function Orders() {
     if (!fetched && !loading) {
       dispatch(fetchOrders());
     }
-  }, [dispatch, fetched, loading]);
+    if (!usersFetched && !usersLoading) {
+      dispatch(fetchUsers());
+    }
+  }, [dispatch, fetched, loading, usersFetched, usersLoading]);
 
   return (
     <div className="p-6">

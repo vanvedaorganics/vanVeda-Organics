@@ -461,6 +461,8 @@ function Checkout() {
             }),
             shippingAddress,
             total_cents: totals.subtotalCents,
+            userEmail: profile.email || "",
+            userPhone: profile.phone || "",
             delivery_date: farthestDeliveryDate,
             paymentMode: pMode,
             paymentStatus: paymentId ? "Paid" : "Pending",
