@@ -79,10 +79,10 @@ function Orders() {
   };
   const getOrderStatusClass = (status = "") => {
     const s = status.toLowerCase();
-    if (s === "delivered") return "text-green-600";
-    if (s === "shipped") return "text-blue-600";
-    if (s === "cancelled") return "text-red-600";
-    return "text-amber-600";
+    if (s === "delivered" || s === "completed") return "text-green-600 font-bold";
+    if (s === "shipped") return "text-blue-600 font-bold";
+    if (s === "cancelled") return "text-red-600 font-bold";
+    return "text-amber-600 font-bold";
   };
 
   useEffect(() => {
@@ -106,10 +106,16 @@ function Orders() {
     );
 
     try {
-      const payload =
-        field === "paymentStatus"
-          ? { paymentStatus: value }
-          : { fulfillmentStatus: value };
+      const payload = {};
+      
+      if (field === "paymentStatus") {
+        payload.paymentStatus = value;
+      } else if (field === "fulfillmentStatus") {
+        payload.fulfillmentStatus = value;
+      } else if (field === "shipment_number") {
+        payload.shipment_number = value;
+      }
+
       await appwriteService.updateOrder(orderId, payload);
     } catch (err) {
       console.error("Failed to update order status", err);
@@ -165,6 +171,25 @@ function Orders() {
   const columns = [
     { header: "Order No.", accessor: "$id" },
     { header: "Customer", accessor: "userName" },
+    {
+      header: "Shipment No.",
+      accessor: "shipment_number",
+      render: (row) => (
+        <div className="flex flex-col gap-1">
+          <input
+            type="text"
+            placeholder="Add Shipment #"
+            className="border border-[#E7CE9D]/40 rounded-lg px-2 py-1 text-xs focus:border-[#28543d] outline-none w-32"
+            defaultValue={row.shipment_number || ""}
+            onBlur={(e) => {
+              if (e.target.value !== (row.shipment_number || "")) {
+                handleStatusChange(row.$id, "shipment_number", e.target.value);
+              }
+            }}
+          />
+        </div>
+      ),
+    },
     { header: "Items", accessor: "items", render: renderOrderItems },
     {
       header: "Shipping Address",

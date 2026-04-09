@@ -204,6 +204,21 @@ function Profile() {
     }
   };
 
+  const handleCancelOrder = async (orderId) => {
+    if (!window.confirm("Are you sure you want to cancel this order?")) return;
+    try {
+      setOrdersLoading(true);
+      await appwriteConfigService.updateOrder(orderId, { fulfillmentStatus: "cancelled" });
+      const userOrders = await appwriteConfigService.listOrders({ user_id: profile.$id });
+      setOrders(userOrders.documents || []);
+    } catch (err) {
+      console.error("Failed to cancel order:", err);
+      alert("Failed to cancel order: " + err.message);
+    } finally {
+      setOrdersLoading(false);
+    }
+  };
+
   const openModal = () => {
     reset({
       displayName: profile?.displayName || "",
@@ -604,13 +619,13 @@ function Profile() {
                   <section>
                     <div className="flex items-center gap-3 mb-6"><div className="w-8 h-8 bg-amber-50 rounded-full flex items-center justify-center"><Clock className="w-4 h-4 text-amber-600" /></div><h3 className="syne-bold text-xl text-[#201413]">Active Orders</h3><div className="h-px flex-1 bg-gray-100" /></div>
                     {currentOrders.length === 0 ? <div className="bg-white p-12 rounded-[2rem] border border-[#E7CE9D]/10 text-center"><p className="text-sm font-bold text-gray-400 uppercase tracking-widest">No active shipments</p></div> : (
-                      <div className="space-y-6">{currentOrders.map((o) => <OrderCard key={o.$id} order={o} formatINR={formatINR} safeJSONParse={safeJSONParse} normalizeStatus={normalizeStatus} />)}</div>
+                      <div className="space-y-6">{currentOrders.map((o) => <OrderCard key={o.$id} order={o} formatINR={formatINR} safeJSONParse={safeJSONParse} normalizeStatus={normalizeStatus} onCancel={handleCancelOrder} />)}</div>
                     )}
                   </section>
                   <section>
                     <div className="flex items-center gap-3 mb-6"><div className="w-8 h-8 bg-green-50 rounded-full flex items-center justify-center"><CheckCircle2 className="w-4 h-4 text-green-600" /></div><h3 className="syne-bold text-xl text-[#201413]">Complete History</h3><div className="h-px flex-1 bg-gray-100" /></div>
                     {pastOrders.length === 0 ? <div className="bg-white p-12 rounded-[2rem] border border-[#E7CE9D]/10 text-center"><p className="text-sm font-bold text-gray-400 uppercase tracking-widest">History is empty</p></div> : (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">{pastOrders.map((o) => <OrderCard key={o.$id} order={o} formatINR={formatINR} safeJSONParse={safeJSONParse} normalizeStatus={normalizeStatus} />)}</div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">{pastOrders.map((o) => <OrderCard key={o.$id} order={o} formatINR={formatINR} safeJSONParse={safeJSONParse} normalizeStatus={normalizeStatus} onCancel={handleCancelOrder} />)}</div>
                     )}
                   </section>
                 </motion.div>
@@ -684,7 +699,7 @@ function Profile() {
 }
 
 // Subcomponent: OrderCard
-function OrderCard({ order, formatINR, safeJSONParse, normalizeStatus }) {
+function OrderCard({ order, formatINR, safeJSONParse, normalizeStatus, onCancel }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const orderItems = safeJSONParse(order.items, { items: [], summary: {} });
   const shippingAddr = safeJSONParse(order.shippingAddress, null);
@@ -741,6 +756,23 @@ function OrderCard({ order, formatINR, safeJSONParse, normalizeStatus }) {
                     <p className="text-xs text-gray-500 mt-1 italic">{shippingAddr.street}, {shippingAddr.city} {shippingAddr.pincode}</p>
                   </div>
                 </div>
+              )}
+              {order.shipment_number && (
+                <div className="p-5 bg-blue-50/30 rounded-[1.5rem] border border-blue-100 flex items-start gap-3">
+                  <div className="w-4 h-4 text-blue-600 mt-1"><Package size={16} /></div>
+                  <div>
+                    <p className="text-[10px] font-black uppercase text-blue-600 tracking-widest mb-1">Shipment Number</p>
+                    <p className="text-sm font-bold text-[#201413] leading-tight">{order.shipment_number}</p>
+                  </div>
+                </div>
+              )}
+              {normalizeStatus(order.fulfillmentStatus) === "pending" && (
+                <button
+                  onClick={() => onCancel(order.$id)}
+                  className="w-full py-3 text-xs font-black uppercase tracking-widest text-red-500 hover:text-red-700 transition-colors border-2 border-dashed border-red-100 rounded-2xl"
+                >
+                  Cancel Order
+                </button>
               )}
             </div>
           </motion.div>

@@ -522,16 +522,13 @@ export class appwriteConfigService {
     }
   }
 
-  async updateOrder(orderNumber, { paymentStatus, fulfillmentStatus }) {
+  async updateOrder(orderNumber, updates) {
     try {
       return await this.databases.updateDocument(
         conf.appwriteDatabaseId,
         conf.appwriteOrdersCollection,
         orderNumber,
-        {
-          paymentStatus,
-          fulfillmentStatus,
-        }
+        updates
       );
     } catch (error) {
       console.error("Appwrite :: updateOrder error ::", error);

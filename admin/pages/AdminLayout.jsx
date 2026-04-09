@@ -12,6 +12,7 @@ import {
   ShoppingCart,
   Megaphone,
   Tag,
+  RefreshCw,
   X,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
@@ -141,6 +142,19 @@ export default function AdminLayout() {
           >
             <Tag size={15} />
             Offers
+          </NavLink>
+          <NavLink
+            to="/admin/subscriptions"
+            className={({ isActive }) =>
+              `px-3 py-2 rounded flex items-center gap-3 ${
+                isActive
+                  ? "bg-[#dfb96a] text-[#084629] font-bold"
+                  : "hover:bg-green-800"
+              }`
+            }
+          >
+            <RefreshCw size={15} />
+            Subscriptions
           </NavLink>
         </nav>
       </aside>
