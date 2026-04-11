@@ -32,9 +32,10 @@ export class appwriteConfigService {
     description,
     sku,
     categories = null,
-    packaging_size = [], // may be objects or already strings
+    packaging_size = [],
     currency = "INR",
     discount = 0,
+    stock = null,
     batch = null,
     allowed_payment_modes,
   }) {
@@ -78,6 +79,8 @@ export class appwriteConfigService {
       packaging_size: serialized,
       currency,
       discount,
+      // stock: null means "not tracked"; any integer means tracked
+      ...(stock !== null && stock !== undefined ? { stock } : {}),
     };
 
     // Extended payload — newer attributes that may not exist in all schemas
@@ -130,6 +133,7 @@ export class appwriteConfigService {
       packaging_size = [],
       currency = "INR",
       discount = 0,
+      stock = null,
       batch,
       allowed_payment_modes,
     }
@@ -173,6 +177,8 @@ export class appwriteConfigService {
       packaging_size: serialized,
       currency,
       discount,
+      // stock: null means "not tracked"; any integer means tracked
+      ...(stock !== null && stock !== undefined ? { stock } : {}),
     };
 
     // Extended payload — includes newer attributes that may not exist in

@@ -130,6 +130,7 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
       sku: initialData?.sku || "",
       description: initialData?.description || "",
       discount: initialData?.discount ?? 0,
+      stock: initialData?.stock ?? "",
       category:
         initialData?.categories?.$id ??
         (typeof initialData?.categories === "string"
@@ -176,6 +177,7 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
         sku: initialData.sku || "",
         description: initialData.description || "",
         discount: initialData.discount ?? 0,
+        stock: initialData.stock ?? "",
         category:
           initialData?.categories?.$id ??
           (typeof initialData?.categories === "string"
@@ -403,6 +405,9 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
         sku: formData.sku,
         categories: formData.category || "",
         discount: parseInt(formData.discount, 10) || 0,
+        stock: formData.stock !== "" && formData.stock !== undefined
+          ? parseInt(formData.stock, 10)
+          : null,
         packaging_size,
         // currency omitted (defaults to "INR" server-side)
         batch, // NEW
@@ -436,6 +441,7 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
           sku: "",
           description: "",
           discount: 0,
+          stock: "",
           category: "",
           allowed_payment_modes: ["COD", "ONLINE"],
         });
@@ -618,6 +624,29 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
             error={errors.discount?.message}
           />
           <p className="text-[11px] text-gray-500">Optional.</p>
+        </div>
+
+        {/* Stock */}
+        <div className="space-y-1">
+          <Label htmlFor="stock">Stock (units)</Label>
+          <Input
+            id="stock"
+            type="number"
+            min="0"
+            placeholder="e.g. 100"
+            disabled={isSubmitting}
+            {...register("stock", {
+              min: { value: 0, message: "Stock cannot be negative" },
+            })}
+            error={errors.stock?.message}
+          />
+          {(() => {
+            const s = parseInt(watch("stock"), 10);
+            if (isNaN(s) || watch("stock") === "") return <p className="text-[11px] text-gray-500">Leave empty if not tracking stock.</p>;
+            if (s === 0) return <p className="text-[11px] text-red-600 font-semibold">⚠ Out of stock</p>;
+            if (s <= 10) return <p className="text-[11px] text-amber-600 font-semibold">⚠ Low stock</p>;
+            return <p className="text-[11px] text-emerald-600">✓ In stock</p>;
+          })()}
         </div>
 
         {/* Category */}

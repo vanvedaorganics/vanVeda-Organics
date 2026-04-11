@@ -308,6 +308,32 @@ export default function ProductsPage() {
           ? `${row.discount}%`
           : "0%",
     },
+    {
+      header: "Stock",
+      accessor: "stock",
+      render: (row) => {
+        const s = row.stock;
+        if (s === null || s === undefined)
+          return <span className="text-xs text-gray-400">—</span>;
+        if (s === 0)
+          return (
+            <span className="px-2 py-0.5 text-xs rounded-full bg-red-100 text-red-700 font-semibold border border-red-200">
+              Out of stock
+            </span>
+          );
+        if (s <= 10)
+          return (
+            <span className="px-2 py-0.5 text-xs rounded-full bg-amber-100 text-amber-700 font-semibold border border-amber-200">
+              Low · {s} left
+            </span>
+          );
+        return (
+          <span className="px-2 py-0.5 text-xs rounded-full bg-emerald-100 text-emerald-700 font-semibold border border-emerald-200">
+            {s} in stock
+          </span>
+        );
+      },
+    },
     // NEW: Batch column with dropdown viewer
     {
       header: "Batch",
