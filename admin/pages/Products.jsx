@@ -18,7 +18,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import appwriteService from "../../src/appwrite/appwriteConfigService";
-import { fetchProducts } from "../../src/store/productsSlice";
+import { fetchProducts, updateProduct as updateProductInStore, addProduct } from "../../src/store/productsSlice";
 import { getImageUrl } from "../../utils/getImageUrl";
 
 // Helpers to work with new schema
@@ -486,8 +486,19 @@ export default function ProductsPage() {
         title={editProduct ? "Edit Product" : "Add Product"}
       >
         <ProductsForm
-          onSuccess={() => {
+          onSuccess={(savedDoc) => {
+            // 1. Immediately patch the Redux store with the returned Appwrite doc
+            //    so the table reflects changes instantly without waiting for re-fetch
+            if (savedDoc) {
+              if (editProduct) {
+                dispatch(updateProductInStore(savedDoc));
+              } else {
+                dispatch(addProduct(savedDoc));
+              }
+            }
+            // 2. Full background re-fetch to stay in sync with Appwrite
             dispatch(fetchProducts());
+            // 3. Close the modal
             setProductModalOpen(false);
             setEditProduct(null);
           }}

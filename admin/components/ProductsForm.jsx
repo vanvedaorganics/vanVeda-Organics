@@ -409,10 +409,11 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
         allowed_payment_modes: formData.allowed_payment_modes, // NEW
       };
 
+      let result;
       if (isEdit) {
-        await appwriteService.updateProduct(formData.slug, payloadBase);
+        result = await appwriteService.updateProduct(formData.slug, payloadBase);
       } else {
-        await appwriteService.createProduct(payloadBase);
+        result = await appwriteService.createProduct(payloadBase);
       }
 
       // Best-effort deletion of replaced/removed images
@@ -444,7 +445,7 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
         setBatches([]);
       }
 
-      if (onSuccess) onSuccess();
+      if (onSuccess) onSuccess(result);
     } catch (err) {
       setSubmitError(getFriendlyErrorMessage(err));
     }

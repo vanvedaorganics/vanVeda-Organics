@@ -31,12 +31,12 @@ export class appwriteConfigService {
     name,
     description,
     sku,
-    categories = "",
+    categories = null,
     packaging_size = [], // may be objects or already strings
     currency = "INR",
     discount = 0,
     batch = null,
-    allowed_payment_modes = ["COD", "ONLINE"], // NEW
+    allowed_payment_modes,
   }) {
     const serialized = (
       Array.isArray(packaging_size) ? packaging_size : []
@@ -55,7 +55,7 @@ export class appwriteConfigService {
       }
     });
 
-    // NEW: sanitize + serialize batch array -> string or null
+    // Sanitize + serialize batch array -> string or null
     const batchArray = Array.isArray(batch) ? batch : [];
     const sanitizedBatch = batchArray
       .map((b) => ({
@@ -67,23 +67,57 @@ export class appwriteConfigService {
       ? JSON.stringify(sanitizedBatch)
       : null;
 
-    return await this.databases.createDocument(
-      conf.appwriteDatabaseId,
-      conf.appwriteProductsCollection,
+    // Core payload — confirmed fields always safe to send
+    const corePayload = {
+      name,
       slug,
-      {
-        name,
+      description,
+      sku,
+      // Send null for empty relationship — never send "" (Appwrite rejects it)
+      categories: categories || null,
+      packaging_size: serialized,
+      currency,
+      discount,
+    };
+
+    // Extended payload — newer attributes that may not exist in all schemas
+    const extendedPayload = {
+      ...corePayload,
+      ...(batchPayload !== null ? { batch: batchPayload } : {}),
+      ...(Array.isArray(allowed_payment_modes) && allowed_payment_modes.length
+        ? { allowed_payment_modes }
+        : {}),
+    };
+
+    try {
+      return await this.databases.createDocument(
+        conf.appwriteDatabaseId,
+        conf.appwriteProductsCollection,
         slug,
-        description,
-        sku,
-        categories,
-        packaging_size: serialized,
-        currency,
-        discount,
-        batch: batchPayload,
-        allowed_payment_modes,
+        extendedPayload
+      );
+    } catch (err) {
+      const isUnknownAttr =
+        /unknown attribute|invalid attribute|Extra attribute/i.test(
+          err?.message || ""
+        );
+      if (isUnknownAttr) {
+        console.warn(
+          "[createProduct] Retrying without extended attributes. " +
+            "Add 'batch' and 'allowed_payment_modes' to your Appwrite " +
+            "products collection to enable these features. Raw error:",
+          err.message
+        );
+        return await this.databases.createDocument(
+          conf.appwriteDatabaseId,
+          conf.appwriteProductsCollection,
+          slug,
+          corePayload
+        );
       }
-    );
+      console.error("[createProduct] Appwrite error:", err?.message, err);
+      throw err;
+    }
   }
 
   async updateProduct(
