@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contact Form Enquiry</title>
+</head>
+<body style="margin:0;padding:0;background:#f4f1eb;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f1eb;padding:32px 16px;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+
+          <!-- Header -->
+          <tr>
+            <td style="background:linear-gradient(135deg,#1a3628 0%,#28543d 60%,#744531 100%);padding:32px 40px;text-align:center;">
+              <p style="margin:0 0 6px;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#E7CE9D;opacity:0.9;">True Soil Organics</p>
+              <h1 style="margin:0;font-size:24px;font-weight:800;color:#ffffff;">New Contact Enquiry 📬</h1>
+            </td>
+          </tr>
+
+          <!-- Intro -->
+          <tr>
+            <td style="padding:28px 40px 0;">
+              <p style="margin:0;font-size:14px;color:#555;line-height:1.7;">
+                Someone has submitted the contact form on <strong style="color:#1a3628;">truesoilorganics.com</strong>. Here are the details:
+              </p>
+            </td>
+          </tr>
+
+          <!-- Details Card -->
+          <tr>
+            <td style="padding:20px 40px 24px;">
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#faf8f4;border-radius:12px;border:1px solid #e7ce9d;overflow:hidden;">
+                <tr>
+                  <td style="padding:14px 20px;border-bottom:1px solid #e7ce9d;">
+                    <p style="margin:0;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#744531;">Sender Details</p>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:20px;">
+                    <table width="100%" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="padding:6px 0;font-size:13px;color:#777;width:35%;vertical-align:top;">Name</td>
+                        <td style="padding:6px 0;font-size:13px;color:#1a3628;font-weight:700;">{{from_name}}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding:6px 0;font-size:13px;color:#777;vertical-align:top;">Email</td>
+                        <td style="padding:6px 0;font-size:13px;color:#28543d;font-weight:600;">
+                          <a href="mailto:{{from_email}}" style="color:#28543d;text-decoration:none;">{{from_email}}</a>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding:6px 0;font-size:13px;color:#777;vertical-align:top;">Phone</td>
+                        <td style="padding:6px 0;font-size:13px;color:#1a3628;">{{phone}}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding:6px 0;font-size:13px;color:#777;vertical-align:top;">Subject</td>
+                        <td style="padding:6px 0;font-size:13px;color:#744531;font-weight:700;">{{subject}}</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Message -->
+          <tr>
+            <td style="padding:0 40px 32px;">
+              <p style="margin:0 0 10px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#744531;">Message</p>
+              <div style="background:#f0f7f3;border-left:3px solid #28543d;border-radius:6px;padding:16px 18px;">
+                <p style="margin:0;font-size:14px;color:#1a3628;line-height:1.8;white-space:pre-wrap;">{{message}}</p>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Reply CTA -->
+          <tr>
+            <td style="padding:0 40px 32px;text-align:center;">
+              <a href="mailto:{{from_email}}" style="display:inline-block;background:linear-gradient(135deg,#28543d,#1a3628);color:#ffffff;text-decoration:none;font-size:14px;font-weight:700;padding:12px 28px;border-radius:30px;letter-spacing:0.3px;">
+                ✉️ Reply to {{from_name}}
+              </a>
+            </td>
+          </tr>
+
+          <!-- Divider -->
+          <tr>
+            <td style="padding:0 40px;">
+              <hr style="border:none;border-top:1px solid #e7e4dc;margin:0;" />
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding:24px 40px;text-align:center;">
+              <p style="margin:0 0 4px;font-size:13px;color:#744531;font-weight:700;">True Soil Organics</p>
+              <p style="margin:0;font-size:12px;color:#999;">Gir Gadhda, Somnath District, Gujarat – 362530, India</p>
+              <p style="margin:14px 0 0;font-size:11px;color:#bbb;">
+                © 2025 True Soil Organics. All rights reserved.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>

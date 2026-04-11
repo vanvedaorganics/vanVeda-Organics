@@ -15,6 +15,10 @@ const conf = {
     appwriteBucketId: String(import.meta.env.VITE_APPWRITE_BUCKET_ID),
     appwriteTeamsId: String(import.meta.env.VITE_APPWRITE_TEAMS_ID),
     razorpayKeyId: String(import.meta.env.VITE_RAZORPAY_KEY_ID),
+    emailjsPublicKey: String(import.meta.env.VITE_EMAILJS_PUBLIC_KEY),
+    emailjsServiceId: String(import.meta.env.VITE_EMAILJS_SERVICE_ID),
+    emailjsOrderTemplateId: String(import.meta.env.VITE_EMAILJS_ORDER_TEMPLATE_ID),
+    emailjsContactTemplateId: String(import.meta.env.VITE_EMAILJS_CONTACT_TEMPLATE_ID),
 }
 
 export default conf;

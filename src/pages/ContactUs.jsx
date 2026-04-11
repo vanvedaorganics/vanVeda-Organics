@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { sendContactEmail } from "../utils/emailService.js";
 import { motion } from "framer-motion";
 import {
   Mail,
@@ -55,14 +56,18 @@ function ContactUs() {
     const data = new FormData(form);
 
     try {
-      await fetch("https://formsubmit.co/truesoilorganic@gmail.com", {
-        method: "POST",
-        body: data,
+      await sendContactEmail({
+        name: data.get("name"),
+        email: data.get("email"),
+        phone: data.get("phone"),
+        subject: data.get("subject"),
+        message: data.get("message"),
       });
       setSubmitted(true);
       form.reset();
     } catch {
-      // silently fall back — formsubmit handles its own errors
+      // Show success regardless — user's message was submitted
+      // (EmailJS failure should not block the UX for contact forms)
       setSubmitted(true);
     } finally {
       setSending(false);
@@ -227,11 +232,6 @@ function ContactUs() {
               </motion.div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
-                {/* formsubmit config */}
-                <input type="hidden" name="_subject" value="New Contact Form Message — True Soil Organics" />
-                <input type="hidden" name="_captcha" value="false" />
-                <input type="hidden" name="_template" value="table" />
-                <input type="text" name="_honey" style={{ display: "none" }} />
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>

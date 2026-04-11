@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Order Confirmation</title>
+</head>
+<body style="margin:0;padding:0;background:#f4f1eb;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f1eb;padding:32px 16px;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+
+          <!-- Header -->
+          <tr>
+            <td style="background:linear-gradient(135deg,#1a3628 0%,#28543d 55%,#744531 100%);padding:36px 40px;text-align:center;">
+              <p style="margin:0 0 8px;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#E7CE9D;opacity:0.9;">True Soil Organics</p>
+              <h1 style="margin:0;font-size:28px;font-weight:800;color:#ffffff;letter-spacing:-0.5px;">Order Confirmed! 🌿</h1>
+              <p style="margin:10px 0 0;font-size:14px;color:rgba(255,255,255,0.75);">Thank you for choosing farm-fresh goodness</p>
+            </td>
+          </tr>
+
+          <!-- Greeting -->
+          <tr>
+            <td style="padding:32px 40px 0;">
+              <p style="margin:0;font-size:16px;color:#1a3628;font-weight:600;">Dear {{customer_name}},</p>
+              <p style="margin:10px 0 0;font-size:14px;color:#555;line-height:1.7;">
+                Your order has been successfully placed and is now being lovingly prepared by our farmers at Gir, Gujarat. 
+                We'll notify you once it's on its way!
+              </p>
+            </td>
+          </tr>
+
+          <!-- Order Summary Card -->
+          <tr>
+            <td style="padding:24px 40px;">
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#faf8f4;border-radius:12px;border:1px solid #e7ce9d;overflow:hidden;">
+                <tr>
+                  <td style="padding:16px 20px;border-bottom:1px solid #e7ce9d;">
+                    <p style="margin:0;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#744531;">Order Summary</p>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:20px;">
+                    <table width="100%" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="padding:6px 0;font-size:13px;color:#666;width:50%;">Order ID</td>
+                        <td style="padding:6px 0;font-size:13px;color:#1a3628;font-weight:700;text-align:right;">{{order_id}}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding:6px 0;font-size:13px;color:#666;">Payment Mode</td>
+                        <td style="padding:6px 0;font-size:13px;color:#1a3628;font-weight:600;text-align:right;">{{payment_mode}}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding:6px 0;font-size:13px;color:#666;">Estimated Delivery</td>
+                        <td style="padding:6px 0;font-size:13px;color:#28543d;font-weight:700;text-align:right;">{{delivery_date}}</td>
+                      </tr>
+                      <tr>
+                        <td colspan="2" style="padding-top:12px;border-top:1px dashed #e0ddd5;margin-top:8px;"></td>
+                      </tr>
+                      <tr>
+                        <td style="padding:8px 0;font-size:15px;color:#1a3628;font-weight:800;">Total Amount</td>
+                        <td style="padding:8px 0;font-size:18px;color:#744531;font-weight:800;text-align:right;">{{amount}}</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Items -->
+          <tr>
+            <td style="padding:0 40px 24px;">
+              <p style="margin:0 0 10px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#744531;">Items Ordered</p>
+              <div style="background:#f0f7f3;border-left:3px solid #28543d;border-radius:6px;padding:14px 16px;">
+                <pre style="margin:0;font-size:13px;color:#1a3628;font-family:inherit;white-space:pre-wrap;line-height:1.8;">{{items_list}}</pre>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Shipping Address -->
+          <tr>
+            <td style="padding:0 40px 24px;">
+              <p style="margin:0 0 10px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#744531;">Shipping Address</p>
+              <div style="background:#faf8f4;border:1px solid #e0ddd5;border-radius:8px;padding:14px 16px;">
+                <p style="margin:0;font-size:13px;color:#1a3628;line-height:1.8;">{{shipping_address}}</p>
+              </div>
+            </td>
+          </tr>
+
+          <!-- WhatsApp CTA -->
+          <tr>
+            <td style="padding:0 40px 32px;text-align:center;">
+              <p style="margin:0 0 14px;font-size:13px;color:#555;">
+                For faster processing, send us a quick WhatsApp message!
+              </p>
+              <a href="https://wa.me/919316417314" style="display:inline-block;background:#25D366;color:#ffffff;text-decoration:none;font-size:14px;font-weight:700;padding:12px 28px;border-radius:30px;letter-spacing:0.3px;">
+                💬 Chat on WhatsApp
+              </a>
+            </td>
+          </tr>
+
+          <!-- Divider -->
+          <tr>
+            <td style="padding:0 40px;">
+              <hr style="border:none;border-top:1px solid #e7e4dc;margin:0;" />
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding:24px 40px;text-align:center;">
+              <p style="margin:0 0 4px;font-size:13px;color:#744531;font-weight:700;">True Soil Organics</p>
+              <p style="margin:0 0 4px;font-size:12px;color:#999;">Gir Gadhda, Somnath District, Gujarat – 362530, India</p>
+              <p style="margin:0;font-size:12px;color:#999;">
+                <a href="mailto:truesoilorganic@gmail.com" style="color:#28543d;text-decoration:none;">truesoilorganic@gmail.com</a>
+                &nbsp;|&nbsp;
+                <a href="tel:+919316417314" style="color:#28543d;text-decoration:none;">+91 93164 17314</a>
+              </p>
+              <p style="margin:14px 0 0;font-size:11px;color:#bbb;">
+                © 2025 True Soil Organics. All rights reserved.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>

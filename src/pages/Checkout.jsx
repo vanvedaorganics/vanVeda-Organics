@@ -1,3 +1,4 @@
+import { sendOrderEmail } from "../utils/emailService.js";
 import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Button, Input } from "../components";
@@ -529,47 +530,41 @@ function Checkout() {
       const sendOrderNotifications = async (order) => {
         try {
           const orderId = order.$id?.slice(-8).toUpperCase();
-          const amount = (order.total_cents / 100).toFixed(2);
+          const amount = `₹${(order.total_cents / 100).toFixed(2)}`;
           const customerName = profile.displayName || "Customer";
           const customerEmail = authUser.email || "";
           const paymentMode = order.paymentMode || "COD";
 
           // Format items for a readable email list
-          const itemsListText = orderItems.map(item => 
-            `${item.name} x ${item.qty} (₹${(item.item_total_cents / 100).toFixed(2)})`
-          ).join("\n");
+          const itemsListText = orderItems
+            .map(
+              (item) =>
+                `${item.name} x ${item.qty} — ₹${(item.item_total_cents / 100).toFixed(2)}`
+            )
+            .join("\n");
 
-          // 1. Email via FormSubmit.co (AJAX Version)
-          const payload = {
-            _subject: `New ${paymentMode} Order: #${orderId}`,
-            "Order ID": `#${orderId}`,
-            "Customer Name": customerName,
-            "Customer Email": customerEmail,
-            "Total Amount": `₹${amount}`,
-            "Payment Method": paymentMode,
-            "Delivery Date": farthestDeliveryDate,
-            "Order Items": itemsListText,
-            "Shipping Address": JSON.stringify(selectedAddress, null, 2),
-            _template: "table",
-            _captcha: "false"
-          };
+          const addressObj = selectedAddress || {};
+          const formattedAddress = [
+            addressObj.residencyAddress,
+            addressObj.landmark,
+            addressObj.street,
+            `${addressObj.city} ${addressObj.pincode}`,
+            addressObj.state,
+          ]
+            .filter(Boolean)
+            .join(", ");
 
-          // CC the customer for their confirmation
-          if (customerEmail) {
-            payload._cc = customerEmail;
-          }
-
-          fetch("https://formsubmit.co/ajax/truesoilorganic@gmail.com", {
-            method: "POST",
-            headers: { 
-              "Content-Type": "application/json",
-              "Accept": "application/json"
-            },
-            body: JSON.stringify(payload),
-          })
-          .then(res => res.json())
-          .catch(err => console.error("Email notification failed", err));
-
+          // Send branded Gmail email via EmailJS (fire-and-forget)
+          sendOrderEmail({
+            orderId: `#${orderId}`,
+            customerName,
+            customerEmail,
+            amount,
+            paymentMode,
+            deliveryDate: farthestDeliveryDate,
+            itemsList: itemsListText,
+            shippingAddress: formattedAddress,
+          });
         } catch (err) {
           console.error("Failed to trigger notifications", err);
         }
