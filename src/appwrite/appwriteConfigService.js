@@ -68,7 +68,7 @@ export class appwriteConfigService {
       ? JSON.stringify(sanitizedBatch)
       : null;
 
-    // Core payload — confirmed fields always safe to send
+    // Core payload — absolute baseline, confirmed safe in all schema versions
     const corePayload = {
       name,
       slug,
@@ -79,13 +79,12 @@ export class appwriteConfigService {
       packaging_size: serialized,
       currency,
       discount,
-      // stock: null means "not tracked"; any integer means tracked
-      ...(stock !== null && stock !== undefined ? { stock } : {}),
     };
 
-    // Extended payload — newer attributes that may not exist in all schemas
+    // Extended payload — newer attributes; may not exist in all schemas
     const extendedPayload = {
       ...corePayload,
+      ...(stock !== null && stock !== undefined ? { stock } : {}),
       ...(batchPayload !== null ? { batch: batchPayload } : {}),
       ...(Array.isArray(allowed_payment_modes) && allowed_payment_modes.length
         ? { allowed_payment_modes }
@@ -107,7 +106,7 @@ export class appwriteConfigService {
       if (isUnknownAttr) {
         console.warn(
           "[createProduct] Retrying without extended attributes. " +
-            "Add 'batch' and 'allowed_payment_modes' to your Appwrite " +
+            "Add 'stock', 'batch', and 'allowed_payment_modes' to your Appwrite " +
             "products collection to enable these features. Raw error:",
           err.message
         );
@@ -167,7 +166,7 @@ export class appwriteConfigService {
       ? JSON.stringify(sanitizedBatch)
       : null;
 
-    // Core payload — fields that are always safe to send
+    // Core payload — absolute baseline, confirmed safe in all schema versions
     const corePayload = {
       name,
       description,
@@ -177,14 +176,13 @@ export class appwriteConfigService {
       packaging_size: serialized,
       currency,
       discount,
-      // stock: null means "not tracked"; any integer means tracked
-      ...(stock !== null && stock !== undefined ? { stock } : {}),
     };
 
     // Extended payload — includes newer attributes that may not exist in
     // all Appwrite schemas. We try these first and fall back if rejected.
     const extendedPayload = {
       ...corePayload,
+      ...(stock !== null && stock !== undefined ? { stock } : {}),
       ...(batchPayload !== undefined ? { batch: batchPayload } : {}),
       ...(Array.isArray(allowed_payment_modes) && allowed_payment_modes.length
         ? { allowed_payment_modes }
@@ -208,7 +206,7 @@ export class appwriteConfigService {
       if (isUnknownAttr) {
         console.warn(
           "[updateProduct] Retrying without extended attributes. " +
-          "Add 'batch' and 'allowed_payment_modes' to your Appwrite products " +
+          "Add 'stock', 'batch', and 'allowed_payment_modes' to your Appwrite products " +
           "collection to enable these features. Raw error:",
           err.message
         );

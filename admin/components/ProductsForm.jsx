@@ -131,6 +131,12 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
       description: initialData?.description || "",
       discount: initialData?.discount ?? 0,
       stock: initialData?.stock ?? "",
+      // Use existing modes if valid array, otherwise default to both
+      allowed_payment_modes:
+        Array.isArray(initialData?.allowed_payment_modes) &&
+        initialData.allowed_payment_modes.length > 0
+          ? initialData.allowed_payment_modes
+          : ["COD", "ONLINE"],
       category:
         initialData?.categories?.$id ??
         (typeof initialData?.categories === "string"
@@ -178,13 +184,18 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
         description: initialData.description || "",
         discount: initialData.discount ?? 0,
         stock: initialData.stock ?? "",
+        // Use existing modes if valid array, otherwise default to both
+        allowed_payment_modes:
+          Array.isArray(initialData?.allowed_payment_modes) &&
+          initialData.allowed_payment_modes.length > 0
+            ? initialData.allowed_payment_modes
+            : ["COD", "ONLINE"],
         category:
           initialData?.categories?.$id ??
           (typeof initialData?.categories === "string"
             ? initialData.categories
             : "") ??
           "",
-        allowed_payment_modes: initialData?.allowed_payment_modes || ["COD", "ONLINE"],
       });
       setPackagingSizes(parsePackagingSizes(initialData.packaging_size));
       // NEW: reset batches from initial data
@@ -635,6 +646,7 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
             min="0"
             placeholder="e.g. 100"
             disabled={isSubmitting}
+            onFocus={(e) => e.target.select()}
             {...register("stock", {
               min: { value: 0, message: "Stock cannot be negative" },
             })}

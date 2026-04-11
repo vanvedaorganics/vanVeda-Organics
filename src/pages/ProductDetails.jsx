@@ -211,6 +211,11 @@ function ProductDetails() {
   const hasBatches = batches.length > 0;
   const selectedBatch = hasBatches ? batches[selectedBatchIdx] : null;
 
+  // Stock awareness
+  const stock = product?.stock;
+  const isOutOfStock = typeof stock === "number" && stock === 0;
+  const isLowStock = typeof stock === "number" && stock > 0 && stock <= 10;
+
   const selectedSize = hasSizes
     ? sizes[Math.min(selectedSizeIdx, sizes.length - 1)]
     : null;
@@ -682,6 +687,20 @@ function ProductDetails() {
                   </span>
                 )}
               </div>
+
+              {/* Stock status banner */}
+              {isOutOfStock && (
+                <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 font-semibold rounded-xl px-4 py-2.5 text-sm">
+                  <span className="text-lg">⚠️</span>
+                  This product is currently <strong>out of stock</strong>. Check back soon!
+                </div>
+              )}
+              {isLowStock && (
+                <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-700 font-semibold rounded-xl px-4 py-2.5 text-sm">
+                  <span className="text-lg">🔥</span>
+                  Only <strong>{stock} units left</strong> — order now before it runs out!
+                </div>
+              )}
             </div>
 
             <hr className="border-[#E7CE9D]/30" />
@@ -790,7 +809,7 @@ function ProductDetails() {
               <div className="flex items-center justify-between bg-[#f5f0e8] rounded-2xl p-1.5 shadow-inner border border-black/[0.03] w-full lg:w-max">
                 <button
                   onClick={() => updateQty(quantity - 1)}
-                  disabled={quantity <= 0}
+                  disabled={quantity <= 0 || isOutOfStock}
                   className="h-12 w-12 flex items-center justify-center rounded-xl hover:bg-white hover:shadow-sm text-[#744531] transition-all disabled:opacity-30"
                 >
                   <Minus className="h-5 w-5" />
@@ -803,7 +822,8 @@ function ProductDetails() {
                 />
                 <button
                   onClick={() => updateQty(quantity + 1)}
-                  className="h-12 w-12 flex items-center justify-center rounded-xl hover:bg-white hover:shadow-sm text-[#744531] transition-all"
+                  disabled={isOutOfStock}
+                  className="h-12 w-12 flex items-center justify-center rounded-xl hover:bg-white hover:shadow-sm text-[#744531] transition-all disabled:opacity-30"
                 >
                   <Plus className="h-5 w-5" />
                 </button>
@@ -812,15 +832,20 @@ function ProductDetails() {
               {/* Action Buttons Group */}
               <div className="flex-1 flex flex-col sm:flex-row gap-3">
                 <Button
-                  onClick={onAddToCartClick}
+                  onClick={isOutOfStock ? undefined : onAddToCartClick}
+                  disabled={isOutOfStock}
                   className={`flex-1 min-h-[56px] rounded-2xl font-black text-sm uppercase tracking-widest transition-all duration-300 shadow-lg ${
-                    inCart ? "bg-[#744531]/10 text-[#744531] border-2 border-[#744531]/20" : "bg-[#28543d] text-white hover:bg-[#1f4230]"
+                    isOutOfStock
+                      ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200 shadow-none"
+                      : inCart
+                      ? "bg-[#744531]/10 text-[#744531] border-2 border-[#744531]/20"
+                      : "bg-[#28543d] text-white hover:bg-[#1f4230]"
                   }`}
                 >
-                  {inCart ? "Remove Product" : "Add to Bag"}
+                  {isOutOfStock ? "Out of Stock" : inCart ? "Remove Product" : "Add to Bag"}
                 </Button>
                 
-                {!inCart && (
+                {!inCart && !isOutOfStock && (
                   <Button
                     onClick={onBuyNowClick}
                     className="flex-1 min-h-[56px] rounded-2xl font-black text-sm uppercase tracking-widest bg-[#E7CE9D] text-[#744531] hover:bg-[#dec186] shadow-lg transition-all duration-300"

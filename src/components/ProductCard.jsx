@@ -88,6 +88,7 @@ const ProductCard = ({
   average_rating ,
   review_count,
   batch, // NEW
+  stock, // NEW — null means not tracked; 0 means out of stock
 
   // Styling
   className,
@@ -95,6 +96,11 @@ const ProductCard = ({
   // Sizes parsing
   const sizes = useMemo(() => parsePackagingSizes(packaging_size), [packaging_size]);
   const hasDiscount = Number(discount) > 0;
+
+  // Stock awareness
+  const isOutOfStock = typeof stock === "number" && stock === 0;
+  const isLowStock = typeof stock === "number" && stock > 0 && stock <= 10;
+  const isStockTracked = typeof stock === "number";
 
   // Category resolution via Redux store (Categories collection)
   const categoryItems = useSelector((s) => s.categories?.items || []);
@@ -273,10 +279,26 @@ const ProductCard = ({
         {/* Gradient scrim at bottom for text legibility */}
         <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
 
+        {/* Out of stock ribbon */}
+        {isOutOfStock && (
+          <div className="absolute inset-0 bg-black/40 flex items-center justify-center pointer-events-none">
+            <span className="bg-red-600 text-white font-black text-xs uppercase tracking-widest px-4 py-1.5 rounded-full shadow-lg">
+              Out of Stock
+            </span>
+          </div>
+        )}
+
         {/* Discount badge */}
-        {hasDiscount && (
+        {hasDiscount && !isOutOfStock && (
           <div className="absolute top-4 left-4 flex items-center gap-1 bg-[#744531]/90 backdrop-blur-md text-white px-3 py-1 rounded-full text-[10px] font-bold shadow-lg tracking-wider border border-white/20">
             {discount}% OFF
+          </div>
+        )}
+
+        {/* Low stock badge */}
+        {isLowStock && (
+          <div className="absolute top-4 left-4 flex items-center gap-1 bg-amber-500/90 backdrop-blur-md text-white px-3 py-1 rounded-full text-[10px] font-bold shadow-lg tracking-wider border border-white/20">
+            Only {stock} left!
           </div>
         )}
         
@@ -427,20 +449,23 @@ const ProductCard = ({
         {/* Cart Actions */}
         <div className="mt-3 flex items-center gap-2">
           <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={handleToggleCart}
+            whileHover={{ scale: isOutOfStock ? 1 : 1.02 }}
+            whileTap={{ scale: isOutOfStock ? 1 : 0.98 }}
+            onClick={isOutOfStock ? undefined : handleToggleCart}
+            disabled={isOutOfStock}
             className={cn(
               "flex-1 h-12 text-[10px] font-black uppercase tracking-widest rounded-2xl shadow-sm transition-all duration-300",
-              inCart
+              isOutOfStock
+                ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200"
+                : inCart
                 ? "bg-[#f5f0e8] text-[#744531] hover:bg-[#E7CE9D]/50 border border-[#744531]/20"
                 : "bg-[#28543d] hover:bg-[#1f4230] text-white shadow-xl shadow-[#28543d]/20"
             )}
           >
-            {inCart ? "Remove" : "Add To Bag"}
+            {isOutOfStock ? "Out of Stock" : inCart ? "Remove" : "Add To Bag"}
           </motion.button>
 
-          {!inCart && (
+          {!inCart && !isOutOfStock && (
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
