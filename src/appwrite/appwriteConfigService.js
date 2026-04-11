@@ -92,12 +92,12 @@ export class appwriteConfigService {
       name,
       description,
       sku,
-      categories = "",
+      categories = null,
       packaging_size = [],
       currency = "INR",
       discount = 0,
       batch,
-      allowed_payment_modes = ["COD", "ONLINE"], // NEW
+      allowed_payment_modes,
     }
   ) {
     const serialized = (
@@ -129,22 +129,60 @@ export class appwriteConfigService {
       ? JSON.stringify(sanitizedBatch)
       : null;
 
-    return await this.databases.updateDocument(
-      conf.appwriteDatabaseId,
-      conf.appwriteProductsCollection,
-      slug,
-      {
-        name,
-        description,
-        sku,
-        categories,
-        packaging_size: serialized,
-        currency,
-        discount,
-        batch: batchPayload,
-        allowed_payment_modes,
+    // Core payload — fields that are always safe to send
+    const corePayload = {
+      name,
+      description,
+      sku,
+      // Send null for empty relationship — never send "" (Appwrite rejects it)
+      categories: categories || null,
+      packaging_size: serialized,
+      currency,
+      discount,
+    };
+
+    // Extended payload — includes newer attributes that may not exist in
+    // all Appwrite schemas. We try these first and fall back if rejected.
+    const extendedPayload = {
+      ...corePayload,
+      ...(batchPayload !== undefined ? { batch: batchPayload } : {}),
+      ...(Array.isArray(allowed_payment_modes) && allowed_payment_modes.length
+        ? { allowed_payment_modes }
+        : {}),
+    };
+
+    try {
+      return await this.databases.updateDocument(
+        conf.appwriteDatabaseId,
+        conf.appwriteProductsCollection,
+        slug,
+        extendedPayload
+      );
+    } catch (err) {
+      // If Appwrite rejects because a newer attribute (batch / allowed_payment_modes)
+      // hasn't been added to the collection schema yet, retry with core fields only.
+      const isUnknownAttr =
+        /unknown attribute|invalid attribute|Extra attribute/i.test(
+          err?.message || ""
+        );
+      if (isUnknownAttr) {
+        console.warn(
+          "[updateProduct] Retrying without extended attributes. " +
+          "Add 'batch' and 'allowed_payment_modes' to your Appwrite products " +
+          "collection to enable these features. Raw error:",
+          err.message
+        );
+        return await this.databases.updateDocument(
+          conf.appwriteDatabaseId,
+          conf.appwriteProductsCollection,
+          slug,
+          corePayload
+        );
       }
-    );
+      // Log real error before re-throwing so it's visible in console
+      console.error("[updateProduct] Appwrite error:", err?.message, err);
+      throw err;
+    }
   }
 
   async deleteProduct(slug) {

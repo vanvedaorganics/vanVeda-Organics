@@ -105,7 +105,8 @@ function getFriendlyErrorMessage(error) {
     return "A product with this name or slug already exists.";
   if (error.code === 0 || /network|connection/i.test(error.message))
     return "Unable to connect to the server.";
-  if (/invalid/i.test(error.message)) return "Invalid input data.";
+  if (/invalid/i.test(error.message))
+    return `Invalid input: ${error.message}. Check the browser console for details.`;
   return "Unexpected error. Please try again.";
 }
 
