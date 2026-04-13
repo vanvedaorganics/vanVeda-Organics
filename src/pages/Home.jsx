@@ -21,12 +21,17 @@ function Home() {
     dispatch(fetchProducts());
   }, [dispatch]);
 
-  // Pick a few hardcoded featured products
-  const featuredProducts = useMemo(() => 
-    products.filter((p) =>
-      ["gir-kesar-mango", "shudh-desi-ghee", "forest-honey", "organic-haldi"].includes(p.slug)
-    ).slice(0, 4),
-  [products]);
+  // Dynamically pick products marked as bestsellers in the admin panel
+  const featuredProducts = useMemo(() => {
+    const bestsellers = products.filter((p) => p.isBestseller === true);
+    // Fallback: If no bestsellers marked, show the previous hardcoded ones or first 4
+    if (bestsellers.length === 0) {
+      return products.filter((p) =>
+        ["gir-kesar-mango", "shudh-desi-ghee", "forest-honey", "organic-haldi"].includes(p.slug)
+      ).slice(0, 4);
+    }
+    return bestsellers.slice(0, 4);
+  }, [products]);
 
   const latestBlogs = useMemo(() => blogData.slice(0, 3), []);
 

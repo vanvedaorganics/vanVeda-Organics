@@ -38,6 +38,7 @@ export class appwriteConfigService {
     stock = null,
     batch = null,
     allowed_payment_modes,
+    isBestseller = false,
   }) {
     const serialized = (
       Array.isArray(packaging_size) ? packaging_size : []
@@ -89,6 +90,7 @@ export class appwriteConfigService {
       ...(Array.isArray(allowed_payment_modes) && allowed_payment_modes.length
         ? { allowed_payment_modes }
         : {}),
+      isBestseller,
     };
 
     try {
@@ -135,6 +137,7 @@ export class appwriteConfigService {
       stock = null,
       batch,
       allowed_payment_modes,
+      isBestseller,
     }
   ) {
     const serialized = (
@@ -187,6 +190,7 @@ export class appwriteConfigService {
       ...(Array.isArray(allowed_payment_modes) && allowed_payment_modes.length
         ? { allowed_payment_modes }
         : {}),
+      ...(typeof isBestseller === "boolean" ? { isBestseller } : {}),
     };
 
     try {

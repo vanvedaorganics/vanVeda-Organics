@@ -143,6 +143,7 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
           ? initialData.categories
           : "") ??
         "",
+      isBestseller: initialData?.isBestseller || false,
     },
   });
 
@@ -196,6 +197,7 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
             ? initialData.categories
             : "") ??
           "",
+        isBestseller: initialData.isBestseller || false,
       });
       setPackagingSizes(parsePackagingSizes(initialData.packaging_size));
       // NEW: reset batches from initial data
@@ -423,6 +425,7 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
         // currency omitted (defaults to "INR" server-side)
         batch, // NEW
         allowed_payment_modes: formData.allowed_payment_modes, // NEW
+        isBestseller: formData.isBestseller,
       };
 
       let result;
@@ -455,6 +458,7 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
           stock: "",
           category: "",
           allowed_payment_modes: ["COD", "ONLINE"],
+          isBestseller: false,
         });
         // New: after creating a product, keep one default row instead of empty
         setPackagingSizes([createEmptyPackagingSize()]);
@@ -727,6 +731,26 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
             </label>
           </div>
           <p className="text-[11px] text-gray-500 italic">Select which payment methods are available for this product.</p>
+        </div>
+
+        {/* Bestseller Toggle */}
+        <div className="md:col-span-2 bg-amber-50/30 p-4 rounded-xl border border-amber-100 space-y-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <Label htmlFor="isBestseller">Bestseller Product</Label>
+              <p className="text-[11px] text-gray-500 italic">Mark this product to be featured in the "Bestsellers" section on the home page.</p>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer group">
+              <input
+                id="isBestseller"
+                type="checkbox"
+                className="sr-only peer"
+                checked={watch("isBestseller")}
+                onChange={(e) => setValue("isBestseller", e.target.checked)}
+              />
+              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+            </label>
+          </div>
         </div>
       </div>
 

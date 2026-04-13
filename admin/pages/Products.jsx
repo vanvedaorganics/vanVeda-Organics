@@ -334,6 +334,18 @@ export default function ProductsPage() {
         );
       },
     },
+    {
+      header: "Bestseller",
+      accessor: "isBestseller",
+      render: (row) =>
+        row.isBestseller ? (
+          <span className="px-2 py-0.5 text-xs rounded-full bg-amber-100 text-amber-700 font-bold border border-amber-300">
+            ★ Bestseller
+          </span>
+        ) : (
+          <span className="text-xs text-gray-400">—</span>
+        ),
+    },
     // NEW: Batch column with dropdown viewer
     {
       header: "Batch",
