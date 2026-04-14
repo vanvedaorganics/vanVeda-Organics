@@ -346,6 +346,18 @@ export default function ProductsPage() {
           <span className="text-xs text-gray-400">—</span>
         ),
     },
+    {
+      header: "Subscription",
+      accessor: "isSubscriptionAllowed",
+      render: (row) =>
+        row.isSubscriptionAllowed ? (
+          <span className="px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-700 font-bold border border-blue-300">
+            ↻ Enabled
+          </span>
+        ) : (
+          <span className="text-xs text-gray-400">—</span>
+        ),
+    },
     // NEW: Batch column with dropdown viewer
     {
       header: "Batch",

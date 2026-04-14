@@ -93,6 +93,38 @@ function Subscriptions() {
       ),
     },
     {
+      header: "Payment",
+      accessor: "paymentMode",
+      render: (row) => (
+        <div className="flex flex-col">
+          <span className="text-xs font-bold text-gray-700">{row.paymentMode || "Online"}</span>
+          <span className={`text-[10px] uppercase font-black ${row.paymentStatus === 'paid' ? 'text-green-600' : 'text-amber-600'}`}>
+            {row.paymentStatus || 'pending'}
+          </span>
+        </div>
+      )
+    },
+    {
+      header: "Cycles",
+      accessor: "remaining_cycles",
+      render: (row) => (
+        <div className="flex items-center gap-1">
+          <span className="font-bold text-[#084629]">{row.remaining_cycles || row.total_cycles || 1}</span>
+          <span className="text-gray-400">/</span>
+          <span className="text-gray-500">{row.total_cycles || 1}</span>
+        </div>
+      )
+    },
+    {
+      header: "Upfront",
+      accessor: "is_upfront_paid",
+      render: (row) => row.is_upfront_paid ? (
+        <span className="px-2 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200 text-[10px] font-bold">YES</span>
+      ) : (
+        <span className="text-gray-400 text-[10px]">NO</span>
+      )
+    },
+    {
       header: "Next Order",
       accessor: "nextOrderAt",
       render: (row) => row.nextOrderAt ? new Date(row.nextOrderAt).toLocaleDateString() : "—",

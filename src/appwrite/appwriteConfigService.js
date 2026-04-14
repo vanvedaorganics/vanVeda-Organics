@@ -39,6 +39,7 @@ export class appwriteConfigService {
     batch = null,
     allowed_payment_modes,
     isBestseller = false,
+    isSubscriptionAllowed = false,
   }) {
     const serialized = (
       Array.isArray(packaging_size) ? packaging_size : []
@@ -91,6 +92,7 @@ export class appwriteConfigService {
         ? { allowed_payment_modes }
         : {}),
       isBestseller,
+      isSubscriptionAllowed,
     };
 
     try {
@@ -138,6 +140,7 @@ export class appwriteConfigService {
       batch,
       allowed_payment_modes,
       isBestseller,
+      isSubscriptionAllowed,
     }
   ) {
     const serialized = (
@@ -191,6 +194,7 @@ export class appwriteConfigService {
         ? { allowed_payment_modes }
         : {}),
       ...(typeof isBestseller === "boolean" ? { isBestseller } : {}),
+      ...(typeof isSubscriptionAllowed === "boolean" ? { isSubscriptionAllowed } : {}),
     };
 
     try {
@@ -348,6 +352,11 @@ export class appwriteConfigService {
     quantity,
     interval,
     shippingAddress,
+    payment_id = null,
+    paymentMode = "Online",
+    paymentStatus = "pending",
+    total_cycles = 1,
+    is_upfront_paid = false,
   }) {
     const now = new Date();
     const nextOrderAt = new Date(now);
@@ -366,6 +375,12 @@ export class appwriteConfigService {
       nextOrderAt: nextOrderAt.toISOString(),
       startedAt: now.toISOString(),
       shippingAddress,
+      payment_id,
+      paymentMode,
+      paymentStatus,
+      total_cycles,
+      remaining_cycles: total_cycles,
+      is_upfront_paid,
     };
 
     try {

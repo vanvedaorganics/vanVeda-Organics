@@ -509,6 +509,8 @@ function ProductDetails() {
               paymentMode: subPaymentMethod,
               paymentStatus: paymentStatus,
               payment_id: paymentId,
+              total_cycles: 4,
+              is_upfront_paid: true,
             });
 
             setShowSubSuccess(true);
@@ -526,8 +528,9 @@ function ProductDetails() {
         if (subPaymentMethod === "COD") {
           await finalizeSubscription(null, "pending");
         } else {
-          // Razorpay integration for subscriptions
-          const amount = Math.round(quantity * (discountedCents)); // total in cents (paise)
+          // Razorpay integration for subscriptions - 4 weeks upfront with extra 5% discount
+          const subDiscountedPrice = Math.round(discountedCents * 0.95);
+          const amount = Math.round(quantity * subDiscountedPrice * 4); // 4 weeks total in cents (paise)
           
           const options = {
             key: conf.razorpayKeyId,
@@ -869,8 +872,9 @@ function ProductDetails() {
             <hr className="border-[#E7CE9D]/30 my-4" />
 
             {/* Subscribe & Save Section */}
+            {product.isSubscriptionAllowed && (
             <motion.div
-              className="bg-white rounded-3xl border-2 border-[#E7CE9D]/40 p-8 shadow-xl relative overflow-hidden group"
+              className="bg-white rounded-3xl border-2 border-[#E7CE9D]/40 p-8 shadow-xl relative overflow-hidden group mb-8"
               initial={{ opacity: 0, y: 10 }}
               whileInView={{ opacity: 1, y: 0 }}
             >
@@ -908,6 +912,15 @@ function ProductDetails() {
                     </div>
                   </div>
                   <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-[#28543d]">Duration</label>
+                    <div className="flex p-1 bg-[#28543d]/10 rounded-xl border border-[#28543d]/20">
+                      <div className="flex-1 py-2 text-[10px] font-black text-[#28543d] flex items-center justify-center gap-1">
+                        4 WEEKS <span className="text-[8px] bg-[#28543d] text-white px-1.5 py-0.5 rounded-full">FIXED</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Batch Quantity</label>
                     <div className="flex items-center bg-[#f5f0e8] rounded-xl px-3 h-[40px] border border-black/[0.03]">
                       <button onClick={() => setSubQuantity(Math.max(1, subQuantity - 1))} className="text-[#28543d]"><Minus className="h-4 w-4" /></button>
@@ -920,7 +933,6 @@ function ProductDetails() {
                       <button onClick={() => setSubQuantity(subQuantity + 1)} className="text-[#28543d]"><Plus className="h-4 w-4" /></button>
                     </div>
                   </div>
-                </div>
 
                 <div className="space-y-2">
                   <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Delivery Landmark</label>
@@ -958,10 +970,14 @@ function ProductDetails() {
 
                 <div className="bg-[#f5f0e8] p-4 rounded-xl border border-black/[0.03]">
                   <div className="flex justify-between items-center mb-1">
-                    <span className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Total per {subInterval === 'weekly' ? 'week' : 'month'}</span>
-                    <span className="text-sm font-black text-[#28543d]">₹{((subQuantity * discountedCents) / 100).toFixed(2)}</span>
+                    <span className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Subscriber Discount</span>
+                    <span className="text-xs font-black text-emerald-600">-5% EXTRA</span>
                   </div>
-                  <p className="text-[9px] text-gray-400 leading-tight">Price includes all taxes. Cancel anytime from your profile.</p>
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Upfront for 4 Weeks</span>
+                    <span className="text-sm font-black text-[#28543d]">₹{((subQuantity * Math.round(discountedCents * 0.95) * 4) / 100).toFixed(2)}</span>
+                  </div>
+                  <p className="text-[9px] text-gray-400 leading-tight">Price includes all taxes. Paid once for 4 scheduled deliveries.</p>
                 </div>
 
                 {subError && <div className="p-3 bg-red-50 text-[11px] font-bold text-red-600 rounded-xl border border-red-100">{subError}</div>}
@@ -971,10 +987,11 @@ function ProductDetails() {
                   disabled={subLoading}
                   className="w-full h-14 rounded-2xl bg-[#28543d] text-white font-black text-sm uppercase tracking-widest shadow-xl hover:bg-[#1f4230] transition-all hover:-translate-y-1"
                 >
-                  {subLoading ? "Securing Subscription..." : "Start Subscription"}
+                  {subLoading ? "Securing Subscription..." : "Pay Upfront & Subscribe"}
                 </Button>
               </div>
             </motion.div>
+            )}
 
             {/* ── Ratings & Reviews ────────────────────────────────────────── */}
             <div className="space-y-6 pt-4">
