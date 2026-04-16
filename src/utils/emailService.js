@@ -109,3 +109,60 @@ export const sendContactEmail = async ({
     throw err; // re-throw so ContactUs can show the right state
   }
 };
+
+/**
+ * Send a subscription-confirmation email to the customer AND
+ * an admin-alert email to the store inbox.
+ *
+ * @param {object} subData
+ * @param {string} subData.subscriptionId   - e.g. "SUB123"
+ * @param {string} subData.customerName
+ * @param {string} subData.customerEmail
+ * @param {string} subData.productName      - e.g. "A2 Gir Cow Ghee"
+ * @param {string} subData.interval         - "weekly" | "monthly"
+ * @param {number} subData.quantity         - units per week/month
+ * @param {number} subData.weeks            - total weeks paid upfront
+ * @param {string} subData.amount           - formatted total, e.g. "₹1200.00"
+ * @param {string} subData.shippingAddress
+ */
+export const sendSubscriptionEmail = async ({
+  subscriptionId,
+  customerName,
+  customerEmail,
+  productName,
+  interval,
+  quantity,
+  weeks,
+  amount,
+  shippingAddress,
+}) => {
+  try {
+    init();
+
+    const itemsList = `${productName} (Subscription) x ${quantity} per ${interval.replace('ly', '')} for ${weeks} weeks`;
+
+    const templateParams = {
+      order_id: `SUB-${subscriptionId.slice(-6).toUpperCase()}`,
+      customer_name: customerName,
+      customer_email: customerEmail,
+      amount,
+      payment_mode: "Online (Upfront)",
+      delivery_date: "Recurring",
+      items_list: itemsList,
+      shipping_address: shippingAddress,
+      to_email: customerEmail,
+      admin_email: "truesoilorganic@gmail.com",
+    };
+
+    // We reuse the Order Template as it has the right fields for a summary
+    await emailjs.send(
+      conf.emailjsServiceId,
+      conf.emailjsOrderTemplateId,
+      templateParams
+    );
+
+    console.log("✅ Subscription confirmation email sent via Gmail");
+  } catch (err) {
+    console.error("❌ EmailJS subscription email failed:", err);
+  }
+};

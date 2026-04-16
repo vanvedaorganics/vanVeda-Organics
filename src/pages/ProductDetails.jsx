@@ -13,6 +13,7 @@ import {
 } from "../store/cartsSlice";
 import { setCartOpen } from "../store/uiSlice";
 import appwriteService from "../appwrite/appwriteConfigService";
+import { sendSubscriptionEmail } from "../utils/emailService";
 import conf from "../conf/conf";
 import { Query } from "appwrite"; // used for advanced queries (optional)
 import { motion, AnimatePresence } from "framer-motion";
@@ -498,9 +499,39 @@ function ProductDetails() {
 
         setSubLoading(true);
 
+        const sendSubscriptionNotification = (subId, qty, weeks, totalCents, addrStr) => {
+          try {
+            const addrObj = JSON.parse(addrStr);
+            const formattedAddr = [
+              addrObj.residencyAddress,
+              addrObj.landmark,
+              addrObj.street,
+              `${addrObj.city} ${addrObj.pincode}`,
+              addrObj.state,
+            ].filter(Boolean).join(", ");
+
+            sendSubscriptionEmail({
+              subscriptionId: subId,
+              customerName: userData.name || "Customer",
+              customerEmail: userData.email || "",
+              productName: product.name,
+              interval: subInterval,
+              quantity: qty,
+              weeks: weeks,
+              amount: `₹${(totalCents / 100).toFixed(2)}`,
+              shippingAddress: formattedAddr,
+            });
+          } catch (e) {
+            console.error("Failed to parse address for notification", e);
+          }
+        };
+
         const finalizeSubscription = async (paymentId = null, paymentStatus = "pending") => {
           try {
-            await appwriteService.createSubscription({
+            const subDiscountedPrice = Math.round(discountedCents * 0.95);
+            const totalCents = quantity * subDiscountedPrice * subWeeks;
+
+            const res = await appwriteService.createSubscription({
               user_id: userData?.$id,
               product_id: product.slug,
               packaging_size: packaging_str,
@@ -513,6 +544,9 @@ function ProductDetails() {
               total_cycles: subWeeks,
               is_upfront_paid: true,
             });
+
+            // Send notification
+            sendSubscriptionNotification(res.$id, quantity, subWeeks, totalCents, shippingAddressStr);
 
             setShowSubSuccess(true);
             setTimeout(() => {
