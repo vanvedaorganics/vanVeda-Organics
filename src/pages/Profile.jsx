@@ -581,14 +581,18 @@ function Profile() {
                               </div>
                               <div className="px-3 py-1 bg-green-100 text-[#28543d] rounded-full text-[9px] font-black uppercase tracking-widest">{s.status}</div>
                             </div>
-                            <div className="grid grid-cols-2 gap-4 mb-6">
+                            <div className="grid grid-cols-3 gap-2 mb-6">
                               <div className="p-3 bg-gray-50 rounded-2xl">
-                                <p className="text-[9px] uppercase font-black text-gray-400 mb-1">Quantity</p>
-                                <p className="text-sm font-bold text-[#201413]">{s.quantity} Units</p>
+                                <p className="text-[9px] uppercase font-black text-gray-400 mb-1">Qty</p>
+                                <p className="text-xs font-bold text-[#201413]">{s.quantity} /wk</p>
                               </div>
                               <div className="p-3 bg-gray-50 rounded-2xl">
                                 <p className="text-[9px] uppercase font-black text-gray-400 mb-1">Size</p>
-                                <p className="text-sm font-bold text-[#201413]">{s.parsedPackaging?.sizeLabel || "-"}</p>
+                                <p className="text-xs font-bold text-[#201413]">{s.parsedPackaging?.sizeLabel || "-"}</p>
+                              </div>
+                              <div className="p-3 bg-[#28543d]/5 rounded-2xl border border-[#28543d]/10">
+                                <p className="text-[9px] uppercase font-black text-[#28543d] mb-1">Cycles</p>
+                                <p className="text-xs font-bold text-[#28543d]">{s.remaining_cycles || s.total_cycles || 1}/{s.total_cycles || 1}</p>
                               </div>
                             </div>
                             <div className="mt-auto space-y-4">

@@ -128,7 +128,8 @@ function ProductDetails() {
 
   // Subscription form state
   const [subQuantity, setSubQuantity] = useState(1);
-  const [subInterval, setSubInterval] = useState("monthly"); // monthly | weekly
+  const [subWeeks, setSubWeeks] = useState(2); // NEW: selectable number of weeks
+  const [subInterval, setSubInterval] = useState("weekly"); // weekly (fixed for now as duration is in weeks)
   const [subAddressIdx, setSubAddressIdx] = useState(0);
   const [subPaymentMethod, setSubPaymentMethod] = useState("Online"); // Online only for Subscriptions
   const [subLoading, setSubLoading] = useState(false);
@@ -509,7 +510,7 @@ function ProductDetails() {
               paymentMode: subPaymentMethod,
               paymentStatus: paymentStatus,
               payment_id: paymentId,
-              total_cycles: 4,
+              total_cycles: subWeeks,
               is_upfront_paid: true,
             });
 
@@ -528,9 +529,9 @@ function ProductDetails() {
         if (subPaymentMethod === "COD") {
           await finalizeSubscription(null, "pending");
         } else {
-          // Razorpay integration for subscriptions - 4 weeks upfront with extra 5% discount
+          // Razorpay integration for subscriptions - Dynamic weeks upfront with extra 5% discount
           const subDiscountedPrice = Math.round(discountedCents * 0.95);
-          const amount = Math.round(quantity * subDiscountedPrice * 4); // 4 weeks total in cents (paise)
+          const amount = Math.round(quantity * subDiscountedPrice * subWeeks); // Total for selected weeks
           
           const options = {
             key: conf.razorpayKeyId,
@@ -912,25 +913,33 @@ function ProductDetails() {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-[#28543d]">Duration</label>
-                    <div className="flex p-1 bg-[#28543d]/10 rounded-xl border border-[#28543d]/20">
-                      <div className="flex-1 py-2 text-[10px] font-black text-[#28543d] flex items-center justify-center gap-1">
-                        4 WEEKS <span className="text-[8px] bg-[#28543d] text-white px-1.5 py-0.5 rounded-full">FIXED</span>
-                      </div>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Duration (Weeks)</label>
+                    <div className="relative">
+                      <select
+                        value={subWeeks}
+                        onChange={(e) => setSubWeeks(Number(e.target.value))}
+                        className="w-full bg-[#f5f0e8] rounded-xl px-4 py-3 text-[11px] font-bold text-[#28543d] appearance-none focus:outline-none border border-black/[0.03]"
+                      >
+                        {[2, 4, 8, 12, 16, 20, 24].map((w) => (
+                          <option key={w} value={w}>{w} Weeks</option>
+                        ))}
+                      </select>
+                      <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-[#28543d] pointer-events-none" />
                     </div>
                   </div>
                 </div>
+                
                 <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Batch Quantity</label>
-                    <div className="flex items-center bg-[#f5f0e8] rounded-xl px-3 h-[40px] border border-black/[0.03]">
-                      <button onClick={() => setSubQuantity(Math.max(1, subQuantity - 1))} className="text-[#28543d]"><Minus className="h-4 w-4" /></button>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Quantity Per Week</label>
+                    <div className="flex items-center bg-[#f5f0e8] rounded-xl px-3 h-[48px] border border-black/[0.03]">
+                      <button onClick={() => setSubQuantity(Math.max(1, subQuantity - 1))} className="text-[#28543d] p-2 hover:bg-white rounded-lg transition-colors"><Minus className="h-4 w-4" /></button>
                       <input 
                         type="number" 
                         value={subQuantity} 
                         onChange={(e) => setSubQuantity(Math.max(1, parseInt(e.target.value) || 1))}
                         className="flex-1 bg-transparent text-center font-bold text-sm text-[#28543d] focus:outline-none" 
                       />
-                      <button onClick={() => setSubQuantity(subQuantity + 1)} className="text-[#28543d]"><Plus className="h-4 w-4" /></button>
+                      <button onClick={() => setSubQuantity(subQuantity + 1)} className="text-[#28543d] p-2 hover:bg-white rounded-lg transition-colors"><Plus className="h-4 w-4" /></button>
                     </div>
                   </div>
 
@@ -974,10 +983,10 @@ function ProductDetails() {
                     <span className="text-xs font-black text-emerald-600">-5% EXTRA</span>
                   </div>
                   <div className="flex justify-between items-center mb-1">
-                    <span className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Upfront for 4 Weeks</span>
-                    <span className="text-sm font-black text-[#28543d]">₹{((subQuantity * Math.round(discountedCents * 0.95) * 4) / 100).toFixed(2)}</span>
+                    <span className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Upfront for {subWeeks} Weeks</span>
+                    <span className="text-sm font-black text-[#28543d]">₹{((subQuantity * Math.round(discountedCents * 0.95) * subWeeks) / 100).toFixed(2)}</span>
                   </div>
-                  <p className="text-[9px] text-gray-400 leading-tight">Price includes all taxes. Paid once for 4 scheduled deliveries.</p>
+                  <p className="text-[9px] text-gray-400 leading-tight">Price includes all taxes. Paid once for {subWeeks} scheduled deliveries.</p>
                 </div>
 
                 {subError && <div className="p-3 bg-red-50 text-[11px] font-bold text-red-600 rounded-xl border border-red-100">{subError}</div>}
