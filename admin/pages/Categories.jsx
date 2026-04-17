@@ -64,11 +64,11 @@ export default function CategoriesPage() {
     {
       header: "Icon",
       accessor: "imageId",
-      render: (imageId) => (
+      render: (row) => (
         <div className="w-12 h-12 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center overflow-hidden shadow-sm">
-          {imageId ? (
+          {row.imageId ? (
             <img 
-              src={getImageUrl(imageId)} 
+              src={getImageUrl(row.imageId)} 
               alt="Icon" 
               className="w-full h-full object-contain p-1"
             />
@@ -81,12 +81,12 @@ export default function CategoriesPage() {
     {
       header: "Category Name",
       accessor: "name",
-      render: (name) => <span className="font-bold text-[#084629]">{name}</span>,
+      render: (row) => <span className="font-bold text-[#084629]">{row.name}</span>,
     },
     {
       header: "Slug",
       accessor: "slug",
-      render: (slug) => <code className="bg-gray-100 px-2 py-0.5 rounded text-[10px] font-mono text-gray-500 uppercase tracking-tighter">{slug}</code>,
+      render: (row) => <code className="bg-gray-100 px-2 py-0.5 rounded text-[10px] font-mono text-gray-500 uppercase tracking-tighter">{row.slug}</code>,
     },
     {
       header: "Actions",
