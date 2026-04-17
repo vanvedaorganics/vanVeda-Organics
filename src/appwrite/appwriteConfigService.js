@@ -556,34 +556,53 @@ export class appwriteConfigService {
     }
   }
 
-  async createCategory({ name, slug }) {
+  async createCategory({ name, slug, imageId = null }) {
+    const corePayload = { name, slug };
+    const extendedPayload = { ...corePayload, imageId };
     try {
       return await this.databases.createDocument(
         conf.appwriteDatabaseId,
         conf.appwriteCategoriesCollection,
         slug,
-        {
-          name,
-          slug,
-        }
+        extendedPayload
       );
     } catch (error) {
+      const isUnknownAttr = /unknown attribute|invalid attribute|Extra attribute/i.test(error?.message || "");
+      if (isUnknownAttr && imageId) {
+        console.warn("[createCategory] imageId attribute missing in collection schema. Falling back to core fields.");
+        return await this.databases.createDocument(
+          conf.appwriteDatabaseId,
+          conf.appwriteCategoriesCollection,
+          slug,
+          corePayload
+        );
+      }
       console.error("Appwrite :: createCategory error ::", error);
       throw error;
     }
   }
 
-  async updateCategory(slug, { name }) {
+  async updateCategory(slug, { name, imageId }) {
+    const corePayload = { name };
+    const extendedPayload = { ...corePayload, imageId: imageId ?? null };
     try {
       return await this.databases.updateDocument(
         conf.appwriteDatabaseId,
         conf.appwriteCategoriesCollection,
         slug,
-        {
-          name,
-        }
+        extendedPayload
       );
     } catch (error) {
+      const isUnknownAttr = /unknown attribute|invalid attribute|Extra attribute/i.test(error?.message || "");
+      if (isUnknownAttr) {
+        console.warn("[updateCategory] imageId attribute missing in collection schema. Falling back to name update.");
+        return await this.databases.updateDocument(
+          conf.appwriteDatabaseId,
+          conf.appwriteCategoriesCollection,
+          slug,
+          corePayload
+        );
+      }
       console.error("Appwrite :: updateCategory error ::", error);
       throw error;
     }
@@ -591,6 +610,19 @@ export class appwriteConfigService {
 
   async deleteCategory(slug) {
     try {
+      // 1. Get the category to find any associated imageId
+      const category = await this.databases.getDocument(
+        conf.appwriteDatabaseId,
+        conf.appwriteCategoriesCollection,
+        slug
+      );
+
+      // 2. Clean up associated image (best effort)
+      if (category.imageId) {
+        await this.deleteFile(category.imageId);
+      }
+
+      // 3. Delete the document
       return await this.databases.deleteDocument(
         conf.appwriteDatabaseId,
         conf.appwriteCategoriesCollection,

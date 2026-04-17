@@ -16,6 +16,7 @@ import { initializeAppData } from "./appwrite/initData.js";
 import Advertisement from "../admin/pages/Advertisement.jsx";
 import Offers from "../admin/pages/Offers.jsx";
 import Subscriptions from "../admin/pages/Subscriptions.jsx";
+import Categories from "../admin/pages/Categories.jsx";
 
 // Client pages
 import Home from "./pages/Home.jsx";
@@ -203,6 +204,14 @@ const router = createBrowserRouter([
         element: (
           <AuthLayout>
             <Subscriptions />
+          </AuthLayout>
+        ),
+      },
+      {
+        path: "categories",
+        element: (
+          <AuthLayout>
+            <Categories />
           </AuthLayout>
         ),
       },

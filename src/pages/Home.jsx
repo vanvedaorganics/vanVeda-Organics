@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Button, ProductsGrid, ImageShowcase, BlogCard } from "../components";
 import { Link } from "react-router-dom";
 import { fetchProducts, selectAllProducts } from "../store/productsSlice";
+import { fetchCategories } from "../store/categoriesSlice";
 import { motion } from "framer-motion";
 import { Leaf, Globe, Truck, CheckCircle, Quote, ArrowRight } from "lucide-react";
 import blogData from "./Blog/blogData";
@@ -11,6 +12,8 @@ function Home() {
   const dispatch = useDispatch();
   const products = useSelector(selectAllProducts);
   const loading = useSelector((state) => state.products.loading);
+  const categories = useSelector((state) => state.categories.items);
+  const catLoading = useSelector((state) => state.categories.loading);
 
   // Scroll to top on mount
   useEffect(() => {
@@ -19,6 +22,7 @@ function Home() {
 
   useEffect(() => {
     dispatch(fetchProducts());
+    dispatch(fetchCategories());
   }, [dispatch]);
 
   // Dynamically pick products marked as bestsellers in the admin panel
@@ -122,7 +126,54 @@ function Home() {
       </section>
 
       {/* ── 3. Category Showcase ────────────────────────────────────────── */}
-     
+      {(categories.length > 0 || catLoading) && (
+        <section className="py-24 bg-[#faf8f4]/50">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-16">
+              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#E7CE9D] mb-2 block">Our Harvest</span>
+              <h2 className="syne-bold text-4xl md:text-5xl text-[#744531]">Browse by Category</h2>
+            </div>
+
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+              {catLoading ? (
+                 Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="h-40 bg-white rounded-[2rem] animate-pulse" />
+                ))
+              ) : (
+                categories.map((cat, idx) => (
+                  <Link 
+                    key={cat.$id || cat.slug} 
+                    to={`/products?category=${cat.$id}`}
+                    className="group"
+                  >
+                    <motion.div 
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: idx * 0.1 }}
+                      className="relative h-48 bg-white rounded-[2rem] p-8 flex flex-col items-center justify-center text-center border border-gray-100 shadow-sm transition-all duration-500 hover:shadow-xl hover:shadow-[#744531]/5 hover:-translate-y-2 group"
+                    >
+                      <div className="w-20 h-20 mb-4 rounded-2xl bg-[#faf8f4] flex items-center justify-center group-hover:bg-[#E7CE9D]/10 transition-colors duration-500 overflow-hidden">
+                        {cat.imageId ? (
+                          <img 
+                            src={getImageUrl(cat.imageId)} 
+                            alt={cat.name} 
+                            className="w-12 h-12 object-contain group-hover:scale-110 transition-transform duration-500" 
+                          />
+                        ) : (
+                          <Tag className="w-8 h-8 text-[#E7CE9D]" />
+                        )}
+                      </div>
+                      <h3 className="syne-bold text-lg text-[#744531] group-hover:text-[#28543d] transition-colors">{cat.name}</h3>
+                      <div className="mt-2 w-0 h-0.5 bg-[#E7CE9D] group-hover:w-8 transition-all duration-500" />
+                    </motion.div>
+                  </Link>
+                ))
+              )}
+            </div>
+          </div>
+        </section>
+      )}
       {/* ── 4. Product Showcase (Bestsellers) ────────────────────────────────── */}
       <section className="py-24 bg-white relative overflow-hidden">
         <div className="container mx-auto px-4">
