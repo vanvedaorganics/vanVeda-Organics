@@ -23,6 +23,94 @@ export class appwriteConfigService {
     this.databases = new Databases(this.client);
     this.storage = new Storage(this.client);
     this.account = new Account(this.client); // keep Account active so storage uses the same authenticated session
+
+    // Automated internal diagnostic: Test bucket connectivity
+    this.testStorageConnectivity();
+  }
+
+  async testStorageConnectivity() {
+    try {
+      await this.storage.listFiles(conf.appwriteBucketId, [], 1);
+      console.log(`[Appwrite Service] Storage connectivity confirmed for bucket: ${conf.appwriteBucketId}`);
+    } catch (error) {
+      if (error?.code === 403 || error?.code === 401) {
+        console.error(`[Appwrite Service] STORAGE PERMISSION ERROR (403/401) for bucket: ${conf.appwriteBucketId}. Ensure the bucket has Read permissions for role 'Any'.`);
+      } else {
+        console.warn(`[Appwrite Service] Storage test returned code ${error?.code}: ${error?.message}`);
+      }
+    }
+  }
+
+  // Helper method to normalize product documentation consistently
+  normalizeProductDoc(doc) {
+    if (!doc) return doc;
+    const parsedDoc = { ...doc };
+
+    // 1. Normalize packaging_size (could be array of strings, array of objects, or single JSON string)
+    let rawPkg = parsedDoc.packaging_size;
+    if (typeof rawPkg === "string" && rawPkg.trim()) {
+      try {
+        const parsed = JSON.parse(rawPkg);
+        if (Array.isArray(parsed)) rawPkg = parsed;
+      } catch (e) {
+        console.warn("[normalizeProductDoc] Failed to parse packaging_size string", e);
+      }
+    }
+
+    if (Array.isArray(rawPkg)) {
+      parsedDoc.packaging_size = rawPkg.map((item) => {
+        if (typeof item === "string") {
+          try {
+            const obj = JSON.parse(item);
+            return {
+              id: obj?.id || Math.random().toString(36).substr(2, 9),
+              size: obj?.size || "",
+              price_cents: obj?.price_cents || "",
+              images: Array.isArray(obj?.images)
+                ? obj.images.filter((id) => typeof id === "string" && id.trim())
+                : [],
+            };
+          } catch {
+            return { size: "", price_cents: "", images: [] };
+          }
+        }
+        // Already an object
+        return {
+          id: item?.id || item?.$id || Math.random().toString(36).substr(2, 9),
+          size: item?.size || "",
+          price_cents: item?.price_cents || "",
+          images: Array.isArray(item?.images)
+            ? item.images.filter((id) => typeof id === "string" && id.trim())
+            : [],
+        };
+      });
+    } else {
+      parsedDoc.packaging_size = [];
+    }
+
+    // 2. Normalize batch (could be array or single stringified JSON)
+    let rawBatch = parsedDoc.batch;
+    if (typeof rawBatch === "string" && rawBatch.trim()) {
+      try {
+        const parsed = JSON.parse(rawBatch);
+        if (Array.isArray(parsed)) rawBatch = parsed;
+      } catch (e) {
+        // Not JSON or single value
+      }
+    }
+
+    if (Array.isArray(rawBatch)) {
+      parsedDoc.batch = rawBatch
+        .map((b) => ({
+          name: String(b?.name ?? "").trim(),
+          delivery_date: String(b?.delivery_date ?? "").trim(),
+        }))
+        .filter((b) => b.name || b.delivery_date);
+    } else {
+      parsedDoc.batch = [];
+    }
+
+    return parsedDoc;
   }
 
   async createProduct({
@@ -95,12 +183,13 @@ export class appwriteConfigService {
     };
 
     try {
-      return await this.databases.createDocument(
+      const res = await this.databases.createDocument(
         conf.appwriteDatabaseId,
         conf.appwriteProductsCollection,
         slug,
         extendedPayload
       );
+      return this.normalizeProductDoc(res);
     } catch (err) {
       const isUnknownAttr =
         /unknown attribute|invalid attribute|Extra attribute/i.test(
@@ -113,12 +202,13 @@ export class appwriteConfigService {
             "products collection to enable these features. Raw error:",
           err.message
         );
-        return await this.databases.createDocument(
+        const res = await this.databases.createDocument(
           conf.appwriteDatabaseId,
           conf.appwriteProductsCollection,
           slug,
           corePayload
         );
+        return this.normalizeProductDoc(res);
       }
       console.error("[createProduct] Appwrite error:", err?.message, err);
       throw err;
@@ -197,12 +287,13 @@ export class appwriteConfigService {
     };
 
     try {
-      return await this.databases.updateDocument(
+      const res = await this.databases.updateDocument(
         conf.appwriteDatabaseId,
         conf.appwriteProductsCollection,
         slug,
         extendedPayload
       );
+      return this.normalizeProductDoc(res);
     } catch (err) {
       // If Appwrite rejects because a newer attribute (batch / allowed_payment_modes)
       // hasn't been added to the collection schema yet, retry with core fields only.
@@ -217,12 +308,13 @@ export class appwriteConfigService {
           "collection to enable these features. Raw error:",
           err.message
         );
-        return await this.databases.updateDocument(
+        const res = await this.databases.updateDocument(
           conf.appwriteDatabaseId,
           conf.appwriteProductsCollection,
           slug,
           corePayload
         );
+        return this.normalizeProductDoc(res);
       }
       // Log real error before re-throwing so it's visible in console
       console.error("[updateProduct] Appwrite error:", err?.message, err);
@@ -280,62 +372,9 @@ export class appwriteConfigService {
         queries
       );
 
-      const documents = res.documents.map((doc) => {
-        const parsedDoc = { ...doc };
-        if (Array.isArray(parsedDoc.packaging_size)) {
-          parsedDoc.packaging_size = parsedDoc.packaging_size.map((item) => {
-            if (typeof item === "string") {
-              try {
-                const obj = JSON.parse(item);
-                return {
-                  size: obj?.size || "",
-                  price_cents: obj?.price_cents || "",
-                  images: Array.isArray(obj?.images)
-                    ? obj.images.filter(
-                        (id) => typeof id === "string" && id.trim()
-                      )
-                    : [],
-                };
-              } catch {
-                return { size: "", price_cents: "", images: [] };
-              }
-            }
-            // already object
-            return {
-              size: item?.size || "",
-              price_cents: item?.price_cents || "",
-              images: Array.isArray(item?.images)
-                ? item.images.filter(
-                    (id) => typeof id === "string" && id.trim()
-                  )
-                : [],
-            };
-          });
-        } else {
-          parsedDoc.packaging_size = [];
-        }
-
-        // NEW: parse batch string -> array for UI
-        if (typeof parsedDoc.batch === "string" && parsedDoc.batch.trim()) {
-          try {
-            const arr = JSON.parse(parsedDoc.batch);
-            parsedDoc.batch = Array.isArray(arr)
-              ? arr
-                  .map((b) => ({
-                    name: String(b?.name ?? "").trim(),
-                    delivery_date: String(b?.delivery_date ?? "").trim(),
-                  }))
-                  .filter((b) => b.name || b.delivery_date)
-              : [];
-          } catch {
-            parsedDoc.batch = [];
-          }
-        } else if (!Array.isArray(parsedDoc.batch)) {
-          parsedDoc.batch = [];
-        }
-
-        return parsedDoc;
-      });
+      const documents = res.documents.map((doc) =>
+        this.normalizeProductDoc(doc)
+      );
 
       return { ...res, documents };
     } catch (error) {
@@ -464,12 +503,13 @@ export class appwriteConfigService {
 
   async updateProductDiscount(productId, discount) {
     try {
-      return await this.databases.updateDocument(
+      const res = await this.databases.updateDocument(
         conf.appwriteDatabaseId,
         conf.appwriteProductsCollection,
         productId,
         { discount }
       );
+      return appwriteConfigService.normalizeProductDoc(res);
     } catch (error) {
       console.error("Appwrite :: updateProductDiscount error ::", error);
       throw error;
@@ -500,7 +540,7 @@ export class appwriteConfigService {
       }
 
       // 2️⃣ Update product document with new stats
-      return await this.databases.updateDocument(
+      const res = await this.databases.updateDocument(
         conf.appwriteDatabaseId,
         conf.appwriteProductsCollection,
         productId,
@@ -509,6 +549,7 @@ export class appwriteConfigService {
           review_count: count,
         }
       );
+      return appwriteConfigService.normalizeProductDoc(res);
     } catch (error) {
       console.error("Appwrite :: updateProductReviewStats error ::", error);
       throw error;
@@ -783,7 +824,9 @@ export class appwriteConfigService {
       await this.storage.deleteFile(conf.appwriteBucketId, fileId);
       return true;
     } catch (error) {
-      console.error("Appwrite :: deleteFile error ::", error);
+      if (error?.code !== 404) {
+        console.error("Appwrite :: deleteFile error ::", error);
+      }
       return false;
     }
   }

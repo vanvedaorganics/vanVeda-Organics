@@ -27,27 +27,6 @@ import { setCartOpen, selectIsCartOpen } from "../store/uiSlice";
 import { CartCard } from "./index";
 
 // ---- Helpers for new schema + cart keys ----
-const parsePackagingSizes = (raw = []) => {
-  if (!Array.isArray(raw)) return [];
-  return raw
-    .map((item) => {
-      try {
-        const obj = typeof item === "string" ? JSON.parse(item) : item || {};
-        return {
-          size: obj?.size || "",
-          price_cents:
-            typeof obj?.price_cents !== "undefined"
-              ? Number(obj.price_cents)
-              : undefined,
-          images: Array.isArray(obj?.images) ? obj.images.filter(Boolean) : [],
-        };
-      } catch {
-        return null;
-      }
-    })
-    .filter(Boolean);
-};
-
 const discountPrice = (cents, discount) => {
   const d = Number(discount) || 0;
   if (!cents || d <= 0) return cents || 0;
@@ -158,7 +137,7 @@ export function Header() {
           typeof itemData === "number" ? itemData : (itemData?.qty ?? 0);
         const batchData = typeof itemData === "object" ? itemData?.batch : null;
 
-        const packaging = parsePackagingSizes(product.packaging_size);
+        const packaging = product.packaging_size || [];
         const sizeObj =
           typeof parsed.sizeIdx === "number" && packaging[parsed.sizeIdx]
             ? packaging[parsed.sizeIdx]

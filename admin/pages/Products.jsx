@@ -22,26 +22,8 @@ import { fetchProducts, updateProduct as updateProductInStore, addProduct } from
 import { getImageUrl } from "../../utils/getImageUrl";
 
 // Helpers to work with new schema
-const parsePackagingSizes = (raw = []) => {
-  if (!Array.isArray(raw)) return [];
-  return raw
-    .map((item) => {
-      try {
-        const obj = typeof item === "string" ? JSON.parse(item) : item || {};
-        return {
-          size: obj?.size || "",
-          price_cents: obj?.price_cents ? Number(obj.price_cents) : undefined,
-          images: Array.isArray(obj?.images) ? obj.images.filter(Boolean) : [],
-        };
-      } catch {
-        return null;
-      }
-    })
-    .filter(Boolean);
-};
-
 const getMainImageId = (packaging) => {
-  const first = packaging?.find(
+  const first = (packaging || []).find(
     (p) => Array.isArray(p.images) && p.images.length > 0
   );
   return first?.images?.[0] || "";
@@ -56,36 +38,8 @@ const discountPrice = (cents, discount) => {
   return Math.round((cents * (100 - d)) / 100);
 };
 
-// NEW: batch helper for numbering
+// NEW: padding helper
 const pad2 = (n) => String(n).padStart(2, "0");
-
-// NEW: robust batch parser to handle both array and stringified JSON
-const parseBatches = (raw) => {
-  if (!raw) return [];
-  if (Array.isArray(raw)) {
-    return raw
-      .map((b) => ({
-        name: String(b?.name ?? "").trim(),
-        delivery_date: String(b?.delivery_date ?? "").trim(),
-      }))
-      .filter((b) => b.name || b.delivery_date);
-  }
-  if (typeof raw === "string" && raw.trim()) {
-    try {
-      const arr = JSON.parse(raw);
-      if (!Array.isArray(arr)) return [];
-      return arr
-        .map((b) => ({
-          name: String(b?.name ?? "").trim(),
-          delivery_date: String(b?.delivery_date ?? "").trim(),
-        }))
-        .filter((b) => b.name || b.delivery_date);
-    } catch {
-      return [];
-    }
-  }
-  return [];
-};
 
 export default function ProductsPage() {
   const dispatch = useDispatch();
@@ -143,7 +97,7 @@ export default function ProductsPage() {
   }, [openBatchRowId]);
 
   const buildGalleryFromRow = (row) => {
-    const packaging = parsePackagingSizes(row.packaging_size);
+    const packaging = row.packaging_size || [];
     return packaging
       .map((p) => ({
         size: p.size || "—",
@@ -196,7 +150,7 @@ export default function ProductsPage() {
       header: "Preview",
       accessor: "packaging_size",
       render: (row) => {
-        const packaging = parsePackagingSizes(row.packaging_size);
+        const packaging = row.packaging_size || [];
         const fileId = getMainImageId(packaging);
         if (!fileId) {
           return (
@@ -241,7 +195,7 @@ export default function ProductsPage() {
       header: "Sizes",
       accessor: "packaging_size",
       render: (row) => {
-        const packaging = parsePackagingSizes(row.packaging_size);
+        const packaging = row.packaging_size || [];
         if (!packaging.length) return "—";
         return (
           <div className="flex flex-col gap-1">
@@ -261,7 +215,7 @@ export default function ProductsPage() {
       header: "Price (per size)",
       accessor: "packaging_size",
       render: (row) => {
-        const packaging = parsePackagingSizes(row.packaging_size);
+        const packaging = row.packaging_size || [];
         if (!packaging.length) return "—";
         return (
           <div className="flex flex-col gap-1">
@@ -364,7 +318,7 @@ export default function ProductsPage() {
       accessor: "batch",
       render: (row) => {
         const idKey = row.$id || row.slug;
-        const batches = parseBatches(row.batch);
+        const batches = row.batch || [];
         if (!batches.length) return "—";
         const first = batches[0] || {};
         const titleText = `Batch 00 ${first.name || "Unnamed"}${

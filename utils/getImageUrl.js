@@ -4,6 +4,7 @@ import conf from "../src/conf/conf";
 export const getImageUrl = (fileId) => {
   if (!fileId) return "/placeholder.svg";
 
-  // Use /preview for optimized web display and better permission compatibility
-  return `${conf.appwriteUrl}/storage/buckets/${conf.appwriteBucketId}/files/${fileId}/preview?project=${conf.appwriteProjectId}`;
+  // Use /view as it often has broader public compatibility in Appwrite Cloud
+  const baseUrl = `${conf.appwriteUrl}/storage/buckets/${conf.appwriteBucketId}/files/${fileId}/view`;
+  return `${baseUrl}?project=${conf.appwriteProjectId}`;
 };

@@ -17,29 +17,10 @@ import { sendSubscriptionEmail } from "../utils/emailService";
 import conf from "../conf/conf";
 import { Query } from "appwrite"; // used for advanced queries (optional)
 import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "../../utils/lib";
 
-// Helpers for new schema
-const parsePackagingSizes = (raw = []) => {
-  if (!Array.isArray(raw)) return [];
-  return raw
-    .map((item) => {
-      try {
-        const obj = typeof item === "string" ? JSON.parse(item) : item || {};
-        return {
-          size: obj?.size || "",
-          price_cents:
-            typeof obj?.price_cents !== "undefined"
-              ? Number(obj.price_cents)
-              : undefined,
-          images: Array.isArray(obj?.images) ? obj.images.filter(Boolean) : [],
-        };
-      } catch {
-        return null;
-      }
-    })
-    .filter(Boolean);
-};
-const discountPrice = (cents, discount) => {
+// Price helper
+const getDiscountedPrice = (cents, discount) => {
   const d = Number(discount) || 0;
   if (!cents || d <= 0) return cents || 0;
   return Math.round((cents * (100 - d)) / 100);
@@ -48,34 +29,6 @@ const discountPrice = (cents, discount) => {
 // cart key helpers: `${slug}::${sizeIdx}`
 const CART_KEY_SEP = "::";
 const makeCartKey = (slug, sizeIdx) => `${slug}${CART_KEY_SEP}${sizeIdx}`;
-
-// NEW: Parse batches helper
-const parseBatches = (raw) => {
-  if (!raw) return [];
-  if (Array.isArray(raw)) {
-    return raw
-      .map((b) => ({
-        name: String(b?.name ?? "").trim(),
-        delivery_date: String(b?.delivery_date ?? "").trim(),
-      }))
-      .filter((b) => b.name || b.delivery_date);
-  }
-  if (typeof raw === "string" && raw.trim()) {
-    try {
-      const arr = JSON.parse(raw);
-      if (!Array.isArray(arr)) return [];
-      return arr
-        .map((b) => ({
-          name: String(b?.name ?? "").trim(),
-          delivery_date: String(b?.delivery_date ?? "").trim(),
-        }))
-        .filter((b) => b.name || b.delivery_date);
-    } catch {
-      return [];
-    }
-  }
-  return [];
-};
 
 function ProductDetails() {
   const { slug } = useParams();
@@ -88,6 +41,7 @@ function ProductDetails() {
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [imgError, setImgError] = useState(false);
 
   // Gallery + size selection state
   const [selectedSizeIdx, setSelectedSizeIdx] = useState(0);
@@ -198,20 +152,13 @@ function ProductDetails() {
     };
   }, [product, authStatus, userData]);
 
-  // Derived data from new schema
-  const sizes = useMemo(
-    () => (product ? parsePackagingSizes(product.packaging_size) : []),
-    [product]
-  );
+  // Derived data from new schema (pre-normalized)
+  const sizes = product?.packaging_size || [];
+  const batches = product?.batch || [];
   const hasSizes = sizes.length > 0;
-
-  // NEW: Move batches useMemo here (before early returns)
-  const batches = useMemo(
-    () => (product ? parseBatches(product.batch) : []),
-    [product]
-  );
   const hasBatches = batches.length > 0;
   const selectedBatch = hasBatches ? batches[selectedBatchIdx] : null;
+
 
   // Stock awareness
   const stock = product?.stock;
@@ -272,8 +219,8 @@ function ProductDetails() {
   // Price (per selected size, fallback to legacy)
   const baseCents = useMemo(() => {
     const centsFromSize =
-      typeof selectedSize?.price_cents === "number"
-        ? selectedSize.price_cents
+      typeof selectedSize?.price_cents !== "undefined"
+        ? Number(selectedSize.price_cents)
         : undefined;
     if (typeof centsFromSize === "number" && centsFromSize > 0)
       return centsFromSize;
@@ -283,7 +230,7 @@ function ProductDetails() {
   }, [selectedSize, product]);
 
   const discountedCents = useMemo(
-    () => discountPrice(baseCents, product?.discount || 0),
+    () => getDiscountedPrice(baseCents, product?.discount || 0),
     [baseCents, product?.discount]
   );
 
@@ -666,11 +613,31 @@ function ProductDetails() {
                 key={mainImageUrl}
                 initial={{ opacity: 0, scale: 1.05 }}
                 animate={{ opacity: 1, scale: 1 }}
-                src={mainImageUrl}
+                src={imgError ? "/placeholder.svg" : mainImageUrl}
                 alt={product.name}
-                className="w-full h-full object-cover"
-                onError={(e) => (e.currentTarget.src = "/placeholder.svg")}
+                className={cn(
+                   "w-full h-full object-cover",
+                   imgError && "opacity-40 grayscale"
+                )}
+                onError={(e) => {
+                  if (!imgError) {
+                    console.error(`[ProductDetails] Main image load failed for ${product.name}. URL: ${mainImageUrl}. Possible Appwrite Storage Permission issue (403).`);
+                    setImgError(true);
+                  }
+                }}
               />
+              {imgError && (
+                 <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center bg-white/60 backdrop-blur-sm">
+                   <div className="bg-white/90 p-6 rounded-3xl shadow-xl border border-red-100 flex flex-col items-center">
+                      <span className="text-sm font-bold text-red-800 uppercase tracking-widest mb-1">
+                        Permission Blocked (403)
+                      </span>
+                      <span className="text-xs text-gray-500 max-w-[200px] leading-relaxed">
+                        Appwrite Storage Bucket needs "Read" permissions for role "Any".
+                      </span>
+                   </div>
+                 </div>
+              )}
               {hasDiscount && (
                 <div className="absolute top-6 left-6 bg-[#744531] text-white px-4 py-1.5 rounded-full text-xs font-bold shadow-lg tracking-wider">
                   {product.discount}% OFF
@@ -698,6 +665,10 @@ function ProductDetails() {
                           src={getImageUrl(fid)}
                           alt={`${product.name} thumbnail ${i + 1}`}
                           className="h-full w-full object-cover"
+                          onError={(e) => {
+                            console.error(`[ProductDetails] Thumbnail ${i+1} load failed for ${product.name}. Possible Appwrite Storage Permission issue (403).`);
+                            e.currentTarget.src = "/placeholder.svg";
+                          }}
                         />
                       </button>
                     );

@@ -24,62 +24,16 @@ export const updateProductDiscount = createAsyncThunk(
 
 // Helper: normalize product document to prevent field degradation
 const normalizeProductDoc = (incoming, existingItem = {}) => {
-  const normalized = { ...incoming };
+  // Delegate core field normalization (packaging_size, batch) to the service
+  let normalized = appwriteService.normalizeProductDoc(incoming);
 
-  // Normalize packaging_size (string[] -> object[])
-  if (Array.isArray(normalized.packaging_size)) {
-    normalized.packaging_size = normalized.packaging_size.map((item) => {
-      if (typeof item === "string") {
-        try {
-          const obj = JSON.parse(item);
-          return {
-            size: obj?.size || "",
-            price_cents: obj?.price_cents || "",
-            images: Array.isArray(obj?.images)
-              ? obj.images.filter((id) => typeof id === "string" && id.trim())
-              : [],
-          };
-        } catch {
-          return { size: "", price_cents: "", images: [] };
-        }
-      }
-      return {
-        size: item?.size || "",
-        price_cents: item?.price_cents || "",
-        images: Array.isArray(item?.images)
-          ? item.images.filter((id) => typeof id === "string" && id.trim())
-          : [],
-      };
-    });
-  } else if (Array.isArray(existingItem.packaging_size)) {
-    // Preserve existing if not in payload
+  // Preserve existing fields if they were missing or null in incoming (Appwrite sometimes returns partial docs)
+  if (!normalized.packaging_size?.length && existingItem?.packaging_size?.length) {
     normalized.packaging_size = existingItem.packaging_size;
-  } else {
-    normalized.packaging_size = [];
   }
-
-  // Normalize batch (stringified JSON -> array)
-  if (typeof normalized.batch === "string" && normalized.batch.trim()) {
-    try {
-      const arr = JSON.parse(normalized.batch);
-      normalized.batch = Array.isArray(arr)
-        ? arr
-            .map((b) => ({
-              name: String(b?.name ?? "").trim(),
-              delivery_date: String(b?.delivery_date ?? "").trim(),
-            }))
-            .filter((b) => b.name || b.delivery_date)
-        : [];
-    } catch {
-      normalized.batch = [];
-    }
-  } else if (normalized.batch === null || normalized.batch === undefined) {
-    // Preserve existing batch if incoming is null/undefined
-    normalized.batch = Array.isArray(existingItem.batch)
-      ? existingItem.batch
-      : [];
-  } else if (!Array.isArray(normalized.batch)) {
-    normalized.batch = [];
+  
+  if (!normalized.batch?.length && existingItem?.batch?.length) {
+    normalized.batch = existingItem.batch;
   }
 
   // Preserve expanded category object if incoming only has id string

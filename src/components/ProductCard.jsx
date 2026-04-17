@@ -13,68 +13,17 @@ import {
 } from "../store/cartsSlice";
 import { motion, AnimatePresence } from "framer-motion";
 
-// Parse packaging_size that may contain stringified objects
-const parsePackagingSizes = (raw = []) => {
-  if (!Array.isArray(raw)) return [];
-  return raw
-    .map((item) => {
-      try {
-        const obj = typeof item === "string" ? JSON.parse(item) : item || {};
-        return {
-          size: obj?.size || "",
-          price_cents: obj?.price_cents ? Number(obj.price_cents) : undefined,
-          images: Array.isArray(obj?.images) ? obj.images.filter(Boolean) : [],
-        };
-      } catch {
-        return null;
-      }
-    })
-    .filter(Boolean);
-};
-
-const discountPrice = (cents, discount) => {
+// Price helper
+const getDiscountedPrice = (cents, discount) => {
   const d = Number(discount) || 0;
   if (d <= 0) return cents;
   return Math.round((cents * (100 - d)) / 100);
 };
 
-const getMainImageId = (sizeObj) =>
-  Array.isArray(sizeObj?.images) && sizeObj.images.length > 0
-    ? sizeObj.images[0]
-    : "";
-
 const currencyLabel = (currency = "INR") => (currency === "INR" ? "₹" : currency);
 
 const CART_KEY_SEP = "::";
 const makeCartKey = (slug, sizeIdx) => `${slug}${CART_KEY_SEP}${sizeIdx}`;
-
-// NEW: Parse batches helper
-const parseBatches = (raw) => {
-  if (!raw) return [];
-  if (Array.isArray(raw)) {
-    return raw
-      .map((b) => ({
-        name: String(b?.name ?? "").trim(),
-        delivery_date: String(b?.delivery_date ?? "").trim(),
-      }))
-      .filter((b) => b.name || b.delivery_date);
-  }
-  if (typeof raw === "string" && raw.trim()) {
-    try {
-      const arr = JSON.parse(raw);
-      if (!Array.isArray(arr)) return [];
-      return arr
-        .map((b) => ({
-          name: String(b?.name ?? "").trim(),
-          delivery_date: String(b?.delivery_date ?? "").trim(),
-        }))
-        .filter((b) => b.name || b.delivery_date);
-    } catch {
-      return [];
-    }
-  }
-  return [];
-};
 
 const ProductCard = ({
   // New schema fields
@@ -93,8 +42,12 @@ const ProductCard = ({
   // Styling
   className,
 }) => {
-  // Sizes parsing
-  const sizes = useMemo(() => parsePackagingSizes(packaging_size), [packaging_size]);
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  // Data arrives pre-normalized from Redux store via appwriteConfigService
+  const sizes = packaging_size || [];
+  const batches = batch || [];
   const hasDiscount = Number(discount) > 0;
 
   // Stock awareness
@@ -121,14 +74,27 @@ const ProductCard = ({
 
   // Card state
   const [activeIdx, setActiveIdx] = useState(0);
+  const [imgError, setImgError] = useState(false);
 
   const activeSize = sizes[activeIdx] || null;
-  const activeMainImageId = activeSize ? getMainImageId(activeSize) : "";
+  
+  // Robust image retrieval: look in active size first, then fallback to ANY size if empty
+  const activeMainImageId = useMemo(() => {
+    const fromActive = Array.isArray(activeSize?.images) && activeSize.images.length > 0 
+      ? activeSize.images[0] 
+      : "";
+    if (fromActive) return fromActive;
+    
+    // Fallback search across all sizes
+    const firstAvailable = sizes.find(s => Array.isArray(s.images) && s.images.length > 0);
+    return firstAvailable?.images?.[0] || "";
+  }, [activeSize, sizes]);
+
   const imageUrl = activeMainImageId ? getImageUrl(activeMainImageId) : "/placeholder.svg";
 
   const baseCents =
-    typeof activeSize?.price_cents === "number" ? activeSize.price_cents : 0;
-  const finalCents = discountPrice(baseCents, discount);
+    typeof activeSize?.price_cents !== "undefined" ? Number(activeSize.price_cents) : 0;
+  const finalCents = getDiscountedPrice(baseCents, discount);
 
   const c = currencyLabel(currency);
   const formattedFinal = `${c} ${(finalCents / 100).toFixed(2)}`;
@@ -140,8 +106,6 @@ const ProductCard = ({
     e.stopPropagation();
   };
 
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
   const items = useSelector(selectCartItems);
 
   // Build cart key for active size
@@ -151,8 +115,6 @@ const ProductCard = ({
   const cartBatch = typeof cartItem === "object" ? cartItem?.batch : null;
   const inCart = quantity > 0;
 
-  // NEW: Batch state with dropdown control
-  const batches = useMemo(() => parseBatches(batch), [batch]);
   const hasBatches = batches.length > 0;
   const [selectedBatchIdx, setSelectedBatchIdx] = useState(0);
   const [batchDropdownOpen, setBatchDropdownOpen] = useState(false);
@@ -270,11 +232,28 @@ const ProductCard = ({
       {/* ── Image ────────────────────────────────────────── */}
       <div className="relative w-full aspect-[4/5] overflow-hidden bg-[#faf8f4]">
         <img
-          src={imageUrl}
+          src={imgError ? "/placeholder.svg" : imageUrl}
           alt={name}
-          className="h-full w-full object-cover transform transition-transform duration-500 ease-in-out group-hover:scale-110"
+          className={cn(
+            "h-full w-full object-cover transform transition-transform duration-500 ease-in-out group-hover:scale-110",
+            imgError && "opacity-40 grayscale"
+          )}
           loading="lazy"
+          onError={(e) => {
+            if (!imgError) {
+               console.error(`[ProductCard] Image load failed for ${name}. URL: ${imageUrl}. Possible Appwrite Storage Permission issue (403).`);
+               setImgError(true);
+            }
+          }}
         />
+        {imgError && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center">
+             <span className="text-[10px] font-bold text-[#744531] uppercase tracking-tighter opacity-60">
+               Permission Error (403)
+             </span>
+             <span className="text-[8px] text-gray-500 mt-1">Check Appwrite Bucket Settings</span>
+          </div>
+        )}
 
         {/* Gradient scrim at bottom for text legibility */}
         <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
