@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import appwriteService from "../../src/appwrite/appwriteConfigService";
 import { fetchProducts, updateProduct as updateProductInStore, addProduct } from "../../src/store/productsSlice";
+import { fetchCategories } from "../../src/store/categoriesSlice";
 import { getImageUrl } from "../../utils/getImageUrl";
 
 // Helpers to work with new schema
@@ -468,6 +469,7 @@ export default function ProductsPage() {
     if (!fetched && !loading) {
       dispatch(fetchProducts());
     }
+    dispatch(fetchCategories());
   }, [dispatch, fetched, loading]);
 
   return (
