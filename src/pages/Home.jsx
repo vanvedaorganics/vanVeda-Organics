@@ -7,6 +7,7 @@ import { fetchCategories } from "../store/categoriesSlice";
 import { motion } from "framer-motion";
 import { Leaf, Globe, Truck, CheckCircle, Quote, ArrowRight, Tag } from "lucide-react";
 import blogData from "./Blog/blogData";
+import { getImageUrl } from "../../utils/getImageUrl";
 
 function Home() {
   const dispatch = useDispatch();
