@@ -587,9 +587,9 @@ export class appwriteConfigService {
     }
   }
 
-  async createCategory({ name, slug, imageId = null }) {
+  async createCategory({ name, slug, imageId = null, navIcon = null }) {
     const corePayload = { name, slug };
-    const extendedPayload = { ...corePayload, imageId };
+    const extendedPayload = { ...corePayload, imageId, navIcon };
     try {
       return await this.databases.createDocument(
         conf.appwriteDatabaseId,
@@ -599,23 +599,37 @@ export class appwriteConfigService {
       );
     } catch (error) {
       const isUnknownAttr = /unknown attribute|invalid attribute|Extra attribute/i.test(error?.message || "");
-      if (isUnknownAttr && imageId) {
-        console.warn("[createCategory] imageId attribute missing in collection schema. Falling back to core fields.");
-        return await this.databases.createDocument(
-          conf.appwriteDatabaseId,
-          conf.appwriteCategoriesCollection,
-          slug,
-          corePayload
-        );
+      if (isUnknownAttr) {
+        // Try with imageId only (no navIcon)
+        try {
+          return await this.databases.createDocument(
+            conf.appwriteDatabaseId,
+            conf.appwriteCategoriesCollection,
+            slug,
+            { ...corePayload, imageId }
+          );
+        } catch (err2) {
+          const isAttrErr2 = /unknown attribute|invalid attribute|Extra attribute/i.test(err2?.message || "");
+          if (isAttrErr2) {
+            console.warn("[createCategory] imageId/navIcon attribute missing. Falling back to core fields.");
+            return await this.databases.createDocument(
+              conf.appwriteDatabaseId,
+              conf.appwriteCategoriesCollection,
+              slug,
+              corePayload
+            );
+          }
+          throw err2;
+        }
       }
       console.error("Appwrite :: createCategory error ::", error);
       throw error;
     }
   }
 
-  async updateCategory(slug, { name, imageId }) {
+  async updateCategory(slug, { name, imageId, navIcon }) {
     const corePayload = { name };
-    const extendedPayload = { ...corePayload, imageId: imageId ?? null };
+    const extendedPayload = { ...corePayload, imageId: imageId ?? null, navIcon: navIcon ?? null };
     try {
       return await this.databases.updateDocument(
         conf.appwriteDatabaseId,
@@ -626,13 +640,27 @@ export class appwriteConfigService {
     } catch (error) {
       const isUnknownAttr = /unknown attribute|invalid attribute|Extra attribute/i.test(error?.message || "");
       if (isUnknownAttr) {
-        console.warn("[updateCategory] imageId attribute missing in collection schema. Falling back to name update.");
-        return await this.databases.updateDocument(
-          conf.appwriteDatabaseId,
-          conf.appwriteCategoriesCollection,
-          slug,
-          corePayload
-        );
+        // Try with imageId only (navIcon may not exist in schema yet)
+        try {
+          return await this.databases.updateDocument(
+            conf.appwriteDatabaseId,
+            conf.appwriteCategoriesCollection,
+            slug,
+            { ...corePayload, imageId: imageId ?? null }
+          );
+        } catch (err2) {
+          const isAttrErr2 = /unknown attribute|invalid attribute|Extra attribute/i.test(err2?.message || "");
+          if (isAttrErr2) {
+            console.warn("[updateCategory] Falling back to name-only update.");
+            return await this.databases.updateDocument(
+              conf.appwriteDatabaseId,
+              conf.appwriteCategoriesCollection,
+              slug,
+              corePayload
+            );
+          }
+          throw err2;
+        }
       }
       console.error("Appwrite :: updateCategory error ::", error);
       throw error;

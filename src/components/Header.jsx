@@ -379,40 +379,45 @@ export function Header() {
                     Shop by Category
                   </h3>
                   <div className="flex items-center flex-wrap gap-3 px-1">
-                    {categories.map((cat) => (
-                      <Link
-                        key={cat.$id}
-                        to={`/products?category=${cat.$id}`}
-                        onClick={() => setMobileMenuOpen(false)}
-                        className="flex flex-col items-center gap-1.5 group"
-                      >
-                        <div className="w-14 h-14 rounded-2xl bg-[#E7CE9D]/10 flex items-center justify-center overflow-hidden group-hover:bg-[#E7CE9D]/25 transition-colors border border-[#E7CE9D]/20">
-                          {cat.icon ? (
-                            <img
-                              src={getImageUrl(cat.icon)}
-                              alt={cat.name}
-                              className="w-full h-full object-cover"
-                              onError={(e) => {
-                                e.target.style.display = "none";
-                                e.target.nextSibling.style.display = "flex";
-                              }}
-                            />
-                          ) : null}
-                          <span
-                            className="text-2xl font-bold text-[#744531]"
-                            style={{ display: cat.icon ? "none" : "flex" }}
-                          >
-                            {cat.name?.[0]?.toUpperCase() || "?"}
+                    {categories.map((cat) => {
+                      // Prefer the dedicated mobile nav icon; fall back to the main category icon
+                      const displayIconId = cat.navIcon || cat.imageId || null;
+                      return (
+                        <Link
+                          key={cat.$id}
+                          to={`/products?category=${cat.$id}`}
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="flex flex-col items-center gap-1.5 group"
+                        >
+                          <div className="w-14 h-14 rounded-2xl bg-[#E7CE9D]/10 flex items-center justify-center overflow-hidden group-hover:bg-[#E7CE9D]/25 transition-colors border border-[#E7CE9D]/20">
+                            {displayIconId ? (
+                              <img
+                                src={getImageUrl(displayIconId)}
+                                alt={cat.name}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  e.target.style.display = "none";
+                                  if (e.target.nextSibling) e.target.nextSibling.style.display = "flex";
+                                }}
+                              />
+                            ) : null}
+                            <span
+                              className="w-full h-full flex items-center justify-center text-xl font-bold text-[#744531]"
+                              style={{ display: displayIconId ? "none" : "flex" }}
+                            >
+                              {cat.name?.[0]?.toUpperCase() || "?"}
+                            </span>
+                          </div>
+                          <span className="text-[10px] font-bold text-[#744531] uppercase tracking-tighter text-center leading-tight max-w-[56px] truncate">
+                            {cat.name}
                           </span>
-                        </div>
-                        <span className="text-[10px] font-bold text-[#744531] uppercase tracking-tighter text-center leading-tight max-w-[56px] truncate">
-                          {cat.name}
-                        </span>
-                      </Link>
-                    ))}
+                        </Link>
+                      );
+                    })}
                   </div>
                 </div>
               )}
+
 
               <nav className="mt-2 flex flex-col gap-2 font-semibold">
                 {navItems.map(
