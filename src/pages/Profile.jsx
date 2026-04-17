@@ -4,6 +4,7 @@ import { useNavigate, useLocation, Link } from "react-router-dom";
 import appwriteConfigService from "../appwrite/appwriteConfigService";
 import appwriteAuthService from "../appwrite/authService";
 import { logout } from "../store/authSlice";
+import { updateOrder } from "../store/ordersSlice";
 import { Button, Input } from "../components";
 import { 
   User, Phone, Mail, MapPin, X, LogOut, Package, 
@@ -207,15 +208,13 @@ function Profile() {
   const handleCancelOrder = async (orderId) => {
     if (!window.confirm("Are you sure you want to cancel this order?")) return;
     try {
-      setOrdersLoading(true);
-      await appwriteConfigService.updateOrder(orderId, { fulfillmentStatus: "cancelled" });
-      const userOrders = await appwriteConfigService.listOrders({ user_id: profile.$id });
-      setOrders(userOrders.documents || []);
+      const updatedOrder = await appwriteConfigService.updateOrder(orderId, { 
+        fulfillmentStatus: "cancelled" 
+      });
+      dispatch(updateOrder(updatedOrder));
     } catch (err) {
       console.error("Failed to cancel order:", err);
       alert("Failed to cancel order: " + err.message);
-    } finally {
-      setOrdersLoading(false);
     }
   };
 

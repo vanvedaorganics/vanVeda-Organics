@@ -65,20 +65,20 @@ export class appwriteConfigService {
             return {
               id: obj?.id || Math.random().toString(36).substr(2, 9),
               size: obj?.size || "",
-              price_cents: obj?.price_cents || "",
+              price_cents: Number(obj?.price_cents) || 0,
               images: Array.isArray(obj?.images)
                 ? obj.images.filter((id) => typeof id === "string" && id.trim())
                 : [],
             };
           } catch {
-            return { size: "", price_cents: "", images: [] };
+            return { size: "", price_cents: 0, images: [] };
           }
         }
         // Already an object
         return {
           id: item?.id || item?.$id || Math.random().toString(36).substr(2, 9),
           size: item?.size || "",
-          price_cents: item?.price_cents || "",
+          price_cents: Number(item?.price_cents) || 0,
           images: Array.isArray(item?.images)
             ? item.images.filter((id) => typeof id === "string" && id.trim())
             : [],
@@ -86,6 +86,11 @@ export class appwriteConfigService {
       });
     } else {
       parsedDoc.packaging_size = [];
+    }
+
+    // NEW: Normalize top-level price_cents for legacy support
+    if (parsedDoc.price_cents !== undefined) {
+      parsedDoc.price_cents = Number(parsedDoc.price_cents) || 0;
     }
 
     // 2. Normalize batch (could be array or single stringified JSON)
@@ -319,6 +324,32 @@ export class appwriteConfigService {
       // Log real error before re-throwing so it's visible in console
       console.error("[updateProduct] Appwrite error:", err?.message, err);
       throw err;
+    }
+  }
+
+  // NEW: Update product stock (deduct or add)
+  async updateProductStock(slug, quantityToDeduct) {
+    try {
+      const product = await this.databases.getDocument(
+        conf.appwriteDatabaseId,
+        conf.appwriteProductsCollection,
+        slug
+      );
+
+      const currentStock = typeof product.stock === "number" ? product.stock : null;
+      if (currentStock === null) return null; // Not tracking stock
+
+      const newStock = Math.max(0, currentStock - quantityToDeduct);
+
+      return await this.databases.updateDocument(
+        conf.appwriteDatabaseId,
+        conf.appwriteProductsCollection,
+        slug,
+        { stock: newStock }
+      );
+    } catch (error) {
+      console.error("Appwrite :: updateProductStock error ::", error);
+      throw error;
     }
   }
 

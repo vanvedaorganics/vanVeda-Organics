@@ -218,15 +218,13 @@ function ProductDetails() {
 
   // Price (per selected size, fallback to legacy)
   const baseCents = useMemo(() => {
-    const centsFromSize =
-      typeof selectedSize?.price_cents !== "undefined"
-        ? Number(selectedSize.price_cents)
-        : undefined;
-    if (typeof centsFromSize === "number" && centsFromSize > 0)
-      return centsFromSize;
-    const legacy =
-      typeof product?.price_cents === "number" ? product.price_cents : 0;
-    return legacy;
+    const sPrice = Number(selectedSize?.price_cents);
+    if (!isNaN(sPrice) && sPrice > 0) return sPrice;
+
+    const pPrice = Number(product?.price_cents);
+    if (!isNaN(pPrice) && pPrice > 0) return pPrice;
+
+    return 0;
   }, [selectedSize, product]);
 
   const discountedCents = useMemo(

@@ -278,12 +278,10 @@ function Checkout() {
             ? packaging[parsed.sizeIdx]
             : null;
 
-        const baseCents =
-          typeof sizeObj?.price_cents === "number"
-            ? sizeObj.price_cents
-            : typeof product.price_cents === "number"
-            ? product.price_cents
-            : 0;
+        const sPrice = Number(sizeObj?.price_cents);
+        const baseCents = (!isNaN(sPrice) && sPrice > 0) 
+          ? sPrice 
+          : (Number(product?.price_cents) || 0);
 
         const unitCents = discountPrice(baseCents, product.discount || 0);
 
@@ -491,7 +489,18 @@ function Checkout() {
         }
       };
 
-      const finalizeSuccess = (result) => {
+      const finalizeSuccess = async (result) => {
+        // NEW: Deduct stock for all items in order
+        try {
+          await Promise.allSettled(
+            cartRows.map((row) =>
+              appwriteService.updateProductStock(row.slug, row.qty)
+            )
+          );
+        } catch (stockErr) {
+          console.error("Stock deduction failed", stockErr);
+        }
+
         dispatch(emptyUserCart());
         dispatch(setEmptyCart());
         setPlacedOrder(result);
@@ -566,7 +575,7 @@ function Checkout() {
               // response.razorpay_payment_id
               await submitOrderToAppwrite(
                 response.razorpay_payment_id,
-                "Card" // Changed from "Razorpay Online" to match Appwrite enum (UPI, Card, COD)
+                "ONLINE" // Standardized from "Card"
               );
             } catch (err) {
               console.error("DEBUG: Order placement failed after Razorpay success.");

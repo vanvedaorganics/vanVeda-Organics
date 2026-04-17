@@ -391,7 +391,7 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
     // Construct final array (objects)
     return packagingSizes.map((ps) => ({
       size: ps.size.trim(),
-      price_cents: Math.round(Number(ps.priceRupees) * 100).toString(),
+      price_cents: Math.round(Number(ps.priceRupees) * 100),
       images: ps.images.map((img) =>
         img.type === "existing" ? img.fileId : uploadedMap.get(img.id)
       ),
