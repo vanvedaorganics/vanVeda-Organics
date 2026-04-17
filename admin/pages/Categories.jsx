@@ -44,22 +44,6 @@ export default function CategoriesPage() {
     setModalOpen(true);
   };
 
-  const handleDelete = async (slug) => {
-    if (!window.confirm("Are you sure you want to delete this category? All products using it will no longer show it in filtering.")) return;
-    
-    setDeletingId(slug);
-    try {
-      await appwriteService.deleteCategory(slug);
-      dispatch(deleteCategoryInStore(slug));
-      toast.success("Category deleted successfully");
-    } catch (err) {
-      toast.error("Failed to delete category");
-      console.error(err);
-    } finally {
-      setDeletingId(null);
-    }
-  };
-
   const columns = [
     {
       header: "Icon",
@@ -106,7 +90,22 @@ export default function CategoriesPage() {
               <Pencil size={14} />
             </button>
             <button
-              onClick={() => handleDelete(idKey)}
+              onClick={async () => {
+                if (isDeleting) return;
+                if (!window.confirm("Are you sure you want to delete this category? All products using it will no longer show it in filtering.")) return;
+                
+                setDeletingId(idKey);
+                try {
+                  await appwriteService.deleteCategory(idKey);
+                  dispatch(deleteCategoryInStore(idKey));
+                  toast.success("Category deleted successfully");
+                } catch (err) {
+                  toast.error("Failed to delete category");
+                  console.error("Delete Error:", err);
+                } finally {
+                  setDeletingId(null);
+                }
+              }}
               disabled={isDeleting}
               className={`h-8 w-8 flex items-center justify-center rounded-lg border transition-colors ${
                 isDeleting 
