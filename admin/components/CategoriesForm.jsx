@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { Input, Button, Label } from "../index";
+import { Input, Button, Label } from "./index";
 import appwriteService from "../../src/appwrite/appwriteConfigService";
 import { getImageUrl } from "../../utils/getImageUrl";
 import { X, Upload, ImageIcon } from "lucide-react";
