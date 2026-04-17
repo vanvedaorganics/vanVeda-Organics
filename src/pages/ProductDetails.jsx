@@ -954,7 +954,7 @@ function ProductDetails() {
                         onChange={(e) => setSubWeeks(Number(e.target.value))}
                         className="w-full bg-[#f5f0e8] rounded-xl px-4 py-3 text-[11px] font-bold text-[#28543d] appearance-none focus:outline-none border border-black/[0.03]"
                       >
-                        {[2, 4, 8, 12, 16, 20, 24].map((w) => (
+                        {[2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((w) => (
                           <option key={w} value={w}>{w} Weeks</option>
                         ))}
                       </select>
