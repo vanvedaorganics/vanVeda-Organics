@@ -90,33 +90,40 @@ export default function CategoriesPage() {
     },
     {
       header: "Actions",
-      accessor: (row) => row,
+      accessor: "slug",
       className: "text-right",
-      render: (row) => (
-        <div className="flex justify-end gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleEdit(row)}
-            className="h-8 w-8 p-0 rounded-lg hover:bg-[#dfb96a]/10 hover:border-[#dfb96a] text-gray-600 border-gray-200"
-          >
-            <Pencil size={14} />
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleDelete(row.$id || row.slug)}
-            disabled={deletingId === (row.$id || row.slug)}
-            className="h-8 w-8 p-0 rounded-lg hover:bg-red-50 hover:border-red-200 text-gray-600 border-gray-200"
-          >
-            {deletingId === (row.$id || row.slug) ? (
-              <Loader2 size={14} className="animate-spin" />
-            ) : (
-              <Trash2 size={14} />
-            )}
-          </Button>
-        </div>
-      ),
+      render: (row) => {
+        const idKey = row.$id || row.slug;
+        const isDeleting = deletingId === idKey;
+        
+        return (
+          <div className="flex justify-end gap-2">
+            <button
+              onClick={() => handleEdit(row)}
+              className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-[#dfb96a]/10 hover:border-[#dfb96a] text-gray-600 border border-gray-200 transition-colors"
+              title="Edit"
+            >
+              <Pencil size={14} />
+            </button>
+            <button
+              onClick={() => handleDelete(idKey)}
+              disabled={isDeleting}
+              className={`h-8 w-8 flex items-center justify-center rounded-lg border transition-colors ${
+                isDeleting 
+                ? "bg-gray-50 text-gray-400 border-gray-100" 
+                : "hover:bg-red-50 hover:border-red-200 text-gray-600 border-gray-200"
+              }`}
+              title="Delete"
+            >
+              {isDeleting ? (
+                <Loader2 size={14} className="animate-spin" />
+              ) : (
+                <Trash2 size={14} />
+              )}
+            </button>
+          </div>
+        );
+      },
     },
   ];
 
@@ -162,22 +169,21 @@ export default function CategoriesPage() {
         )}
       </div>
 
-      {modalOpen && (
-        <Modal
-          title={editCategory ? "Edit Category" : "New Category"}
-          onClose={() => setModalOpen(false)}
-        >
-          <div className="p-1">
-            <CategoriesForm
-              initialData={editCategory}
-              onSuccess={() => {
-                setModalOpen(false);
-                dispatch(fetchCategories());
-              }}
-            />
-          </div>
-        </Modal>
-      )}
+      <Modal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        title={editCategory ? "Edit Category" : "New Category"}
+      >
+        <div className="p-1">
+          <CategoriesForm
+            initialData={editCategory}
+            onSuccess={() => {
+              setModalOpen(false);
+              dispatch(fetchCategories());
+            }}
+          />
+        </div>
+      </Modal>
     </div>
   );
 }
