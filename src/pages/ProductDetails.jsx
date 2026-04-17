@@ -1054,7 +1054,7 @@ function ProductDetails() {
             {/* Description Section */}
             <div className="space-y-4 pt-4">
               <h3 className="text-xs font-bold text-[#28543d] uppercase tracking-widest flex items-center gap-2">
-                <span>Product Philosophy</span>
+                <span>Product Details</span>
                 <span className="h-px flex-1 bg-[#28543d]/10"></span>
               </h3>
               <div className="text-gray-500 text-sm leading-relaxed whitespace-pre-wrap font-medium">
