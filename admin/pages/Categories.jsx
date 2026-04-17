@@ -26,9 +26,10 @@ export default function CategoriesPage() {
   const dispatch = useDispatch();
   const { items: categories, loading, error } = useSelector((state) => state.categories);
   
-  const [modalOpen, setModalOpen] = useState(false);
   const [editCategory, setEditCategory] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
   useEffect(() => {
     dispatch(fetchCategories());
@@ -92,9 +93,18 @@ export default function CategoriesPage() {
             <button
               onClick={async () => {
                 if (isDeleting) return;
-                if (!window.confirm("Are you sure you want to delete this category? All products using it will no longer show it in filtering.")) return;
                 
+                // First click: enter confirm mode
+                if (confirmDeleteId !== idKey) {
+                  setConfirmDeleteId(idKey);
+                  // Auto-cancel after 3 seconds
+                  setTimeout(() => setConfirmDeleteId(prev => prev === idKey ? null : prev), 3000);
+                  return;
+                }
+
+                // Second click: perform delete
                 setDeletingId(idKey);
+                setConfirmDeleteId(null);
                 try {
                   await appwriteService.deleteCategory(idKey);
                   dispatch(deleteCategoryInStore(idKey));
@@ -107,15 +117,19 @@ export default function CategoriesPage() {
                 }
               }}
               disabled={isDeleting}
-              className={`h-8 w-8 flex items-center justify-center rounded-lg border transition-colors ${
-                isDeleting 
-                ? "bg-gray-50 text-gray-400 border-gray-100" 
-                : "hover:bg-red-50 hover:border-red-200 text-gray-600 border-gray-200"
+              className={`h-8 flex items-center justify-center rounded-lg border transition-all duration-200 ${
+                confirmDeleteId === idKey
+                ? "bg-red-600 text-white border-red-600 px-3 w-auto"
+                : isDeleting 
+                ? "bg-gray-50 text-gray-400 border-gray-100 w-8" 
+                : "hover:bg-red-50 hover:border-red-200 text-gray-600 border-gray-200 w-8"
               }`}
-              title="Delete"
+              title={confirmDeleteId === idKey ? "Click again to confirm" : "Delete"}
             >
               {isDeleting ? (
                 <Loader2 size={14} className="animate-spin" />
+              ) : confirmDeleteId === idKey ? (
+                <span className="text-[10px] font-bold uppercase tracking-wider">Confirm?</span>
               ) : (
                 <Trash2 size={14} />
               )}
