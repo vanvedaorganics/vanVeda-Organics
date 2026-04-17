@@ -22,8 +22,7 @@ export class appwriteConfigService {
       .setProject(conf.appwriteProjectId);
     this.databases = new Databases(this.client);
     this.storage = new Storage(this.client);
-
-    // this.account = new Account(this.client);
+    this.account = new Account(this.client); // keep Account active so storage uses the same authenticated session
   }
 
   async createProduct({
@@ -774,7 +773,8 @@ export class appwriteConfigService {
       );
     } catch (error) {
       console.error("Appwrite :: uploadFile error ::", error);
-      return false;
+      // Re-throw so callers receive the real Appwrite error message
+      throw error;
     }
   }
 

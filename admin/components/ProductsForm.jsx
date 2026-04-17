@@ -101,13 +101,21 @@ function parsePackagingSizes(raw = []) {
 
 function getFriendlyErrorMessage(error) {
   if (!error) return "";
-  if (error.code === 409 || /already exists|duplicate/i.test(error.message))
+  const msg = error.message || "";
+  if (error.code === 409 || /already exists|duplicate/i.test(msg))
     return "A product with this name or slug already exists.";
-  if (error.code === 0 || /network|connection/i.test(error.message))
-    return "Unable to connect to the server.";
-  if (/invalid/i.test(error.message))
-    return `Invalid input: ${error.message}. Check the browser console for details.`;
-  return "Unexpected error. Please try again.";
+  if (error.code === 0 || /network|connection/i.test(msg))
+    return "Unable to connect to the server. Check your internet connection.";
+  if (error.code === 401 || /unauthorized|not authorized/i.test(msg))
+    return "Upload failed: You are not authorized. Please log out and log back in as admin.";
+  if (error.code === 403 || /forbidden|missing scope|not allowed/i.test(msg))
+    return "Upload failed: Storage bucket does not allow file creation. Go to Appwrite Console → Storage → your bucket → Permissions and add Create permission for role 'users' or 'any'.";
+  if (/upload|storage|bucket|file/i.test(msg))
+    return `Image upload error: ${msg}`;
+  if (/invalid/i.test(msg))
+    return `Invalid input: ${msg}. Check the browser console for details.`;
+  // Fall back to the raw message so admin always sees what went wrong
+  return msg || "Unexpected error. Check the browser console for details.";
 }
 
 export default function ProductsForm({ onSuccess, initialData = null }) {
@@ -372,8 +380,9 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
     for (const ps of packagingSizes) {
       for (const img of ps.images) {
         if (img.type === "new" && img.file && !uploadedMap.has(img.id)) {
+          // uploadFile now throws on failure — the real Appwrite error propagates up
           const res = await appwriteService.uploadFile(img.file);
-          if (!res || !res.$id) throw new Error("Image upload failed.");
+          if (!res?.$id) throw new Error("Image upload failed: server returned an invalid response.");
           uploadedMap.set(img.id, res.$id);
         }
       }
