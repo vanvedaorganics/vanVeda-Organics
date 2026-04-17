@@ -608,25 +608,35 @@ export class appwriteConfigService {
     }
   }
 
-  async deleteCategory(slug) {
+  async deleteCategory(id) {
     try {
-      // 1. Get the category to find any associated imageId
-      const category = await this.databases.getDocument(
-        conf.appwriteDatabaseId,
-        conf.appwriteCategoriesCollection,
-        slug
-      );
+      // 1. Try to find the category to check for associated images (Best Effort)
+      let imageId = null;
+      try {
+        const category = await this.databases.getDocument(
+          conf.appwriteDatabaseId,
+          conf.appwriteCategoriesCollection,
+          id
+        );
+        imageId = category.imageId;
+      } catch (err) {
+        console.warn("Appwrite :: deleteCategory :: Could not fetch category for cleanup, proceeding with deletion anyway.");
+      }
 
-      // 2. Clean up associated image (best effort)
-      if (category.imageId) {
-        await this.deleteFile(category.imageId);
+      // 2. Clean up associated image if found
+      if (imageId) {
+        try {
+          await this.deleteFile(imageId);
+        } catch (err) {
+          console.warn("Appwrite :: deleteCategory :: Image cleanup failed but proceeding.");
+        }
       }
 
       // 3. Delete the document
       return await this.databases.deleteDocument(
         conf.appwriteDatabaseId,
         conf.appwriteCategoriesCollection,
-        slug
+        id
       );
     } catch (error) {
       console.error("Appwrite :: deleteCategory error ::", error);
