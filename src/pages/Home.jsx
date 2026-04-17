@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import { fetchProducts, selectAllProducts } from "../store/productsSlice";
 import { fetchCategories } from "../store/categoriesSlice";
 import { motion } from "framer-motion";
-import { Leaf, Globe, Truck, CheckCircle, Quote, ArrowRight } from "lucide-react";
+import { Leaf, Globe, Truck, CheckCircle, Quote, ArrowRight, Tag } from "lucide-react";
 import blogData from "./Blog/blogData";
 
 function Home() {
