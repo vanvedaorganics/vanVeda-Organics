@@ -196,7 +196,7 @@ export default function ClientLogin() {
               <p className="text-gray-400 text-sm font-medium">
                 Don’t have an account?{" "}
                 <a href="/signup" className="text-[#28543d] font-bold hover:underline transition-all">
-                  Join for Free
+                  Sign In
                 </a>
               </p>
             </div>
