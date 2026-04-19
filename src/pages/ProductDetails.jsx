@@ -123,9 +123,16 @@ function ProductDetails() {
     return String(plans).split(",").map(p => parseInt(p.trim())).filter(p => !isNaN(p));
   }, [product?.subs_monthly_plans]);
 
-  // Available intervals based on configured plans
-  const hasWeekly = weeklyPlans.length > 0;
-  const hasMonthly = monthlyPlans.length > 0;
+  // Available intervals based on configured plans and explicit toggles
+  const hasWeekly = useMemo(() => {
+    const isAllowed = product?.isWeeklyAllowed ?? true;
+    return isAllowed && weeklyPlans.length > 0;
+  }, [product?.isWeeklyAllowed, weeklyPlans]);
+
+  const hasMonthly = useMemo(() => {
+    const isAllowed = product?.isMonthlyAllowed ?? true;
+    return isAllowed && monthlyPlans.length > 0;
+  }, [product?.isMonthlyAllowed, monthlyPlans]);
 
   // Sync subInterval if current selection is invalid
   useEffect(() => {

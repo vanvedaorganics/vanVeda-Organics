@@ -155,6 +155,8 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
       isSubscriptionAllowed: initialData?.isSubscriptionAllowed || false,
       subs_weekly_plans: initialData?.subs_weekly_plans || "",
       subs_monthly_plans: initialData?.subs_monthly_plans || "",
+      isWeeklyAllowed: initialData?.isWeeklyAllowed ?? true,
+      isMonthlyAllowed: initialData?.isMonthlyAllowed ?? true,
     },
   });
 
@@ -212,6 +214,8 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
         isSubscriptionAllowed: initialData.isSubscriptionAllowed || false,
         subs_weekly_plans: initialData.subs_weekly_plans || "",
         subs_monthly_plans: initialData.subs_monthly_plans || "",
+        isWeeklyAllowed: initialData.isWeeklyAllowed ?? true,
+        isMonthlyAllowed: initialData.isMonthlyAllowed ?? true,
       });
       setPackagingSizes(parsePackagingSizes(initialData.packaging_size));
       // NEW: reset batches from initial data
@@ -444,6 +448,8 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
         isSubscriptionAllowed: formData.isSubscriptionAllowed,
         subs_weekly_plans: formData.subs_weekly_plans || null,
         subs_monthly_plans: formData.subs_monthly_plans || null,
+        isWeeklyAllowed: formData.isWeeklyAllowed,
+        isMonthlyAllowed: formData.isMonthlyAllowed,
       };
 
       let result;
@@ -480,6 +486,8 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
           isSubscriptionAllowed: false,
           subs_weekly_plans: "",
           subs_monthly_plans: "",
+          isWeeklyAllowed: true,
+          isMonthlyAllowed: true,
         });
         // New: after creating a product, keep one default row instead of empty
         setPackagingSizes([createEmptyPackagingSize()]);
@@ -794,26 +802,63 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
           </div>
 
           {watch("isSubscriptionAllowed") && (
-            <div className="grid md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-emerald-100">
-              <div className="space-y-1">
-                <Label htmlFor="subs_weekly_plans">Weekly Durations</Label>
-                <Input
-                  id="subs_weekly_plans"
-                  placeholder="e.g. 1, 2, 4, 8"
-                  disabled={isSubmitting}
-                  {...register("subs_weekly_plans")}
-                />
-                <p className="text-[10px] text-gray-500">Comma separated number of weeks.</p>
+            <div className="grid md:grid-cols-2 gap-6 mt-4 pt-4 border-t border-emerald-100">
+              {/* Weekly Toggle + Input */}
+              <div className="space-y-4 p-4 rounded-2xl bg-emerald-50/50 border border-emerald-100/50">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="isWeeklyAllowed" className="font-bold text-emerald-800">Weekly Subscription</Label>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      id="isWeeklyAllowed"
+                      type="checkbox"
+                      className="sr-only peer"
+                      {...register("isWeeklyAllowed")}
+                    />
+                    <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+                  </label>
+                </div>
+                {watch("isWeeklyAllowed") && (
+                  <div className="space-y-1 animate-in fade-in slide-in-from-top-1 duration-200">
+                    <Label htmlFor="subs_weekly_plans" className="text-[10px] uppercase tracking-wider opacity-60">Durations (Weeks)</Label>
+                    <Input
+                      id="subs_weekly_plans"
+                      placeholder="e.g. 1, 2, 4, 8"
+                      disabled={isSubmitting}
+                      {...register("subs_weekly_plans")}
+                      className="bg-white"
+                    />
+                    <p className="text-[10px] text-gray-400">Comma separated weeks (e.g. 1, 2, 4)</p>
+                  </div>
+                )}
               </div>
-              <div className="space-y-1">
-                <Label htmlFor="subs_monthly_plans">Monthly Durations</Label>
-                <Input
-                  id="subs_monthly_plans"
-                  placeholder="e.g. 1, 3, 6, 12"
-                  disabled={isSubmitting}
-                  {...register("subs_monthly_plans")}
-                />
-                <p className="text-[10px] text-gray-500">Comma separated number of months.</p>
+
+              {/* Monthly Toggle + Input */}
+              <div className="space-y-4 p-4 rounded-2xl bg-amber-50/50 border border-amber-100/50">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="isMonthlyAllowed" className="font-bold text-amber-800">Monthly Subscription</Label>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      id="isMonthlyAllowed"
+                      type="checkbox"
+                      className="sr-only peer"
+                      {...register("isMonthlyAllowed")}
+                    />
+                    <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-600"></div>
+                  </label>
+                </div>
+                {watch("isMonthlyAllowed") && (
+                  <div className="space-y-1 animate-in fade-in slide-in-from-top-1 duration-200">
+                    <Label htmlFor="subs_monthly_plans" className="text-[10px] uppercase tracking-wider opacity-60">Durations (Months)</Label>
+                    <Input
+                      id="subs_monthly_plans"
+                      placeholder="e.g. 1, 3, 6"
+                      disabled={isSubmitting}
+                      {...register("subs_monthly_plans")}
+                      className="bg-white"
+                    />
+                    <p className="text-[10px] text-gray-400">Comma separated months (e.g. 1, 3, 6)</p>
+                  </div>
+                )}
               </div>
             </div>
           )}

@@ -134,6 +134,8 @@ export class appwriteConfigService {
     isSubscriptionAllowed = false,
     subs_weekly_plans = null,
     subs_monthly_plans = null,
+    isWeeklyAllowed = true,
+    isMonthlyAllowed = true,
   }) {
     const serialized = (
       Array.isArray(packaging_size) ? packaging_size : []
@@ -189,6 +191,8 @@ export class appwriteConfigService {
       isSubscriptionAllowed,
       subs_weekly_plans,
       subs_monthly_plans,
+      isWeeklyAllowed,
+      isMonthlyAllowed,
     };
 
     try {
@@ -241,6 +245,8 @@ export class appwriteConfigService {
       isSubscriptionAllowed,
       subs_weekly_plans,
       subs_monthly_plans,
+      isWeeklyAllowed,
+      isMonthlyAllowed,
     }
   ) {
     const serialized = (
@@ -297,6 +303,8 @@ export class appwriteConfigService {
       ...(typeof isSubscriptionAllowed === "boolean" ? { isSubscriptionAllowed } : {}),
       subs_weekly_plans,
       subs_monthly_plans,
+      isWeeklyAllowed,
+      isMonthlyAllowed,
     };
 
     try {
