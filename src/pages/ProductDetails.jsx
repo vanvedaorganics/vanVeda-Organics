@@ -1107,7 +1107,7 @@ function ProductDetails() {
             {/* Features */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4">
                {[
-                 { label: "100% Organic", icon: <CheckCircle2 className="h-4 w-4" /> },
+                 { label: "Organic", icon: <CheckCircle2 className="h-4 w-4" /> },
                  { label: "Zero Pesticides", icon: <CheckCircle2 className="h-4 w-4" /> },
                  { label: "Lab Tested", icon: <CheckCircle2 className="h-4 w-4" /> },
                  { label: "Farm Fresh", icon: <CheckCircle2 className="h-4 w-4" /> }

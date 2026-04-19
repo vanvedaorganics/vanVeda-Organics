@@ -64,7 +64,7 @@ function Home() {
               transition={{ delay: 0.3 }}
               className="mb-6 inline-block rounded-full px-6 py-2 text-[10px] font-black uppercase tracking-[0.2em] bg-[#E7CE9D]/10 text-[#E7CE9D] border border-[#E7CE9D]/30 backdrop-blur-md"
             >
-              100% Pure & Organic • Soil to Soul
+              Pure & Organic • Soil to Soul
             </motion.span>
 
             <motion.h1
@@ -109,7 +109,7 @@ function Home() {
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {[
-              { icon: Leaf, title: "100% Organic", desc: "Non-GMO & Pure" },
+              { icon: Leaf, title: "Organic", desc: "Pure" },
               { icon: Globe, title: "Sustainable", desc: "Eco-friendly farms" },
               { icon: Truck, title: "Direct to Table", desc: "Fresh from harvest" },
               { icon: CheckCircle, title: "Purely Natural", desc: "No artificial additives" }
