@@ -137,7 +137,7 @@ function CartCard({
           
           {batch?.delivery_date && (
             <p className="text-[10px] text-gray-400 font-medium italic">
-              Estimated arrival: {batch.delivery_date}
+              Ship Date: {batch.delivery_date}
             </p>
           )}
         </div>

@@ -132,6 +132,8 @@ export class appwriteConfigService {
     allowed_payment_modes,
     isBestseller = false,
     isSubscriptionAllowed = false,
+    subs_weekly_plans = null,
+    subs_monthly_plans = null,
   }) {
     const serialized = (
       Array.isArray(packaging_size) ? packaging_size : []
@@ -185,6 +187,8 @@ export class appwriteConfigService {
         : {}),
       isBestseller,
       isSubscriptionAllowed,
+      subs_weekly_plans,
+      subs_monthly_plans,
     };
 
     try {
@@ -235,6 +239,8 @@ export class appwriteConfigService {
       allowed_payment_modes,
       isBestseller,
       isSubscriptionAllowed,
+      subs_weekly_plans,
+      subs_monthly_plans,
     }
   ) {
     const serialized = (
@@ -289,6 +295,8 @@ export class appwriteConfigService {
         : {}),
       ...(typeof isBestseller === "boolean" ? { isBestseller } : {}),
       ...(typeof isSubscriptionAllowed === "boolean" ? { isSubscriptionAllowed } : {}),
+      subs_weekly_plans,
+      subs_monthly_plans,
     };
 
     try {

@@ -109,6 +109,41 @@ function ProductDetails() {
        setProfile(null);
     }
   }, [authStatus, userData]);
+  
+  // NEW: Custom Subscription Plans
+  const weeklyPlans = useMemo(() => {
+    const plans = product?.subs_weekly_plans;
+    if (!plans) return [2, 4, 8, 12]; // Default fallback
+    return String(plans).split(",").map(p => parseInt(p.trim())).filter(p => !isNaN(p));
+  }, [product?.subs_weekly_plans]);
+
+  const monthlyPlans = useMemo(() => {
+    const plans = product?.subs_monthly_plans;
+    if (!plans) return [1, 3, 6]; // Default fallback
+    return String(plans).split(",").map(p => parseInt(p.trim())).filter(p => !isNaN(p));
+  }, [product?.subs_monthly_plans]);
+
+  // Available intervals based on configured plans
+  const hasWeekly = weeklyPlans.length > 0;
+  const hasMonthly = monthlyPlans.length > 0;
+
+  // Sync subInterval if current selection is invalid
+  useEffect(() => {
+    if (subInterval === "weekly" && !hasWeekly && hasMonthly) {
+      setSubInterval("monthly");
+    } else if (subInterval === "monthly" && !hasMonthly && hasWeekly) {
+      setSubInterval("weekly");
+    }
+  }, [hasWeekly, hasMonthly, subInterval]);
+
+  // Sync subWeeks default when interval or plans change
+  useEffect(() => {
+    if (subInterval === "weekly" && weeklyPlans.length > 0) {
+      if (!weeklyPlans.includes(subWeeks)) setSubWeeks(weeklyPlans[0]);
+    } else if (subInterval === "monthly" && monthlyPlans.length > 0) {
+      if (!monthlyPlans.includes(subWeeks)) setSubWeeks(monthlyPlans[0]);
+    }
+  }, [subInterval, weeklyPlans, monthlyPlans]);
 
   const profileAddresses = useMemo(() => {
     if (profile?.address) return parseAddressArray(profile.address);
@@ -775,7 +810,7 @@ function ProductDetails() {
                         {inCart && cartBatch ? cartBatch.name : selectedBatch?.name || "Select delivery batch"}
                       </p>
                       {((inCart && cartBatch?.delivery_date) || (!inCart && selectedBatch?.delivery_date)) && (
-                        <p className="text-xs opacity-60 font-medium">Estimated Arrival: {inCart ? cartBatch.delivery_date : selectedBatch.delivery_date}</p>
+                        <p className="text-xs opacity-60 font-medium">Ship Date: {inCart ? cartBatch.delivery_date : selectedBatch.delivery_date}</p>
                       )}
                     </div>
                     {!inCart && <ChevronDown className={`w-5 h-5 transition-transform duration-300 ${batchDropdownOpen ? "rotate-180" : ""}`} />}
@@ -902,7 +937,7 @@ function ProductDetails() {
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Subscription Frequency</label>
                     <div className="flex p-1 bg-[#f5f0e8] rounded-xl">
-                      {["weekly", "monthly"].map((int) => (
+                      {["weekly", "monthly"].filter(int => (int === "weekly" ? hasWeekly : hasMonthly)).map((int) => (
                         <button
                           key={int}
                           onClick={() => setSubInterval(int)}
@@ -916,15 +951,17 @@ function ProductDetails() {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Duration (Weeks)</label>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                      Duration ({subInterval === 'weekly' ? 'Weeks' : 'Months'})
+                    </label>
                     <div className="relative">
                       <select
                         value={subWeeks}
                         onChange={(e) => setSubWeeks(Number(e.target.value))}
                         className="w-full bg-[#f5f0e8] rounded-xl px-4 py-3 text-[11px] font-bold text-[#28543d] appearance-none focus:outline-none border border-black/[0.03]"
                       >
-                        {[2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((w) => (
-                          <option key={w} value={w}>{w} Weeks</option>
+                        {(subInterval === "weekly" ? weeklyPlans : monthlyPlans).map((w) => (
+                          <option key={w} value={w}>{w} {subInterval === 'weekly' ? 'Weeks' : 'Months'}</option>
                         ))}
                       </select>
                       <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-[#28543d] pointer-events-none" />
@@ -980,17 +1017,17 @@ function ProductDetails() {
                   <p className="text-[10px] text-gray-400 italic">COD is not available for recurring plans.</p>
                 </div>
 
-                <div className="bg-[#f5f0e8] p-4 rounded-xl border border-black/[0.03]">
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Subscriber Discount</span>
-                    <span className="text-xs font-black text-emerald-600">-5% EXTRA</span>
+                  <div className="bg-[#f5f0e8] p-4 rounded-xl border border-black/[0.03]">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Subscriber Discount</span>
+                      <span className="text-xs font-black text-emerald-600">-5% EXTRA</span>
+                    </div>
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Upfront for {subWeeks} {subInterval === 'weekly' ? 'Weeks' : 'Months'}</span>
+                      <span className="text-sm font-black text-[#28543d]">₹{((subQuantity * Math.round(discountedCents * 0.95) * subWeeks) / 100).toFixed(2)}</span>
+                    </div>
+                    <p className="text-[9px] text-gray-400 leading-tight">Price includes all taxes. Paid once for {subWeeks} scheduled deliveries.</p>
                   </div>
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Upfront for {subWeeks} Weeks</span>
-                    <span className="text-sm font-black text-[#28543d]">₹{((subQuantity * Math.round(discountedCents * 0.95) * subWeeks) / 100).toFixed(2)}</span>
-                  </div>
-                  <p className="text-[9px] text-gray-400 leading-tight">Price includes all taxes. Paid once for {subWeeks} scheduled deliveries.</p>
-                </div>
 
                 {subError && <div className="p-3 bg-red-50 text-[11px] font-bold text-red-600 rounded-xl border border-red-100">{subError}</div>}
 

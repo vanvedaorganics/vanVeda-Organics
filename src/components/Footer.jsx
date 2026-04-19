@@ -98,7 +98,7 @@ function Footer() {
               <Mail className="h-4 w-4" /> truesoilorganic@gmail.com
             </p>
             <p className="flex items-center gap-2">
-              <Phone className="h-4 w-4" /> +91 9316417314
+              <Phone className="h-4 w-4" /> +91 90827 16034
             </p>
             <p className="text-primary-foreground/80">
               Gir Gadhda, Gujarat, India

@@ -153,6 +153,8 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
         "",
       isBestseller: initialData?.isBestseller || false,
       isSubscriptionAllowed: initialData?.isSubscriptionAllowed || false,
+      subs_weekly_plans: initialData?.subs_weekly_plans || "",
+      subs_monthly_plans: initialData?.subs_monthly_plans || "",
     },
   });
 
@@ -208,6 +210,8 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
           "",
         isBestseller: initialData.isBestseller || false,
         isSubscriptionAllowed: initialData.isSubscriptionAllowed || false,
+        subs_weekly_plans: initialData.subs_weekly_plans || "",
+        subs_monthly_plans: initialData.subs_monthly_plans || "",
       });
       setPackagingSizes(parsePackagingSizes(initialData.packaging_size));
       // NEW: reset batches from initial data
@@ -438,6 +442,8 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
         allowed_payment_modes: formData.allowed_payment_modes, // NEW
         isBestseller: formData.isBestseller,
         isSubscriptionAllowed: formData.isSubscriptionAllowed,
+        subs_weekly_plans: formData.subs_weekly_plans || null,
+        subs_monthly_plans: formData.subs_monthly_plans || null,
       };
 
       let result;
@@ -472,6 +478,8 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
           allowed_payment_modes: ["COD", "ONLINE"],
           isBestseller: false,
           isSubscriptionAllowed: false,
+          subs_weekly_plans: "",
+          subs_monthly_plans: "",
         });
         // New: after creating a product, keep one default row instead of empty
         setPackagingSizes([createEmptyPackagingSize()]);
@@ -784,6 +792,31 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
               <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
             </label>
           </div>
+
+          {watch("isSubscriptionAllowed") && (
+            <div className="grid md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-emerald-100">
+              <div className="space-y-1">
+                <Label htmlFor="subs_weekly_plans">Weekly Durations</Label>
+                <Input
+                  id="subs_weekly_plans"
+                  placeholder="e.g. 1, 2, 4, 8"
+                  disabled={isSubmitting}
+                  {...register("subs_weekly_plans")}
+                />
+                <p className="text-[10px] text-gray-500">Comma separated number of weeks.</p>
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="subs_monthly_plans">Monthly Durations</Label>
+                <Input
+                  id="subs_monthly_plans"
+                  placeholder="e.g. 1, 3, 6, 12"
+                  disabled={isSubmitting}
+                  {...register("subs_monthly_plans")}
+                />
+                <p className="text-[10px] text-gray-500">Comma separated number of months.</p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
