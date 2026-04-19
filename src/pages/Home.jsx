@@ -236,9 +236,9 @@ function Home() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
-              { name: "Anjali Sharma", text: "The Giri Kesar Mangoes are a world apart. You can truly taste the Gir soil in every bite. Pure heaven!", role: "Health Enthusiast" },
-              { name: "Sameer Vora", text: "Finally found Ghee that smells like Home. True soil Organics's commitment to quality is evident from the first use.", role: "Professional Chef" },
-              { name: "Priya Mehta", text: "Sustainable, organic, and truly effective. The honey from the forest section is my morning ritual now.", role: "Yoga Practitioner" }
+              { name: "Rajesh Patel", text: "The aroma of these Gir Kesar mangoes filled our entire home. The taste is exactly what I remember from my childhood in Junagadh. Pure bliss!", role: "Rajkot, Gujarat" },
+              { name: "Meera Patel", text: "Finding authentic, naturally ripened Kesar mangoes is hard, but True Soil has delivered the absolute best. Perfectly sweet and fiber-less.", role: "Ahmedabad, Gujarat" },
+              { name: "Sanjay Shah", text: "Best Kesar mangoes I have had in years. You can tell they haven't used any ripening chemicals. A must-have for every mango lover!", role: "Surat, Gujarat" }
             ].map((t, idx) => (
               <div key={idx} className="bg-white/5 backdrop-blur-md rounded-[2.5rem] p-10 border border-white/10 hover:bg-white/10 transition-all duration-500">
                 <p className="italic text-lg mb-8 text-white/90 leading-relaxed font-light">"{t.text}"</p>
