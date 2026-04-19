@@ -126,9 +126,13 @@ function ClientProducts() {
           <div className="animate-fadeInUp delay-300">
             <ProductsGrid products={filteredProducts} />
             {filteredProducts.length === 0 && (
-              <p className="text-center text-gray-500 mt-8">
-                No products found in this category.
-              </p>
+              <div className="flex flex-col items-center justify-center py-20 px-4 min-h-[40vh]">
+                <p className="syne-bold text-center text-[#744531]/20 font-black uppercase tracking-[0.4em] leading-tight select-none"
+                   style={{ fontSize: "clamp(3rem, 12vw, 8rem)" }}>
+                  Coming Soon
+                </p>
+                <div className="mt-8 w-24 h-1 bg-[#E7CE9D]/30 rounded-full" />
+              </div>
             )}
           </div>
         )}

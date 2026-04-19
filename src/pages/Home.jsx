@@ -237,7 +237,7 @@ function Home() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               { name: "Anjali Sharma", text: "The Giri Kesar Mangoes are a world apart. You can truly taste the Gir soil in every bite. Pure heaven!", role: "Health Enthusiast" },
-              { name: "Sameer Vora", text: "Finally found Ghee that smells like Home. vanVeda's commitment to quality is evident from the first use.", role: "Professional Chef" },
+              { name: "Sameer Vora", text: "Finally found Ghee that smells like Home. True soil Organics's commitment to quality is evident from the first use.", role: "Professional Chef" },
               { name: "Priya Mehta", text: "Sustainable, organic, and truly effective. The honey from the forest section is my morning ritual now.", role: "Yoga Practitioner" }
             ].map((t, idx) => (
               <div key={idx} className="bg-white/5 backdrop-blur-md rounded-[2.5rem] p-10 border border-white/10 hover:bg-white/10 transition-all duration-500">

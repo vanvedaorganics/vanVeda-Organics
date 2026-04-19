@@ -36,6 +36,7 @@ import ShippingAndDeliveryPolicy from "./pages/ShippingAndDeliveryPolicy.jsx";
 import Checkout from "./pages/Checkout.jsx";
 import ForgotPassword from "./pages/ForgotPassword.jsx";
 import ResetPassword from "./pages/ResetPassword.jsx";
+import FAQ from "./pages/FAQ.jsx";
 
 initializeAppData();
 
@@ -120,6 +121,10 @@ const router = createBrowserRouter([
       {
         path: "/shipping-policy",
         element: <ShippingAndDeliveryPolicy />,
+      },
+      {
+        path: "/faq",
+        element: <FAQ />,
       },
       {
         path: "/checkout",
