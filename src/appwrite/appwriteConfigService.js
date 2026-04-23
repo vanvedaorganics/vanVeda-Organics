@@ -229,9 +229,10 @@ export class appwriteConfigService {
   }
 
   async updateProduct(
-    slug,
+    documentId,
     {
       name,
+      slug,
       description,
       sku,
       categories = null,
@@ -281,6 +282,7 @@ export class appwriteConfigService {
     // Core payload — absolute baseline, confirmed safe in all schema versions
     const corePayload = {
       name,
+      slug,
       description,
       sku,
       // Send null for empty relationship — never send "" (Appwrite rejects it)
@@ -311,7 +313,7 @@ export class appwriteConfigService {
       const res = await this.databases.updateDocument(
         conf.appwriteDatabaseId,
         conf.appwriteProductsCollection,
-        slug,
+        documentId,
         extendedPayload
       );
       return this.normalizeProductDoc(res);
@@ -332,7 +334,7 @@ export class appwriteConfigService {
         const res = await this.databases.updateDocument(
           conf.appwriteDatabaseId,
           conf.appwriteProductsCollection,
-          slug,
+          documentId,
           corePayload
         );
         return this.normalizeProductDoc(res);

@@ -28,13 +28,9 @@ const normalizeProductDoc = (incoming, existingItem = {}) => {
   let normalized = appwriteService.normalizeProductDoc(incoming);
 
   // Preserve existing fields if they were missing or null in incoming (Appwrite sometimes returns partial docs)
-  if (!normalized.packaging_size?.length && existingItem?.packaging_size?.length) {
-    normalized.packaging_size = existingItem.packaging_size;
-  }
+
   
-  if (!normalized.batch?.length && existingItem?.batch?.length) {
-    normalized.batch = existingItem.batch;
-  }
+
 
   // Preserve expanded category object if incoming only has id string
   if (

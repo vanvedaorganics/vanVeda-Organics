@@ -454,7 +454,10 @@ export default function ProductsForm({ onSuccess, initialData = null }) {
 
       let result;
       if (isEdit) {
-        result = await appwriteService.updateProduct(formData.slug, payloadBase);
+        result = await appwriteService.updateProduct(
+          initialData?.$id || formData.slug,
+          payloadBase
+        );
       } else {
         result = await appwriteService.createProduct(payloadBase);
       }

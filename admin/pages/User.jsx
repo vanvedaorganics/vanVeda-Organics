@@ -62,8 +62,8 @@ function User() {
           const res = await AuthService.listTeamMemberships();         
           if (res.memberships) {
             const formatted = res.memberships.map((m) => ({
-              userName: m.user?.name ?? "Unknown",
-              email: m.user?.email ?? "N/A",
+              userName: m.userName || "Unknown",
+              email: m.userEmail || "N/A",
               roles: m.roles || [],
             }));
             setTeamMembers(formatted);
