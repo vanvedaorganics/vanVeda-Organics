@@ -737,6 +737,8 @@ export class appwriteConfigService {
   async createOrder({
     user_id,
     userName,
+    userEmail,
+    userPhone,
     items,
     shippingAddress,
     total_cents,
@@ -748,29 +750,37 @@ export class appwriteConfigService {
     auto_order = false,
   }) {
     try {
-      // Build payload without undefined fields to respect backend defaults
+      // Generate a unique ID to use for both the document ID and the orderNumber attribute
+      const docId = ID.unique();
+
+      // Build payload with ONLY confirmed schema attributes.
+      // Removed: 'userId', 'userEmail', 'userPhone', 'auto_order', and 'orderNumber'
+      // as they are not in the current Appwrite schema and caused errors.
       const payload = {
         user_id,
         userName,
         items,
         shippingAddress,
         total_cents,
-        auto_order,
       };
+
       if (typeof delivery_date !== "undefined")
         payload.delivery_date = delivery_date;
       if (typeof paymentMode !== "undefined") payload.paymentMode = paymentMode;
       if (typeof paymentStatus !== "undefined")
         payload.paymentStatus = paymentStatus;
-      if (typeof fulfillmentStatus !== "undefined")
+      
+      if (typeof fulfillmentStatus !== "undefined") {
         payload.fulfillmentStatus = fulfillmentStatus;
+      }
+      
       if (typeof payment_id !== "undefined")
         payload.payment_id = payment_id;
 
       return await this.databases.createDocument(
         conf.appwriteDatabaseId,
         conf.appwriteOrdersCollection,
-        ID.unique(),
+        docId,
         payload,
         [Permission.read(Role.user(user_id))]
       );
