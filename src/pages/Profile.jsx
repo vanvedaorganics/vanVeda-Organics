@@ -130,7 +130,7 @@ function Profile() {
     const past = [];
 
     for (const order of userOrders) {
-      const status = normalizeStatus(order.fulfillmentStatus);
+      const status = normalizeStatus(order.fulfillmentSattus || order.fulfillmentStatus);
       if (pastStatuses.has(status)) {
         past.push(order);
       } else {
@@ -708,7 +708,7 @@ function OrderCard({ order, formatINR, safeJSONParse, normalizeStatus, onCancel 
   const shippingAddr = safeJSONParse(order.shippingAddress, null);
 
   const getStatusBadge = (status) => {
-    const s = normalizeStatus(status);
+    const s = normalizeStatus(status || order.fulfillmentSattus);
     const config = {
       delivered: "bg-emerald-50 text-emerald-600 border-emerald-100",
       shipped: "bg-blue-50 text-blue-600 border-blue-100",

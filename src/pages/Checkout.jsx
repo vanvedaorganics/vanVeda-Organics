@@ -407,25 +407,13 @@ function Checkout() {
         }
       }
 
-      // Build items payload for order with new structure
+      // Build items payload for order - optimized for Appwrite size limits (1000 chars)
       const orderItems = cartRows.map((r) => ({
-        slug: r.slug,
         name: r.name,
-        packaging_size: {
-          sizeLabel: r.sizeLabel || null,
-          price_cents: r.baseCents, // base price before discount
-        },
         qty: r.qty,
-        discount: r.discountPercent,
-        price_cents: r.unitCents, // discounted unit price
+        price: r.unitCents,
         item_total_cents: r.unitCents * r.qty,
-        categories: r.categories || null, // reused, no extra find()
-        batch: r.batch
-          ? {
-              name: r.batch.name || "",
-              delivery_date: r.batch.delivery_date || "",
-            }
-          : null,
+        size: r.sizeLabel || null,
       }));
 
       const itemsPayload = {
@@ -433,7 +421,6 @@ function Checkout() {
         summary: {
           total_items: totals.itemCount,
           subtotal_cents: totals.subtotalCents,
-          currency: totals.currency,
         },
       };
 
@@ -554,7 +541,7 @@ function Checkout() {
               // response.razorpay_payment_id
               await submitOrderToAppwrite(
                 response.razorpay_payment_id,
-                "ONLINE" // Standardized from "Card"
+                "Card" // Changed from "ONLINE" to match Appwrite enum
               );
             } catch (err) {
               console.error("DEBUG: Order placement failed after Razorpay success.");

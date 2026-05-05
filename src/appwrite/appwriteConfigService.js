@@ -752,28 +752,40 @@ export class appwriteConfigService {
     // Generate a unique ID to use for both the document ID and the orderNumber attribute
     const docId = ID.unique();
 
-    // Core payload: attributes confirmed to exist in older schemas
+    // Core payload: Strictly attributes confirmed in appwrite.config.json
     const corePayload = {
-      user_id,
-      userName,
-      userEmail: userEmail || "",
-      userPhone: userPhone || "",
+      userId: user_id, // Key is userId
       orderNumber: docId,
       items,
       shippingAddress,
       total_cents,
     };
 
-    if (typeof delivery_date !== "undefined") corePayload.delivery_date = delivery_date;
-    if (typeof paymentMode !== "undefined") corePayload.paymentMode = paymentMode;
-    if (typeof paymentStatus !== "undefined") corePayload.paymentStatus = paymentStatus;
-    if (typeof fulfillmentStatus !== "undefined") corePayload.fulfillmentStatus = fulfillmentStatus;
+    // Add optional enum fields if they match schema keys exactly
+    if (typeof paymentMode !== "undefined") {
+        // Map "ONLINE" to "Card" to match Appwrite enum [UPI, Card, COD]
+        corePayload.paymentMode = paymentMode === "ONLINE" ? "Card" : paymentMode;
+    }
+    if (typeof paymentStatus !== "undefined") {
+        // Ensure case matches Enum [Pending, Paid, Failed]
+        const pStatus = String(paymentStatus).toLowerCase();
+        corePayload.paymentStatus = pStatus === "paid" ? "Paid" : pStatus === "failed" ? "Failed" : "Pending";
+    }
+    if (typeof fulfillmentStatus !== "undefined") {
+        // Schema has typo 'fulfillmentSattus' and lowercase enum [shipped, delivered, cancelled, pending]
+        corePayload.fulfillmentSattus = String(fulfillmentStatus).toLowerCase();
+    }
 
-    // Extended payload: attributes that might not exist in all schemas
+    // Extended payload: Attributes that might not exist in all schemas (fallback will strip these)
     const extendedPayload = {
       ...corePayload,
-      ...(payment_id ? { payment_id } : {}),
+      userName,
+      userEmail,
+      userPhone,
+      delivery_date,
+      payment_id,
       auto_order,
+      fulfillmentStatus, // Correct spelling for future-proofing
     };
 
     try {
