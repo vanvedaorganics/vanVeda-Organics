@@ -756,6 +756,9 @@ export class appwriteConfigService {
     const corePayload = {
       user_id,
       userName,
+      userEmail: userEmail || "",
+      userPhone: userPhone || "",
+      orderNumber: docId,
       items,
       shippingAddress,
       total_cents,
@@ -769,8 +772,6 @@ export class appwriteConfigService {
     // Extended payload: attributes that might not exist in all schemas
     const extendedPayload = {
       ...corePayload,
-      ...(userEmail ? { userEmail } : {}),
-      ...(userPhone ? { userPhone } : {}),
       ...(payment_id ? { payment_id } : {}),
       auto_order,
     };
