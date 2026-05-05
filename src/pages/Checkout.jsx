@@ -409,11 +409,11 @@ function Checkout() {
 
       // Build items payload for order - optimized for Appwrite size limits (1000 chars)
       const orderItems = cartRows.map((r) => ({
-        name: r.name,
+        name: r.name.slice(0, 50), // Ensure name isn't too long
         qty: r.qty,
         price: r.unitCents,
         item_total_cents: r.unitCents * r.qty,
-        size: r.sizeLabel || null,
+        size: (r.sizeLabel || "").slice(0, 30),
       }));
 
       const itemsPayload = {
@@ -424,7 +424,17 @@ function Checkout() {
         },
       };
 
-      const shippingAddress = JSON.stringify(selectedAddress);
+      // Compact address keys to fit within 512 chars
+      const compactAddress = selectedAddress ? {
+        ra: selectedAddress.residencyAddress,
+        lm: selectedAddress.landmark,
+        st: selectedAddress.street,
+        pc: selectedAddress.pincode,
+        ct: selectedAddress.city,
+        s: selectedAddress.state
+      } : null;
+
+      const shippingAddress = JSON.stringify(compactAddress).slice(0, 510);
 
       // Function to handle the actual Appwrite document creation
       const submitOrderToAppwrite = async (paymentId = null, pMode = "COD") => {
@@ -550,7 +560,7 @@ function Checkout() {
               console.error("DEBUG: Response Message:", err?.message || err?.response?.message);
               setError({
                 type: "error",
-                message: "Payment captured but failed to save order. Please contact support.",
+                message: `Payment captured but failed to save order: ${err.message || "Unknown error"}. Please contact support.`,
               });
             } finally {
               setPlacing(false);

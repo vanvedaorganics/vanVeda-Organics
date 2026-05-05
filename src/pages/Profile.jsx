@@ -755,8 +755,12 @@ function OrderCard({ order, formatINR, safeJSONParse, normalizeStatus, onCancel 
                   <MapPin className="w-4 h-4 text-[#28543d] mt-1" />
                   <div>
                     <p className="text-[10px] font-black uppercase text-[#28543d] tracking-widest mb-1">Shipping To</p>
-                    <p className="text-sm font-bold text-[#201413] leading-tight">{shippingAddr.residencyAddress}</p>
-                    <p className="text-xs text-gray-500 mt-1 italic">{shippingAddr.street}, {shippingAddr.city} {shippingAddr.pincode}</p>
+                    <p className="text-sm font-bold text-[#201413] leading-tight">
+                      {shippingAddr.ra || shippingAddr.residencyAddress}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1 italic">
+                      {shippingAddr.st || shippingAddr.street}, {shippingAddr.ct || shippingAddr.city} {shippingAddr.pc || shippingAddr.pincode}
+                    </p>
                   </div>
                 </div>
               )}

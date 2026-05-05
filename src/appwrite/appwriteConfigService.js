@@ -797,15 +797,15 @@ export class appwriteConfigService {
         [Permission.read(Role.user(user_id))]
       );
     } catch (error) {
-      const isUnknownAttr = /unknown attribute|invalid attribute|Extra attribute/i.test(
+      // Broaden regex to catch all Appwrite attribute-related errors
+      const isAttrError = /attribute|not found|extra|invalid/i.test(
         error?.message || ""
-      );
+      ) || error?.code === 400;
 
-      if (isUnknownAttr) {
+      if (isAttrError) {
         console.warn(
-          "[createOrder] Retrying without extended attributes. " +
-          "Add 'userEmail', 'userPhone', and 'payment_id' to your Appwrite orders collection. " +
-          "Raw error:", error.message
+          "[createOrder] Fallback triggered due to schema mismatch. Retrying with core attributes only.",
+          error.message
         );
         return await this.databases.createDocument(
           conf.appwriteDatabaseId,
