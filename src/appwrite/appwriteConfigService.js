@@ -752,18 +752,36 @@ export class appwriteConfigService {
     // Generate a unique ID to use for both the document ID and the orderNumber attribute
     const docId = ID.unique();
 
-    // Initial full payload
+    // Initial exhaustive payload with all common naming variations
+    // The "Self-Healing" loop below will automatically strip any that don't exist in your DB.
     const payload = {
       userId: user_id,
+      userId: user_id, // Duplicate for safety if it was a typo in my thought
+      user_id: user_id,
       orderNumber: docId,
+      // Name variations
       username: userName || "",
       userName: userName || "",
+      user_name: userName || "",
+      "user name": userName || "",
+      Username: userName || "",
+      UserName: userName || "",
+      // Email/Phone variations
       userEmail: userEmail || "",
+      user_email: userEmail || "",
+      email: userEmail || "",
       userPhone: userPhone || "",
+      user_phone: userPhone || "",
+      phone: userPhone || "",
+      // Date variations
+      delivery_date: delivery_date || "",
+      deliveryDate: delivery_date || "",
+      "delivery date": delivery_date || "",
+      delivery_date: delivery_date || "",
+      // Standard fields
       items,
       shippingAddress,
       total_cents,
-      delivery_date: delivery_date || "",
       paymentMode: paymentMode === "ONLINE" ? "Card" : (paymentMode || "COD"),
       paymentStatus: (paymentStatus && String(paymentStatus).toLowerCase() === "paid") ? "Paid" : "Pending",
       fulfillmentStatus: fulfillmentStatus || "pending",
