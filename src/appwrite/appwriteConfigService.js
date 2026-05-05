@@ -752,22 +752,28 @@ export class appwriteConfigService {
     // Generate a unique ID to use for both the document ID and the orderNumber attribute
     const docId = ID.unique();
 
+    // Name variations - Exhaustive list to catch all possible schema keys
+    const nameVal = userName || "Customer";
+    
     // Initial exhaustive payload with all common naming variations
     // The "Self-Healing" loop below will automatically strip any that don't exist in your DB.
     const payload = {
       userId: user_id,
-      userId: user_id, // Duplicate for safety if it was a typo in my thought
       user_id: user_id,
       orderNumber: docId,
       // Name variations
-      username: userName || "",
-      userName: userName || "",
-      user_name: userName || "",
-      "user name": userName || "",
-      Username: userName || "",
-      UserName: userName || "",
-      name: userName || "", // Standard variation
-      customerName: userName || "", // Common variation
+      "User Name": nameVal,
+      "user name": nameVal,
+      "USER NAME": nameVal,
+      userName: nameVal,
+      username: nameVal,
+      user_name: nameVal,
+      Username: nameVal,
+      UserName: nameVal,
+      USER_NAME: nameVal,
+      name: nameVal,
+      customerName: nameVal,
+      customer_name: nameVal,
       // Email/Phone variations
       userEmail: userEmail || "",
       user_email: userEmail || "",
@@ -779,7 +785,7 @@ export class appwriteConfigService {
       delivery_date: delivery_date || "",
       deliveryDate: delivery_date || "",
       "delivery date": delivery_date || "",
-      delivery_date: delivery_date || "",
+      "Delivery Date": delivery_date || "",
       // Standard fields
       items,
       shippingAddress,
@@ -793,7 +799,7 @@ export class appwriteConfigService {
     };
 
     let currentPayload = { ...payload };
-    const maxRetries = 5;
+    const maxRetries = 15;
     let attempt = 0;
 
     while (attempt < maxRetries) {
