@@ -752,10 +752,14 @@ export class appwriteConfigService {
     // Generate a unique ID to use for both the document ID and the orderNumber attribute
     const docId = ID.unique();
 
-    // Core payload: Strictly attributes confirmed in appwrite.config.json
+    // Core payload: attributes that are most likely required in the live database
     const corePayload = {
-      userId: user_id, // Key is userId
+      userId: user_id,
       orderNumber: docId,
+      username: userName || "", // Live DB requires 'username' (lowercase)
+      userName: userName || "",
+      userEmail: userEmail || "",
+      userPhone: userPhone || "",
       items,
       shippingAddress,
       total_cents,
@@ -763,29 +767,23 @@ export class appwriteConfigService {
 
     // Add optional enum fields if they match schema keys exactly
     if (typeof paymentMode !== "undefined") {
-        // Map "ONLINE" to "Card" to match Appwrite enum [UPI, Card, COD]
         corePayload.paymentMode = paymentMode === "ONLINE" ? "Card" : paymentMode;
     }
     if (typeof paymentStatus !== "undefined") {
-        // Ensure case matches Enum [Pending, Paid, Failed]
         const pStatus = String(paymentStatus).toLowerCase();
         corePayload.paymentStatus = pStatus === "paid" ? "Paid" : pStatus === "failed" ? "Failed" : "Pending";
     }
     if (typeof fulfillmentStatus !== "undefined") {
-        // Schema has typo 'fulfillmentSattus' and lowercase enum [shipped, delivered, cancelled, pending]
         corePayload.fulfillmentSattus = String(fulfillmentStatus).toLowerCase();
     }
 
     // Extended payload: Attributes that might not exist in all schemas (fallback will strip these)
     const extendedPayload = {
       ...corePayload,
-      userName,
-      userEmail,
-      userPhone,
       delivery_date,
       payment_id,
       auto_order,
-      fulfillmentStatus, // Correct spelling for future-proofing
+      fulfillmentStatus, // Correct spelling
     };
 
     try {
