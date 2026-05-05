@@ -752,70 +752,71 @@ export class appwriteConfigService {
     // Generate a unique ID to use for both the document ID and the orderNumber attribute
     const docId = ID.unique();
 
-    // Core payload: attributes that are most likely required in the live database
-    const corePayload = {
+    // Initial full payload
+    const payload = {
       userId: user_id,
       orderNumber: docId,
-      username: userName || "", // Live DB requires 'username' (lowercase)
+      username: userName || "",
       userName: userName || "",
       userEmail: userEmail || "",
       userPhone: userPhone || "",
       items,
       shippingAddress,
       total_cents,
+      delivery_date: delivery_date || "",
+      paymentMode: paymentMode === "ONLINE" ? "Card" : (paymentMode || "COD"),
+      paymentStatus: (paymentStatus && String(paymentStatus).toLowerCase() === "paid") ? "Paid" : "Pending",
+      fulfillmentStatus: fulfillmentStatus || "pending",
+      fulfillmentSattus: (fulfillmentStatus || "pending").toLowerCase(),
+      payment_id: payment_id || null,
+      auto_order: !!auto_order,
     };
 
-    // Add optional enum fields if they match schema keys exactly
-    if (typeof paymentMode !== "undefined") {
-        corePayload.paymentMode = paymentMode === "ONLINE" ? "Card" : paymentMode;
-    }
-    if (typeof paymentStatus !== "undefined") {
-        const pStatus = String(paymentStatus).toLowerCase();
-        corePayload.paymentStatus = pStatus === "paid" ? "Paid" : pStatus === "failed" ? "Failed" : "Pending";
-    }
-    if (typeof fulfillmentStatus !== "undefined") {
-        corePayload.fulfillmentSattus = String(fulfillmentStatus).toLowerCase();
-    }
+    let currentPayload = { ...payload };
+    const maxRetries = 5;
+    let attempt = 0;
 
-    // Extended payload: Attributes that might not exist in all schemas (fallback will strip these)
-    const extendedPayload = {
-      ...corePayload,
-      delivery_date,
-      payment_id,
-      auto_order,
-      fulfillmentStatus, // Correct spelling
-    };
-
-    try {
-      return await this.databases.createDocument(
-        conf.appwriteDatabaseId,
-        conf.appwriteOrdersCollection,
-        docId,
-        extendedPayload,
-        [Permission.read(Role.user(user_id))]
-      );
-    } catch (error) {
-      // Broaden regex to catch all Appwrite attribute-related errors
-      const isAttrError = /attribute|not found|extra|invalid/i.test(
-        error?.message || ""
-      ) || error?.code === 400;
-
-      if (isAttrError) {
-        console.warn(
-          "[createOrder] Fallback triggered due to schema mismatch. Retrying with core attributes only.",
-          error.message
-        );
+    while (attempt < maxRetries) {
+      try {
         return await this.databases.createDocument(
           conf.appwriteDatabaseId,
           conf.appwriteOrdersCollection,
           docId,
-          corePayload,
+          currentPayload,
           [Permission.read(Role.user(user_id))]
         );
+      } catch (error) {
+        attempt++;
+        const errorMessage = error?.message || "";
+        
+        // 1. Check for "Extra attribute" / "not found in collection"
+        const extraAttrMatch = errorMessage.match(/attribute ["']?([^"']+)["']? (is not found|not found|is not allowed|extra)/i);
+        
+        if (extraAttrMatch) {
+          const attrToRemove = extraAttrMatch[1];
+          console.warn(`[createOrder] Attribute "${attrToRemove}" not in schema. Stripping and retrying...`);
+          delete currentPayload[attrToRemove];
+          continue; // Retry with stripped payload
+        }
+
+        // 2. If it's a generic attribute error but we can't identify which one, 
+        // fall back to a known minimal safe set (as a last resort)
+        if (/attribute|not found|extra|invalid/i.test(errorMessage) && attempt === 1) {
+          console.warn("[createOrder] Generic attribute error. Falling back to minimal payload.");
+          currentPayload = {
+            userId: user_id,
+            orderNumber: docId,
+            items,
+            shippingAddress,
+            total_cents,
+          };
+          continue;
+        }
+
+        // If it's not a fixable attribute error, or we've run out of retries
+        console.error(`Appwrite :: createOrder error (Attempt ${attempt}) ::`, error);
+        throw error;
       }
-      
-      console.error("Appwrite :: createOrder error ::", error);
-      throw error;
     }
   }
 
