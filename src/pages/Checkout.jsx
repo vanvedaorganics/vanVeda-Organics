@@ -441,51 +441,30 @@ function Checkout() {
 
       // Function to handle the actual Appwrite document creation
       const submitOrderToAppwrite = async (paymentId = null, pMode = "COD") => {
-        const createOrderPayload = (includePaymentId) => {
-          const payload = {
-            user_id: profile.$id,
-            userName: profile.displayName || "",
-            items: JSON.stringify({
-              ...itemsPayload,
-              payment_info: paymentId ? { razorpay_id: paymentId, mode: pMode } : null,
-            }),
-            shippingAddress,
-            total_cents: totals.subtotalCents,
-            userEmail: profile.email || "",
-            userPhone: profile.phone || "",
-            delivery_date: farthestDeliveryDate,
-            paymentMode: pMode,
-            paymentStatus: paymentId ? "Paid" : "Pending",
-            fulfillmentStatus: "pending",
-          };
-          if (includePaymentId && paymentId) {
-            payload.payment_id = paymentId;
-          }
-          return payload;
+        const payload = {
+          user_id: profile.$id,
+          userName: profile.displayName || "",
+          userEmail: profile.email || "",
+          userPhone: profile.phone || "",
+          items: JSON.stringify({
+            ...itemsPayload,
+            payment_info: paymentId ? { razorpay_id: paymentId, mode: pMode } : null,
+          }),
+          shippingAddress,
+          total_cents: totals.subtotalCents,
+          delivery_date: farthestDeliveryDate,
+          paymentMode: pMode,
+          paymentStatus: paymentId ? "Paid" : "Pending",
+          fulfillmentStatus: "pending",
+          payment_id: paymentId,
         };
 
         try {
-          // Attempt 1: Standard save with payment_id
-          const result = await appwriteService.createOrder(createOrderPayload(true));
-          finalizeSuccess(result);
+          const result = await appwriteService.createOrder(payload);
+          await finalizeSuccess(result);
         } catch (err) {
-          const errMsg = err?.message || "";
-          // Check if failure is due to missing attribute "payment_id"
-          if (errMsg.includes("payment_id") || errMsg.includes("Unknown attribute")) {
-            console.warn("DEBUG: payment_id attribute missing in Appwrite. Retrying without it...");
-            try {
-              // Attempt 2: Fallback save without payment_id field
-              // Note: payment info is still preserved inside the "items" JSON string as a backup
-              const result = await appwriteService.createOrder(createOrderPayload(false));
-              finalizeSuccess(result);
-            } catch (retryErr) {
-              console.error("DEBUG: Fallback order placement failed.", retryErr);
-              throw retryErr;
-            }
-          } else {
-            console.error("DEBUG: Order placement failed for other reason.", err);
-            throw err;
-          }
+          console.error("DEBUG: Order placement failed.", err);
+          throw err;
         }
       };
 

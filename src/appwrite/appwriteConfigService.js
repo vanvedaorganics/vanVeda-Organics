@@ -749,39 +749,60 @@ export class appwriteConfigService {
     payment_id,
     auto_order = false,
   }) {
+    // Generate a unique ID to use for both the document ID and the orderNumber attribute
+    const docId = ID.unique();
+
+    // Core payload: attributes confirmed to exist in older schemas
+    const corePayload = {
+      user_id,
+      userName,
+      items,
+      shippingAddress,
+      total_cents,
+    };
+
+    if (typeof delivery_date !== "undefined") corePayload.delivery_date = delivery_date;
+    if (typeof paymentMode !== "undefined") corePayload.paymentMode = paymentMode;
+    if (typeof paymentStatus !== "undefined") corePayload.paymentStatus = paymentStatus;
+    if (typeof fulfillmentStatus !== "undefined") corePayload.fulfillmentStatus = fulfillmentStatus;
+
+    // Extended payload: attributes that might not exist in all schemas
+    const extendedPayload = {
+      ...corePayload,
+      ...(userEmail ? { userEmail } : {}),
+      ...(userPhone ? { userPhone } : {}),
+      ...(payment_id ? { payment_id } : {}),
+      auto_order,
+    };
+
     try {
-      // Generate a unique ID to use for both the document ID and the orderNumber attribute
-      const docId = ID.unique();
-
-      // Build payload with ONLY confirmed schema attributes.
-      // Removed: 'userId', 'userEmail', 'userPhone', 'auto_order', and 'orderNumber'
-      // as they are not in the current Appwrite schema and caused errors.
-      const payload = {
-        user_id,
-        userName,
-        items,
-        shippingAddress,
-        total_cents,
-      };
-
-      if (typeof delivery_date !== "undefined")
-        payload.delivery_date = delivery_date;
-      if (typeof paymentMode !== "undefined") payload.paymentMode = paymentMode;
-      if (typeof paymentStatus !== "undefined")
-        payload.paymentStatus = paymentStatus;
-      
-      if (typeof fulfillmentStatus !== "undefined") {
-        payload.fulfillmentStatus = fulfillmentStatus;
-      }
-
       return await this.databases.createDocument(
         conf.appwriteDatabaseId,
         conf.appwriteOrdersCollection,
         docId,
-        payload,
+        extendedPayload,
         [Permission.read(Role.user(user_id))]
       );
     } catch (error) {
+      const isUnknownAttr = /unknown attribute|invalid attribute|Extra attribute/i.test(
+        error?.message || ""
+      );
+
+      if (isUnknownAttr) {
+        console.warn(
+          "[createOrder] Retrying without extended attributes. " +
+          "Add 'userEmail', 'userPhone', and 'payment_id' to your Appwrite orders collection. " +
+          "Raw error:", error.message
+        );
+        return await this.databases.createDocument(
+          conf.appwriteDatabaseId,
+          conf.appwriteOrdersCollection,
+          docId,
+          corePayload,
+          [Permission.read(Role.user(user_id))]
+        );
+      }
+      
       console.error("Appwrite :: createOrder error ::", error);
       throw error;
     }
