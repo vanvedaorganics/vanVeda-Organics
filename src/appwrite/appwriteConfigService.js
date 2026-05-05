@@ -766,6 +766,8 @@ export class appwriteConfigService {
       "user name": userName || "",
       Username: userName || "",
       UserName: userName || "",
+      name: userName || "", // Standard variation
+      customerName: userName || "", // Common variation
       // Email/Phone variations
       userEmail: userEmail || "",
       user_email: userEmail || "",
@@ -817,21 +819,8 @@ export class appwriteConfigService {
           continue; // Retry with stripped payload
         }
 
-        // 2. If it's a generic attribute error but we can't identify which one, 
-        // fall back to a known minimal safe set (as a last resort)
-        if (/attribute|not found|extra|invalid/i.test(errorMessage) && attempt === 1) {
-          console.warn("[createOrder] Generic attribute error. Falling back to minimal payload.");
-          currentPayload = {
-            userId: user_id,
-            orderNumber: docId,
-            items,
-            shippingAddress,
-            total_cents,
-          };
-          continue;
-        }
-
-        // If it's not a fixable attribute error, or we've run out of retries
+        // 2. If we reach here, it's a non-attribute error (like network or permissions)
+        // or a "Missing attribute" error that we haven't satisfied yet.
         console.error(`Appwrite :: createOrder error (Attempt ${attempt}) ::`, error);
         throw error;
       }
