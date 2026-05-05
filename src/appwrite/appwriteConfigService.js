@@ -758,9 +758,20 @@ export class appwriteConfigService {
     // Initial exhaustive payload with all common naming variations
     // The "Self-Healing" loop below will automatically strip any that don't exist in your DB.
     const payload = {
+      // User ID variations
       userId: user_id,
       user_id: user_id,
+      "User ID": user_id,
+      "user id": user_id,
+      "USER ID": user_id,
+      userid: user_id,
+      UserID: user_id,
+      // Order Number variations
       orderNumber: docId,
+      "Order Number": docId,
+      "order number": docId,
+      "ORDER NUMBER": docId,
+      OrderNumber: docId,
       // Name variations
       "User Name": nameVal,
       "user name": nameVal,
@@ -790,6 +801,10 @@ export class appwriteConfigService {
       items,
       shippingAddress,
       total_cents,
+      totalCents: total_cents,
+      "Total Cents": total_cents,
+      "total cents": total_cents,
+      // Enum fields
       paymentMode: paymentMode === "ONLINE" ? "Card" : (paymentMode || "COD"),
       paymentStatus: (paymentStatus && String(paymentStatus).toLowerCase() === "paid") ? "Paid" : "Pending",
       fulfillmentStatus: fulfillmentStatus || "pending",
