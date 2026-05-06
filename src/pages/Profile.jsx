@@ -709,7 +709,8 @@ function Profile() {
 // Subcomponent: OrderCard
 function OrderCard({ order, formatINR, safeJSONParse, normalizeStatus, onCancel }) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const orderItems = safeJSONParse(order.items, { items: [], summary: {}, _meta: {} });
+  const parsedItems = safeJSONParse(order.items, []);
+  const itemsList = Array.isArray(parsedItems) ? parsedItems : (Array.isArray(parsedItems?.items) ? parsedItems.items : []);
   const shippingAddr = safeJSONParse(order.shippingAddress, null);
   // fulfillmentSattus is the actual DB field (schema typo), fallback to fulfillmentStatus
   const fulfillmentStatus = order.fulfillmentSattus || order.fulfillmentStatus || "pending";
@@ -750,10 +751,10 @@ function OrderCard({ order, formatINR, safeJSONParse, normalizeStatus, onCancel 
               </div>
               <div className="space-y-3">
                 <p className="text-[10px] font-black uppercase text-gray-400">Order Items</p>
-                {Array.isArray(orderItems.items) && orderItems.items.map((item, id) => (
+                {itemsList.map((item, id) => (
                   <div key={id} className="flex justify-between items-center text-sm p-3 bg-gray-50 rounded-xl">
-                    <div><span className="font-bold text-[#201413]">{item.name}</span><span className="ml-2 text-xs text-[#744531]">({item.qty}x)</span></div>
-                    <p className="font-black text-[#28543d]">{formatINR(item.item_total_cents)}</p>
+                    <div><span className="font-bold text-[#201413]">{item.n || item.name}</span><span className="ml-2 text-xs text-[#744531]">({item.q ?? item.qty}x)</span></div>
+                    <p className="font-black text-[#28543d]">{formatINR(item.t ?? item.item_total_cents)}</p>
                   </div>
                 ))}
               </div>

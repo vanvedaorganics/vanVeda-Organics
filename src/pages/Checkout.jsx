@@ -408,22 +408,15 @@ function Checkout() {
         }
       }
 
-      // Build items payload for order - optimized for Appwrite size limits (1000 chars)
+      // Build ultra-compact items payload — Appwrite items field limit is 1000 chars
+      // Use short keys: n=name, q=qty, p=price(cents), t=item_total_cents, s=size
       const orderItems = cartRows.map((r) => ({
-        name: r.name.slice(0, 50), // Ensure name isn't too long
-        qty: r.qty,
-        price: r.unitCents,
-        item_total_cents: r.unitCents * r.qty,
-        size: (r.sizeLabel || "").slice(0, 30),
+        n: r.name.slice(0, 40),
+        q: r.qty,
+        p: r.unitCents,
+        t: r.unitCents * r.qty,
+        s: (r.sizeLabel || "").slice(0, 20),
       }));
-
-      const itemsPayload = {
-        items: orderItems,
-        summary: {
-          total_items: totals.itemCount,
-          subtotal_cents: totals.subtotalCents,
-        },
-      };
 
       // Compact address keys to fit within 512 chars
       const compactAddress = selectedAddress ? {
@@ -439,12 +432,20 @@ function Checkout() {
 
       // Function to handle the actual Appwrite document creation
       const submitOrderToAppwrite = async (paymentId = null, pMode = "COD") => {
+        // Keep items JSON tight — must be under 1000 chars
+        let safeItems = [...orderItems];
+        let itemsJson = JSON.stringify(safeItems);
+        while (itemsJson.length > 990 && safeItems.length > 1) {
+          safeItems.pop();
+          itemsJson = JSON.stringify(safeItems);
+        }
+
         const payload = {
           user_id: profile.$id,
           userName: profile.displayName || "",
           userEmail: profile.email || authUser?.email || "",
           userPhone: profile.phone || "",
-          items: JSON.stringify(itemsPayload),
+          items: itemsJson,
           shippingAddress,
           total_cents: totals.subtotalCents,
           delivery_date: farthestDeliveryDate,
@@ -494,11 +495,11 @@ function Checkout() {
           const customerEmail = authUser.email || "";
           const paymentMode = order.paymentMode || "COD";
 
-          // Format items for a readable email list
+          // Format items for a readable email list (supports compact keys n/q/t and legacy name/qty/item_total_cents)
           const itemsListText = orderItems
             .map(
               (item) =>
-                `${item.name} x ${item.qty} — ₹${(item.item_total_cents / 100).toFixed(2)}`
+                `${item.n || item.name} x ${item.q ?? item.qty} — ₹${((item.t ?? item.item_total_cents) / 100).toFixed(2)}`
             )
             .join("\n");
 

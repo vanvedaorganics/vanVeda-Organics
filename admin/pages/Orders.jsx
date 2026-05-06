@@ -15,13 +15,6 @@ const safeJSON = (str, fallback = {}) => {
   }
 };
 
-// Helper: extract embedded _meta from the items JSON field
-// New orders store userName/email/phone inside items._meta
-const getOrderMeta = (order) => {
-  const parsed = safeJSON(order.items, {});
-  return parsed._meta || {};
-};
-
 function Orders() {
   const dispatch = useDispatch();
   const {
@@ -43,10 +36,9 @@ function Orders() {
   const paymentStatusOptions = ["Pending", "Paid", "Failed"];
   const orderStatusOptions = ["pending", "cancelled", "delivered", "shipped"];
 
-  const getCommunicationTemplates = (order) => {
+  const getCommunicationTemplates = (order, linkedUser) => {
     const orderId = order.$id?.slice(-8).toUpperCase();
-    const meta = getOrderMeta(order);
-    const customerName = meta.userName || order.userName || "Customer";
+    const customerName = linkedUser?.displayName || order.userName || "Customer";
     // fulfillmentSattus is the DB field (schema typo)
     const status = (order.fulfillmentSattus || order.fulfillmentStatus || "pending").toLowerCase();
     const payment = (order.paymentStatus || "Pending").toLowerCase();
@@ -137,25 +129,26 @@ function Orders() {
     }
   };
 
-  // Render order items list from the JSON payload
+  // Render order items — supports new compact keys (n/q/p/t/s) AND legacy keys (name/qty/price/...)
   const renderOrderItems = (row) => {
     try {
       const parsed = typeof row.items === "string" ? JSON.parse(row.items) : row.items;
-      const list = Array.isArray(parsed?.items) ? parsed.items : [];
+      // New format: array directly. Old format: object with .items array
+      const list = Array.isArray(parsed) ? parsed : (Array.isArray(parsed?.items) ? parsed.items : []);
       if (!list.length) return "—";
       return (
         <div className="space-y-1">
           {list.map((item, idx) => (
             <div key={idx} className="text-sm leading-tight">
-              <div className="font-semibold text-[#084629]">{item.name || "Item"}</div>
+              <div className="font-semibold text-[#084629]">{item.n || item.name || "Item"}</div>
               <div className="text-xs text-gray-600">
-                {item.size ? `Size: ${item.size} • ` : ""}
-                Qty: {item.qty ?? 0}
-                {typeof item.price === "number"
-                  ? ` • ₹${(item.price / 100).toFixed(2)}`
+                {(item.s || item.size) ? `Size: ${item.s || item.size} • ` : ""}
+                Qty: {item.q ?? item.qty ?? 0}
+                {typeof (item.p ?? item.price) === "number"
+                  ? ` • ₹${((item.p ?? item.price) / 100).toFixed(2)}`
                   : ""}
-                {typeof item.item_total_cents === "number"
-                  ? ` (Total: ₹${(item.item_total_cents / 100).toFixed(2)})`
+                {typeof (item.t ?? item.item_total_cents) === "number"
+                  ? ` (Total: ₹${((item.t ?? item.item_total_cents) / 100).toFixed(2)})`
                   : ""}
               </div>
             </div>
@@ -192,8 +185,10 @@ function Orders() {
       header: "Customer",
       accessor: "userId",
       render: (row) => {
-        const meta = getOrderMeta(row);
-        return meta.userName || row.userName || "—";
+        const linkedUser = usersList?.find(
+          (u) => u.$id === row.userId || u.user_id === row.userId
+        );
+        return linkedUser?.displayName || row.userName || row.userId?.slice(-6) || "—";
       },
     },
     {
@@ -291,27 +286,22 @@ function Orders() {
       header: "Contact",
       accessor: "actions",
       render: (row) => {
-        const templates = getCommunicationTemplates(row);
-        const meta = getOrderMeta(row);
-
-        // Fallback: look up user in global users list for old orders that lack _meta
+        // Look up user profile by userId for name/phone/email
         const linkedUser = usersList?.find(
           (u) => u.$id === row.userId || u.user_id === row.userId
         );
+        const templates = getCommunicationTemplates(row, linkedUser);
 
-        // Phone resolution: _meta → top-level (legacy) → linked profile
-        const rawPhoneInput = (
-          meta.userPhone || row.userPhone || linkedUser?.phone || ""
-        ).toString();
+        // Phone resolution: linked user profile → legacy top-level field
+        const rawPhoneInput = (linkedUser?.phone || row.userPhone || "").toString();
         let rawPhone = rawPhoneInput.replace(/\D/g, "");
         if (rawPhone.startsWith("91") && rawPhone.length > 10) rawPhone = rawPhone.slice(2);
         if (rawPhone.startsWith("0")) rawPhone = rawPhone.slice(1);
         const phone = rawPhone.length === 10 ? rawPhone : null;
         const waUrl = phone ? `https://wa.me/91${phone}?text=${templates.wa}` : "#";
 
-        // Email resolution: _meta → top-level (legacy) → linked profile
-        const destinationEmail =
-          meta.userEmail || row.userEmail || linkedUser?.email || "";
+        // Email resolution: linked user profile → legacy top-level field
+        const destinationEmail = linkedUser?.email || row.userEmail || "";
         const gmailUrl = destinationEmail
           ? `https://mail.google.com/mail/u/truesoilorganic@gmail.com/compose?view=cm&fs=1&to=${destinationEmail}&su=${templates.emailSub}&body=${templates.emailBody}`
           : "#";

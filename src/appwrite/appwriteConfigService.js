@@ -752,24 +752,10 @@ export class appwriteConfigService {
     // Generate a unique ID to use for both the document ID and the orderNumber attribute
     const docId = ID.unique();
 
-    // Embed extra info (not in schema) inside the items JSON so it's always retrievable
-    let itemsPayload = items;
-    try {
-      const parsed = typeof items === "string" ? JSON.parse(items) : items;
-      itemsPayload = JSON.stringify({
-        ...parsed,
-        _meta: {
-          userName: userName || "Customer",
-          userEmail: userEmail || "",
-          userPhone: userPhone || "",
-          delivery_date: delivery_date || "",
-          payment_id: payment_id || null,
-          auto_order: !!auto_order,
-        },
-      });
-    } catch (e) {
-      console.warn("[createOrder] Could not embed meta into items payload:", e.message);
-    }
+    // Items are already compact from Checkout.jsx (short keys, sliced).
+    // Do NOT add _meta here — it would risk exceeding Appwrite's 1000-char items field limit.
+    // Admin looks up customer info via userId from the user_profiles collection.
+    const itemsPayload = typeof items === "string" ? items : JSON.stringify(items);
 
     // Normalize paymentMode to valid enum: UPI | Card | COD
     const normalizedMode = (() => {
@@ -799,42 +785,19 @@ export class appwriteConfigService {
       paymentMode: normalizedMode,
     };
 
-    let currentPayload = { ...payload };
-    let maxRetries = 30; // High limit since we added many variations
-
-    while (maxRetries > 0) {
-      try {
-        return await this.databases.createDocument(
-          conf.appwriteDatabaseId,
-          conf.appwriteOrdersCollection,
-          docId,
-          currentPayload,
-          [Permission.read(Role.user(user_id))]
-        );
-      } catch (error) {
-        const msg = error?.message || "";
-        // Match things like: Invalid document structure: Unknown attribute: "userID"
-        const attrMatch = msg.match(/(?:Unknown|Invalid|Extra) attribute[:\s]*"([^"]+)"/i) || 
-                          msg.match(/(?:Unknown|Invalid|Extra) attribute.*?`([^`]+)`/i) ||
-                          msg.match(/attribute "([^"]+)"/i);
-
-        if (attrMatch && attrMatch[1]) {
-          const attr = attrMatch[1];
-          console.warn(`[createOrder] Stripping unknown attribute: ${attr}`);
-          delete currentPayload[attr];
-          maxRetries--;
-        } else if (/unknown attribute|invalid attribute|extra attribute/i.test(msg)) {
-           // Fallback: If we couldn't parse the exact attribute name, break so we don't infinite loop
-           console.error("Appwrite :: createOrder error: Could not parse attribute from string.", msg);
-           throw error;
-        } else {
-          console.error("Appwrite :: createOrder error ::", msg, error);
-          throw error;
-        }
-      }
+    // Single direct call — payload contains only the 8 valid schema attributes
+    try {
+      return await this.databases.createDocument(
+        conf.appwriteDatabaseId,
+        conf.appwriteOrdersCollection,
+        docId,
+        payload,
+        [Permission.read(Role.user(user_id))]
+      );
+    } catch (error) {
+      console.error("Appwrite :: createOrder error ::", error?.message, error);
+      throw error;
     }
-
-    throw new Error("Failed to create order: Document structure mismatch. Exceeded max retries.");
   }
 
   async updateOrder(orderDocId, updates) {
