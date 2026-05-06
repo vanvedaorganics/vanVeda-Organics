@@ -442,17 +442,12 @@ function Checkout() {
 
         const payload = {
           user_id: profile.$id,
-          userName: profile.displayName || "",
-          userEmail: profile.email || authUser?.email || "",
-          userPhone: profile.phone || "",
           items: itemsJson,
           shippingAddress,
           total_cents: totals.subtotalCents,
-          delivery_date: farthestDeliveryDate,
           paymentMode: pMode,
           paymentStatus: paymentId ? "Paid" : "Pending",
           fulfillmentStatus: "pending",
-          payment_id: paymentId,
         };
 
         const result = await appwriteService.createOrder(payload);

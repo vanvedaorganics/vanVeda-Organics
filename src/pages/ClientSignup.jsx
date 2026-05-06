@@ -67,7 +67,6 @@ function ClientSignup() {
         user_id: user.$id,
         displayName: data.username,
         phone: data.phone,
-        email: data.email,
         address: [JSON.stringify(addressObj)],
       });
       if (!profile) throw new Error("User profile creation failed.");

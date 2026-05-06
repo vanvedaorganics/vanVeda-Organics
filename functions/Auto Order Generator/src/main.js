@@ -179,21 +179,20 @@ const createOrderFromSubscription = async (databases, subscription, logger, retr
     };
 
     // Create the order
+    const orderId = ID.unique();
     const order = await databases.createDocument(
       config.databaseId,
       config.ordersCollectionId,
-      ID.unique(),
+      orderId,
       {
-        user_id: userId,
-        userName: userProfile.displayName || userProfile.email || "Unknown User",
+        orderNumber: orderId,
+        userId: userId,
         items: JSON.stringify(itemsPayload),
         shippingAddress: JSON.stringify(shippingAddress),
         total_cents: itemTotalCents,
-        delivery_date: calculateDeliveryDate(),
-        paymentMode: "COD",
         paymentStatus: "Pending",
-        fulfillmentStatus: "pending",
-        auto_order: true,
+        fulfillmentSattus: "pending",
+        paymentMode: "COD",
       },
       [Permission.read(Role.user(userId))]
     );

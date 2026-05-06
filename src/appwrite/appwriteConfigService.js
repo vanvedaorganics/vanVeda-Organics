@@ -1008,7 +1008,6 @@ export class appwriteConfigService {
           displayName,
           phone,
           address,
-          email,
         },
         [
           Permission.read(Role.user(user_id)),
@@ -1046,7 +1045,6 @@ export class appwriteConfigService {
           displayName,
           phone,
           address,
-          email,
         }
       );
     } catch (error) {
