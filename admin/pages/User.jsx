@@ -50,7 +50,7 @@ function User() {
 
   // Team Members table columns
   const teamColumns = [
-    { header: "User Name", accessor: "userName" },
+    { header: "User Name", accessor: "displayName" },
     { header: "Email", accessor: "email" },
     {
       header: "Roles",
@@ -75,8 +75,8 @@ function User() {
           const res = await AuthService.listTeamMemberships();         
           if (res.memberships) {
             const formatted = res.memberships.map((m) => ({
-              userName: m.userName || "Unknown",
-              email: m.userEmail || "N/A",
+              displayName: m.userName || m.name || "Unknown",
+              email: m.userEmail || m.email || "N/A",
               roles: m.roles || [],
             }));
             setTeamMembers(formatted);

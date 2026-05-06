@@ -38,7 +38,7 @@ function Orders() {
 
   const getCommunicationTemplates = (order, linkedUser) => {
     const orderId = order.$id?.slice(-8).toUpperCase();
-    const customerName = linkedUser?.displayName || order.userName || "Customer";
+    const customerName = linkedUser?.displayName || "Customer";
     // fulfillmentSattus is the DB field (schema typo)
     const status = (order.fulfillmentSattus || order.fulfillmentStatus || "pending").toLowerCase();
     const payment = (order.paymentStatus || "Pending").toLowerCase();
@@ -188,7 +188,7 @@ function Orders() {
         const linkedUser = usersList?.find(
           (u) => u.$id === row.userId || u.user_id === row.userId
         );
-        return linkedUser?.displayName || row.userName || row.userId?.slice(-6) || "—";
+        return linkedUser?.displayName || row.userId?.slice(-6) || "—";
       },
     },
     {

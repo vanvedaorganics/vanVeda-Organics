@@ -21,7 +21,7 @@ export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const [userName, setUsername] = useState(null);
+  const [adminName, setAdminName] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -35,7 +35,7 @@ export default function AdminLayout() {
             if (!active) return;
             if (isAdmin) {
               dispatch(login(userData));
-              setUsername(userData.name);
+              setAdminName(userData.name);
             } else {
               dispatch(logout());
               navigate("/admin/login");
@@ -55,7 +55,7 @@ export default function AdminLayout() {
   const userLogout = async () => {
     authService.logout().then(() => {
       dispatch(logout());
-      setUsername(null);
+      setAdminName(null);
       navigate("/admin/login");
       console.log("[Logout] Success");
     });
@@ -195,7 +195,7 @@ export default function AdminLayout() {
           </div>
 
           <div className="flex items-center gap-4">
-            <span className="text-gray-700">{userName}</span>
+            <span className="text-gray-700">{adminName}</span>
             <button
               className="p-2 rounded hover:bg-gray-100"
               onClick={userLogout}
