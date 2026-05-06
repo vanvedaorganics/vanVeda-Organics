@@ -24,6 +24,7 @@ import {
   emptyUserCart,
   setEmptyCart,
 } from "../store/cartsSlice";
+import { addOrder } from "../store/ordersSlice";
 import { fetchProducts } from "../store/productsSlice";
 
 // Helpers copied to keep in sync with cart structure
@@ -441,12 +442,9 @@ function Checkout() {
         const payload = {
           user_id: profile.$id,
           userName: profile.displayName || "",
-          userEmail: profile.email || "",
+          userEmail: profile.email || authUser?.email || "",
           userPhone: profile.phone || "",
-          items: JSON.stringify({
-            ...itemsPayload,
-            payment_info: paymentId ? { razorpay_id: paymentId, mode: pMode } : null,
-          }),
+          items: JSON.stringify(itemsPayload),
           shippingAddress,
           total_cents: totals.subtotalCents,
           delivery_date: farthestDeliveryDate,
@@ -456,13 +454,10 @@ function Checkout() {
           payment_id: paymentId,
         };
 
-        try {
-          const result = await appwriteService.createOrder(payload);
-          await finalizeSuccess(result);
-        } catch (err) {
-          console.error("DEBUG: Order placement failed.", err);
-          throw err;
-        }
+        const result = await appwriteService.createOrder(payload);
+        // Immediately add to Redux so it shows in Profile without reload
+        dispatch(addOrder(result));
+        await finalizeSuccess(result);
       };
 
       const finalizeSuccess = async (result) => {

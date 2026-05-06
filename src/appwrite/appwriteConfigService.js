@@ -752,72 +752,57 @@ export class appwriteConfigService {
     // Generate a unique ID to use for both the document ID and the orderNumber attribute
     const docId = ID.unique();
 
-    // Name variations - Exhaustive list to catch all possible schema keys
-    const nameVal = userName || "Customer";
-    
-    // Initial exhaustive payload with all common naming variations
-    // The "Self-Healing" loop below will automatically strip any that don't exist in your DB.
+    // Embed extra info (not in schema) inside the items JSON so it's always retrievable
+    let itemsPayload = items;
+    try {
+      const parsed = typeof items === "string" ? JSON.parse(items) : items;
+      itemsPayload = JSON.stringify({
+        ...parsed,
+        _meta: {
+          userName: userName || "Customer",
+          userEmail: userEmail || "",
+          userPhone: userPhone || "",
+          delivery_date: delivery_date || "",
+          payment_id: payment_id || null,
+          auto_order: !!auto_order,
+        },
+      });
+    } catch (e) {
+      console.warn("[createOrder] Could not embed meta into items payload:", e.message);
+    }
+
+    // Normalize paymentMode to valid enum: UPI | Card | COD
+    const normalizedMode = (() => {
+      const m = (paymentMode || "COD").toUpperCase();
+      if (m === "ONLINE" || m === "CARD") return "Card";
+      if (m === "UPI") return "UPI";
+      return "COD";
+    })();
+
+    // Normalize paymentStatus to valid enum: Pending | Paid | Failed
+    const normalizedPaymentStatus = (() => {
+      const s = String(paymentStatus || "").toLowerCase();
+      if (s === "paid") return "Paid";
+      if (s === "failed") return "Failed";
+      return "Pending";
+    })();
+
+    // Send only the 8 attributes that exist in the Appwrite orders schema
     const payload = {
-      // User ID variations
-      userId: user_id,
-      user_id: user_id,
-      "User ID": user_id,
-      "user id": user_id,
-      "USER ID": user_id,
-      userid: user_id,
-      UserID: user_id,
-      // Order Number variations
       orderNumber: docId,
-      "Order Number": docId,
-      "order number": docId,
-      "ORDER NUMBER": docId,
-      OrderNumber: docId,
-      // Name variations
-      "User Name": nameVal,
-      "user name": nameVal,
-      "USER NAME": nameVal,
-      userName: nameVal,
-      username: nameVal,
-      user_name: nameVal,
-      Username: nameVal,
-      UserName: nameVal,
-      USER_NAME: nameVal,
-      name: nameVal,
-      customerName: nameVal,
-      customer_name: nameVal,
-      // Email/Phone variations
-      userEmail: userEmail || "",
-      user_email: userEmail || "",
-      email: userEmail || "",
-      userPhone: userPhone || "",
-      user_phone: userPhone || "",
-      phone: userPhone || "",
-      // Date variations
-      delivery_date: delivery_date || "",
-      deliveryDate: delivery_date || "",
-      "delivery date": delivery_date || "",
-      "Delivery Date": delivery_date || "",
-      // Standard fields
-      items,
+      userId: user_id,
+      items: itemsPayload,
       shippingAddress,
       total_cents,
-      totalCents: total_cents,
-      "Total Cents": total_cents,
-      "total cents": total_cents,
-      // Enum fields
-      paymentMode: paymentMode === "ONLINE" ? "Card" : (paymentMode || "COD"),
-      paymentStatus: (paymentStatus && String(paymentStatus).toLowerCase() === "paid") ? "Paid" : "Pending",
-      fulfillmentStatus: fulfillmentStatus || "pending",
-      fulfillmentSattus: (fulfillmentStatus || "pending").toLowerCase(),
-      payment_id: payment_id || null,
-      auto_order: !!auto_order,
+      paymentStatus: normalizedPaymentStatus,
+      fulfillmentSattus: "pending", // schema has typo "Sattus" — must match exactly
+      paymentMode: normalizedMode,
     };
 
     let currentPayload = { ...payload };
-    const maxRetries = 15;
-    let attempt = 0;
+    let maxRetries = 30; // High limit since we added many variations
 
-    while (attempt < maxRetries) {
+    while (maxRetries > 0) {
       try {
         return await this.databases.createDocument(
           conf.appwriteDatabaseId,
@@ -827,34 +812,54 @@ export class appwriteConfigService {
           [Permission.read(Role.user(user_id))]
         );
       } catch (error) {
-        attempt++;
-        const errorMessage = error?.message || "";
-        
-        // 1. Check for "Extra attribute" / "not found in collection"
-        const extraAttrMatch = errorMessage.match(/attribute ["']?([^"']+)["']? (is not found|not found|is not allowed|extra)/i);
-        
-        if (extraAttrMatch) {
-          const attrToRemove = extraAttrMatch[1];
-          console.warn(`[createOrder] Attribute "${attrToRemove}" not in schema. Stripping and retrying...`);
-          delete currentPayload[attrToRemove];
-          continue; // Retry with stripped payload
-        }
+        const msg = error?.message || "";
+        // Match things like: Invalid document structure: Unknown attribute: "userID"
+        const attrMatch = msg.match(/(?:Unknown|Invalid|Extra) attribute[:\s]*"([^"]+)"/i) || 
+                          msg.match(/(?:Unknown|Invalid|Extra) attribute.*?`([^`]+)`/i) ||
+                          msg.match(/attribute "([^"]+)"/i);
 
-        // 2. If we reach here, it's a non-attribute error (like network or permissions)
-        // or a "Missing attribute" error that we haven't satisfied yet.
-        console.error(`Appwrite :: createOrder error (Attempt ${attempt}) ::`, error);
-        throw error;
+        if (attrMatch && attrMatch[1]) {
+          const attr = attrMatch[1];
+          console.warn(`[createOrder] Stripping unknown attribute: ${attr}`);
+          delete currentPayload[attr];
+          maxRetries--;
+        } else if (/unknown attribute|invalid attribute|extra attribute/i.test(msg)) {
+           // Fallback: If we couldn't parse the exact attribute name, break so we don't infinite loop
+           console.error("Appwrite :: createOrder error: Could not parse attribute from string.", msg);
+           throw error;
+        } else {
+          console.error("Appwrite :: createOrder error ::", msg, error);
+          throw error;
+        }
       }
     }
+
+    throw new Error("Failed to create order: Document structure mismatch. Exceeded max retries.");
   }
 
-  async updateOrder(orderNumber, updates) {
+  async updateOrder(orderDocId, updates) {
     try {
+      // Map "fulfillmentStatus" to the schema's typo'd field "fulfillmentSattus"
+      const mapped = { ...updates };
+      if ("fulfillmentStatus" in mapped) {
+        mapped.fulfillmentSattus = mapped.fulfillmentStatus;
+        delete mapped.fulfillmentStatus;
+      }
+      // Normalize paymentStatus enum
+      if (mapped.paymentStatus) {
+        const s = String(mapped.paymentStatus).toLowerCase();
+        mapped.paymentStatus = s === "paid" ? "Paid" : s === "failed" ? "Failed" : "Pending";
+      }
+      // Normalize paymentMode enum
+      if (mapped.paymentMode) {
+        const m = String(mapped.paymentMode).toUpperCase();
+        mapped.paymentMode = (m === "ONLINE" || m === "CARD") ? "Card" : m === "UPI" ? "UPI" : "COD";
+      }
       return await this.databases.updateDocument(
         conf.appwriteDatabaseId,
         conf.appwriteOrdersCollection,
-        orderNumber,
-        updates
+        orderDocId,
+        mapped
       );
     } catch (error) {
       console.error("Appwrite :: updateOrder error ::", error);
@@ -874,12 +879,12 @@ export class appwriteConfigService {
     }
   }
 
-  async getOrder(orderNumber) {
+  async getOrder(orderDocId) {
     try {
       return await this.databases.getDocument(
         conf.appwriteDatabaseId,
         conf.appwriteOrdersCollection,
-        orderNumber
+        orderDocId
       );
     } catch (error) {
       console.error("Appwrite :: getOrder error ::", error);

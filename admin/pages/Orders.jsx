@@ -6,6 +6,22 @@ import { fetchUsers } from "../../src/store/usersSlice";
 import appwriteService from "../../src/appwrite/appwriteConfigService";
 import { MessageCircle, Mail } from "lucide-react";
 
+// Helper: safely parse JSON string
+const safeJSON = (str, fallback = {}) => {
+  try {
+    return typeof str === "string" ? JSON.parse(str) : (str ?? fallback);
+  } catch {
+    return fallback;
+  }
+};
+
+// Helper: extract embedded _meta from the items JSON field
+// New orders store userName/email/phone inside items._meta
+const getOrderMeta = (order) => {
+  const parsed = safeJSON(order.items, {});
+  return parsed._meta || {};
+};
+
 function Orders() {
   const dispatch = useDispatch();
   const {
@@ -26,11 +42,13 @@ function Orders() {
 
   const paymentStatusOptions = ["Pending", "Paid", "Failed"];
   const orderStatusOptions = ["pending", "cancelled", "delivered", "shipped"];
-  
+
   const getCommunicationTemplates = (order) => {
     const orderId = order.$id?.slice(-8).toUpperCase();
-    const customerName = order.userName || "Customer";
-    const status = (order.fulfillmentStatus || "pending").toLowerCase();
+    const meta = getOrderMeta(order);
+    const customerName = meta.userName || order.userName || "Customer";
+    // fulfillmentSattus is the DB field (schema typo)
+    const status = (order.fulfillmentSattus || order.fulfillmentStatus || "pending").toLowerCase();
     const payment = (order.paymentStatus || "Pending").toLowerCase();
 
     let waMessage = "";
@@ -50,7 +68,6 @@ function Orders() {
       emailSubject = `Your Order is Out for Delivery! - #${orderId}`;
       emailBody = `Hello ${customerName},\n\nYour order #${orderId} has been shipped and is on its way to your destination.\n\nThank you for choosing True Soil Organics!`;
     } else {
-      // Pending
       if (payment === "pending") {
         waMessage = `Hello ${customerName}, thank you for your order #${orderId}. We are waiting to confirm your payment to begin processing.`;
         emailSubject = `Action Required: Payment Pending for Order #${orderId}`;
@@ -62,21 +79,23 @@ function Orders() {
       }
     }
 
-    return { 
-      wa: encodeURIComponent(waMessage), 
-      emailSub: encodeURIComponent(emailSubject), 
-      emailBody: encodeURIComponent(emailBody) 
+    return {
+      wa: encodeURIComponent(waMessage),
+      emailSub: encodeURIComponent(emailSubject),
+      emailBody: encodeURIComponent(emailBody),
     };
   };
 
   const capitalizeFirst = (str = "") =>
     str ? str.charAt(0).toUpperCase() + str.slice(1).toLowerCase() : "";
+
   const getPaymentStatusClass = (status = "") => {
     const s = status.toLowerCase();
     if (s === "paid") return "text-green-600";
     if (s === "failed") return "text-red-600";
     return "text-amber-600";
   };
+
   const getOrderStatusClass = (status = "") => {
     const s = status.toLowerCase();
     if (s === "delivered" || s === "completed") return "text-green-600 font-bold";
@@ -92,30 +111,23 @@ function Orders() {
   const handleStatusChange = async (orderId, field, value) => {
     const prevRows = rows;
     setRowLoading((prev) => ({ ...prev, [orderId]: true }));
+
+    // Optimistic update: use the typo'd field name for local state
+    const displayField = field === "fulfillmentStatus" ? "fulfillmentSattus" : field;
     setRows((current) =>
-      current.map((r) =>
-        r.$id === orderId
-          ? {
-              ...r,
-              [field === "paymentStatus"
-                ? "paymentStatus"
-                : "fulfillmentStatus"]: value,
-            }
-          : r
-      )
+      current.map((r) => (r.$id === orderId ? { ...r, [displayField]: value } : r))
     );
 
     try {
       const payload = {};
-      
       if (field === "paymentStatus") {
         payload.paymentStatus = value;
       } else if (field === "fulfillmentStatus") {
+        // updateOrder will remap fulfillmentStatus → fulfillmentSattus
         payload.fulfillmentStatus = value;
       } else if (field === "shipment_number") {
         payload.shipment_number = value;
       }
-
       await appwriteService.updateOrder(orderId, payload);
     } catch (err) {
       console.error("Failed to update order status", err);
@@ -125,40 +137,27 @@ function Orders() {
     }
   };
 
-  // Safely parse items payload from order
+  // Render order items list from the JSON payload
   const renderOrderItems = (row) => {
     try {
-      const parsed =
-        typeof row.items === "string" ? JSON.parse(row.items) : row.items;
+      const parsed = typeof row.items === "string" ? JSON.parse(row.items) : row.items;
       const list = Array.isArray(parsed?.items) ? parsed.items : [];
       if (!list.length) return "—";
       return (
         <div className="space-y-1">
           {list.map((item, idx) => (
             <div key={idx} className="text-sm leading-tight">
-              <div className="font-semibold text-[#084629]">
-                {item.name || "Item"}
-              </div>
+              <div className="font-semibold text-[#084629]">{item.name || "Item"}</div>
               <div className="text-xs text-gray-600">
-                {item.packaging_size?.sizeLabel
-                  ? `Size: ${item.packaging_size.sizeLabel} • `
-                  : ""}
+                {item.size ? `Size: ${item.size} • ` : ""}
                 Qty: {item.qty ?? 0}
-                {typeof item.price_cents === "number"
-                  ? ` • ₹${(item.price_cents / 100).toFixed(2)}`
+                {typeof item.price === "number"
+                  ? ` • ₹${(item.price / 100).toFixed(2)}`
                   : ""}
                 {typeof item.item_total_cents === "number"
                   ? ` (Total: ₹${(item.item_total_cents / 100).toFixed(2)})`
                   : ""}
               </div>
-              {item.batch && (item.batch.name || item.batch.delivery_date) && (
-                <div className="text-[11px] text-[#084629]">
-                  Batch: {item.batch.name || "N/A"}
-                  {item.batch.delivery_date
-                    ? ` • Delivery: ${item.batch.delivery_date}`
-                    : ""}
-                </div>
-              )}
             </div>
           ))}
         </div>
@@ -168,9 +167,35 @@ function Orders() {
     }
   };
 
+  // Render shipping address — handles both compact {ra,st,ct,pc,s} and full key formats
+  const renderShippingAddress = (row) => {
+    try {
+      const addr = safeJSON(row.shippingAddress, null);
+      if (!addr) return "—";
+      const parts = [
+        addr.residencyAddress || addr.ra,
+        addr.landmark || addr.lm,
+        addr.street || addr.st,
+        addr.pincode || addr.pc,
+        addr.city || addr.ct,
+        addr.state || addr.s,
+      ].filter(Boolean);
+      return parts.join(", ") || "—";
+    } catch {
+      return "—";
+    }
+  };
+
   const columns = [
     { header: "Order No.", accessor: "$id" },
-    { header: "Customer", accessor: "userName" },
+    {
+      header: "Customer",
+      accessor: "userId",
+      render: (row) => {
+        const meta = getOrderMeta(row);
+        return meta.userName || row.userName || "—";
+      },
+    },
     {
       header: "Shipment No.",
       accessor: "shipment_number",
@@ -194,10 +219,7 @@ function Orders() {
     {
       header: "Shipping Address",
       accessor: "shippingAddress",
-      render: (row) => {
-        const address = JSON.parse(row.shippingAddress);
-        return `${address.residencyAddress}, ${address.landmark}, ${address.street}, ${address.pincode}, ${address.city}, ${address.state}`;
-      },
+      render: renderShippingAddress,
     },
     {
       header: "Total Amt.",
@@ -206,38 +228,34 @@ function Orders() {
     },
     {
       header: "Order Status",
-      accessor: "fulfillmentStatus",
-      render: (row) => (
-        <select
-          className={`border rounded px-2 py-1 text-sm ${getOrderStatusClass(
-            row.fulfillmentStatus || orderStatusOptions[0]
-          )}`}
-          value={row.fulfillmentStatus || orderStatusOptions[0]}
-          disabled={!!rowLoading[row.$id]}
-          onChange={(e) =>
-            handleStatusChange(row.$id, "fulfillmentStatus", e.target.value)
-          }
-        >
-          {orderStatusOptions.map((status) => (
-            <option
-              key={status}
-              value={status}
-              style={{
-                color:
-                  status === "delivered"
-                    ? "#16a34a"
-                    : status === "shipped"
-                    ? "#2563eb"
-                    : status === "cancelled"
-                    ? "#dc2626"
+      accessor: "fulfillmentSattus",
+      render: (row) => {
+        const currentStatus = row.fulfillmentSattus || row.fulfillmentStatus || orderStatusOptions[0];
+        return (
+          <select
+            className={`border rounded px-2 py-1 text-sm ${getOrderStatusClass(currentStatus)}`}
+            value={currentStatus}
+            disabled={!!rowLoading[row.$id]}
+            onChange={(e) => handleStatusChange(row.$id, "fulfillmentStatus", e.target.value)}
+          >
+            {orderStatusOptions.map((status) => (
+              <option
+                key={status}
+                value={status}
+                style={{
+                  color:
+                    status === "delivered" ? "#16a34a"
+                    : status === "shipped" ? "#2563eb"
+                    : status === "cancelled" ? "#dc2626"
                     : "#b45309",
-              }}
-            >
-              {capitalizeFirst(status)}
-            </option>
-          ))}
-        </select>
-      ),
+                }}
+              >
+                {capitalizeFirst(status)}
+              </option>
+            ))}
+          </select>
+        );
+      },
     },
     {
       header: "Payment Status",
@@ -249,9 +267,7 @@ function Orders() {
           )}`}
           value={row.paymentStatus || paymentStatusOptions[0]}
           disabled={!!rowLoading[row.$id]}
-          onChange={(e) =>
-            handleStatusChange(row.$id, "paymentStatus", e.target.value)
-          }
+          onChange={(e) => handleStatusChange(row.$id, "paymentStatus", e.target.value)}
         >
           {paymentStatusOptions.map((status) => (
             <option
@@ -259,11 +275,9 @@ function Orders() {
               value={status}
               style={{
                 color:
-                  status === "Paid"
-                    ? "#16a34a"
-                    : status === "Failed"
-                    ? "#dc2626"
-                    : "#b45309",
+                  status === "Paid" ? "#16a34a"
+                  : status === "Failed" ? "#dc2626"
+                  : "#b45309",
               }}
             >
               {capitalizeFirst(status)}
@@ -278,22 +292,27 @@ function Orders() {
       accessor: "actions",
       render: (row) => {
         const templates = getCommunicationTemplates(row);
-        
-        // Find matching use in global users list as fallback for old orders
-        const linkedUser = usersList?.find(u => u.$id === row.user_id || u.user_id === row.user_id);
-        
-        // Use userPhone if available, else try simple phone field, then linked user profile
-        const rawPhoneInput = (row.userPhone || row.phone || linkedUser?.phone || "").toString();
+        const meta = getOrderMeta(row);
+
+        // Fallback: look up user in global users list for old orders that lack _meta
+        const linkedUser = usersList?.find(
+          (u) => u.$id === row.userId || u.user_id === row.userId
+        );
+
+        // Phone resolution: _meta → top-level (legacy) → linked profile
+        const rawPhoneInput = (
+          meta.userPhone || row.userPhone || linkedUser?.phone || ""
+        ).toString();
         let rawPhone = rawPhoneInput.replace(/\D/g, "");
         if (rawPhone.startsWith("91") && rawPhone.length > 10) rawPhone = rawPhone.slice(2);
         if (rawPhone.startsWith("0")) rawPhone = rawPhone.slice(1);
-        
         const phone = rawPhone.length === 10 ? rawPhone : null;
         const waUrl = phone ? `https://wa.me/91${phone}?text=${templates.wa}` : "#";
-        
-        // Use userEmail if available, else try email field, then linked user profile
-        const destinationEmail = row.userEmail || row.email || linkedUser?.email || "";
-        const gmailUrl = destinationEmail 
+
+        // Email resolution: _meta → top-level (legacy) → linked profile
+        const destinationEmail =
+          meta.userEmail || row.userEmail || linkedUser?.email || "";
+        const gmailUrl = destinationEmail
           ? `https://mail.google.com/mail/u/truesoilorganic@gmail.com/compose?view=cm&fs=1&to=${destinationEmail}&su=${templates.emailSub}&body=${templates.emailBody}`
           : "#";
 
@@ -306,9 +325,9 @@ function Orders() {
               title={phone ? "Message on WhatsApp" : "Phone number missing in order & profile"}
               onClick={(e) => e.stopPropagation()}
               className={`p-1.5 rounded-lg transition-all shadow-sm ${
-                phone 
-                ? "bg-green-50 text-green-600 hover:bg-green-600 hover:text-white" 
-                : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                phone
+                  ? "bg-green-50 text-green-600 hover:bg-green-600 hover:text-white"
+                  : "bg-gray-100 text-gray-400 cursor-not-allowed"
               }`}
             >
               <MessageCircle size={16} />
@@ -317,12 +336,16 @@ function Orders() {
               href={gmailUrl}
               target="_blank"
               rel="noopener noreferrer"
-              title={destinationEmail ? "Send via Gmail (truesoilorganic@gmail.com)" : "Email missing in order & profile"}
+              title={
+                destinationEmail
+                  ? "Send via Gmail (truesoilorganic@gmail.com)"
+                  : "Email missing in order & profile"
+              }
               onClick={(e) => e.stopPropagation()}
               className={`p-1.5 rounded-lg transition-all shadow-sm ${
                 destinationEmail
-                ? "bg-blue-50 text-[#DB4437] hover:bg-[#DB4437] hover:text-white"
-                : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                  ? "bg-blue-50 text-[#DB4437] hover:bg-[#DB4437] hover:text-white"
+                  : "bg-gray-100 text-gray-400 cursor-not-allowed"
               }`}
             >
               <Mail size={16} />

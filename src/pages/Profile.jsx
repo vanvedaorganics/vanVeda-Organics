@@ -124,12 +124,16 @@ function Profile() {
       return;
     }
 
-    const userOrders = allOrders.filter((order) => order.user_id === authUser.$id);
+    // Schema stores the user id as "userId" (camelCase) — filter by that
+    const userOrders = allOrders.filter(
+      (order) => order.userId === authUser.$id || order.user_id === authUser.$id
+    );
     const pastStatuses = new Set(["delivered", "cancelled"]);
     const current = [];
     const past = [];
 
     for (const order of userOrders) {
+      // Schema has typo "fulfillmentSattus" — check both for safety
       const status = normalizeStatus(order.fulfillmentSattus || order.fulfillmentStatus);
       if (pastStatuses.has(status)) {
         past.push(order);
@@ -208,8 +212,9 @@ function Profile() {
   const handleCancelOrder = async (orderId) => {
     if (!window.confirm("Are you sure you want to cancel this order?")) return;
     try {
-      const updatedOrder = await appwriteConfigService.updateOrder(orderId, { 
-        fulfillmentStatus: "cancelled" 
+      // Pass as fulfillmentStatus — updateOrder will remap to fulfillmentSattus
+      const updatedOrder = await appwriteConfigService.updateOrder(orderId, {
+        fulfillmentStatus: "cancelled",
       });
       dispatch(updateOrder(updatedOrder));
     } catch (err) {
@@ -704,11 +709,13 @@ function Profile() {
 // Subcomponent: OrderCard
 function OrderCard({ order, formatINR, safeJSONParse, normalizeStatus, onCancel }) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const orderItems = safeJSONParse(order.items, { items: [], summary: {} });
+  const orderItems = safeJSONParse(order.items, { items: [], summary: {}, _meta: {} });
   const shippingAddr = safeJSONParse(order.shippingAddress, null);
+  // fulfillmentSattus is the actual DB field (schema typo), fallback to fulfillmentStatus
+  const fulfillmentStatus = order.fulfillmentSattus || order.fulfillmentStatus || "pending";
 
   const getStatusBadge = (status) => {
-    const s = normalizeStatus(status || order.fulfillmentSattus);
+    const s = normalizeStatus(status || fulfillmentStatus);
     const config = {
       delivered: "bg-emerald-50 text-emerald-600 border-emerald-100",
       shipped: "bg-blue-50 text-blue-600 border-blue-100",
@@ -724,7 +731,7 @@ function OrderCard({ order, formatINR, safeJSONParse, normalizeStatus, onCancel 
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-[2rem] p-6 shadow-sm border border-[#E7CE9D]/10 hover:shadow-xl transition-all duration-300">
       <div className="flex flex-col md:flex-row justify-between gap-6 mb-6">
         <div className="space-y-1">
-          <div className="flex items-center gap-3"><h4 className="syne-bold text-[#201413]">Order #{order.$id.slice(-6).toUpperCase()}</h4>{getStatusBadge(order.fulfillmentStatus)}</div>
+          <div className="flex items-center gap-3"><h4 className="syne-bold text-[#201413]">Order #{order.$id.slice(-6).toUpperCase()}</h4>{getStatusBadge(fulfillmentStatus)}</div>
           <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest">{new Date(order.$createdAt).toLocaleDateString()}</p>
         </div>
         <div className="flex items-center gap-4 text-right">
@@ -773,7 +780,7 @@ function OrderCard({ order, formatINR, safeJSONParse, normalizeStatus, onCancel 
                   </div>
                 </div>
               )}
-              {normalizeStatus(order.fulfillmentStatus) === "pending" && (
+              {normalizeStatus(fulfillmentStatus) === "pending" && (
                 <button
                   onClick={() => onCancel(order.$id)}
                   className="w-full py-3 text-xs font-black uppercase tracking-widest text-red-500 hover:text-red-700 transition-colors border-2 border-dashed border-red-100 rounded-2xl"
