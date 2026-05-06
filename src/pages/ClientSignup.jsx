@@ -38,7 +38,7 @@ function ClientSignup() {
       const account = await appwriteAuthService.createAccount({
         email: data.email,
         password: data.password,
-        name: data.username,
+        name: data.name,
       });
       if (!account) throw new Error("Account creation failed.");
       createdUserId = account.$id;
@@ -65,7 +65,7 @@ function ClientSignup() {
       
       const profile = await appwriteConfigService.createUserProfile({
         user_id: user.$id,
-        displayName: data.username,
+        displayName: data.name,
         phone: data.phone,
         address: [JSON.stringify(addressObj)],
       });
@@ -174,14 +174,13 @@ function ClientSignup() {
             )}
 
             <form onSubmit={handleSubmit(create)} className="space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <Input
-                  label="Username"
+                  label="Full Name"
                   placeholder="John Doe"
                   className="rounded-2xl border-[#E7CE9D]/40 focus:ring-[#28543d] focus:border-[#28543d]"
-                  error={errors.username?.message}
-                  {...register("username", { 
-                    required: "Username is required",
+                  error={errors.name?.message}
+                  {...register("name", { 
+                    required: "Full Name is required",
                     minLength: { value: 3, message: "Minimum 3 characters" }
                   })}
                   disabled={loading}

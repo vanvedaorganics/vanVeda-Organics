@@ -736,18 +736,11 @@ export class appwriteConfigService {
 
   async createOrder({
     user_id,
-    userName,
-    userEmail,
-    userPhone,
     items,
     shippingAddress,
     total_cents,
     paymentStatus,
-    fulfillmentStatus,
-    delivery_date,
     paymentMode,
-    payment_id,
-    auto_order = false,
   }) {
     // Generate a unique ID to use for both the document ID and the orderNumber attribute
     const docId = ID.unique();
