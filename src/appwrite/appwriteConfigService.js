@@ -1001,6 +1001,7 @@ export class appwriteConfigService {
           displayName,
           phone,
           address,
+          email: email || "",
         },
         [
           Permission.read(Role.user(user_id)),
@@ -1029,16 +1030,20 @@ export class appwriteConfigService {
 
   async updateUserProfile({ user_id, displayName, phone, address, email }) {
     try {
+      const payload = {
+        user_id,
+        displayName,
+        phone,
+        address,
+      };
+      // Only include email if provided, to avoid overwriting with empty string
+      if (email !== undefined) payload.email = email;
+
       return await this.databases.updateDocument(
         conf.appwriteDatabaseId,
         conf.appwriteUsersCollection,
         user_id,
-        {
-          user_id,
-          displayName,
-          phone,
-          address,
-        }
+        payload
       );
     } catch (error) {
       console.error("Appwrite :: updateUserProfile error ::", error);
