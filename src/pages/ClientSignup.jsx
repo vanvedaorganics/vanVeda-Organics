@@ -174,6 +174,7 @@ function ClientSignup() {
             )}
 
             <form onSubmit={handleSubmit(create)} className="space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <Input
                   label="Full Name"
                   placeholder="John Doe"

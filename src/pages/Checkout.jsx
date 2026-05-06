@@ -447,7 +447,6 @@ function Checkout() {
           total_cents: totals.subtotalCents,
           paymentMode: pMode,
           paymentStatus: paymentId ? "Paid" : "Pending",
-          fulfillmentStatus: "pending",
         };
 
         const result = await appwriteService.createOrder(payload);

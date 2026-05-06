@@ -69,22 +69,6 @@ const calculateDeliveryDate = () => {
   return formatDdMmYyyy(deliveryDate);
 };
 
-/**
- * Fetch user profile to get userName
- */
-const getUserProfile = async (databases, userId) => {
-  try {
-    const profile = await databases.getDocument(
-      config.databaseId,
-      config.usersCollectionId,
-      userId
-    );
-    return profile;
-  } catch (error) {
-    console.error(`Failed to fetch user profile for ${userId}:`, error.message);
-    return null;
-  }
-};
 
 /**
  * Fetch product details
@@ -118,12 +102,6 @@ const createOrderFromSubscription = async (databases, subscription, logger, retr
     const productId = typeof subscription.product_id === 'object' && subscription.product_id?.$id
       ? subscription.product_id.$id
       : subscription.product_id;
-
-    // Fetch user profile for userName
-    const userProfile = await getUserProfile(databases, userId);
-    if (!userProfile) {
-      throw new Error(`User profile not found for user_id: ${userId}`);
-    }
 
     // Fetch product details
     const product = await getProduct(databases, productId);

@@ -43,7 +43,7 @@ export default function AdminUserForm({ onSuccess }) {
     reset,
   } = useForm({
     defaultValues: {
-      username: "",
+      name: "",
       email: "",
       password: "",
       confirmPassword: "",
@@ -64,7 +64,7 @@ export default function AdminUserForm({ onSuccess }) {
       const createRes = await authService.createAccount({
         email: data.email,
         password: data.password,
-        name: data.username,
+        name: data.name,
       });
       if (
         typeof createRes === "string" &&
@@ -91,15 +91,15 @@ export default function AdminUserForm({ onSuccess }) {
         Add New Admin User
       </h2>
       <div>
-        <Label htmlFor="username" required>
-          Username
+        <Label htmlFor="name" required>
+          Full Name
         </Label>
         <Input
-          id="username"
-          {...register("username", { required: "Username is required" })}
-          placeholder="Enter username"
+          id="name"
+          {...register("name", { required: "Full Name is required" })}
+          placeholder="Enter full name"
           disabled={loading}
-          error={errors.username?.message}
+          error={errors.name?.message}
         />
       </div>
       <div>
