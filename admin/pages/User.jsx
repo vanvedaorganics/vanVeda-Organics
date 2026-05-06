@@ -28,8 +28,21 @@ function User() {
       header: "Address",
       accessor: "address",
       render: (row) => {
-        const addr = JSON.parse(row.address[0]);
-        return `${addr.residencyAddress}, ${addr.landmark}, ${addr.street}, ${addr.pincode}, ${addr.city}, ${addr.state}`;
+        try {
+          if (!row.address || !row.address[0]) return "—";
+          const addr = JSON.parse(row.address[0]);
+          const parts = [
+            addr.residencyAddress,
+            addr.landmark,
+            addr.street,
+            addr.pincode,
+            addr.city,
+            addr.state
+          ].filter(Boolean);
+          return parts.join(", ") || "—";
+        } catch (e) {
+          return "—";
+        }
       },
     },
     { header: "Email", accessor: "email" },
