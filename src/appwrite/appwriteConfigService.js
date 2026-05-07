@@ -471,16 +471,24 @@ export class appwriteConfigService {
     };
 
     try {
+      const teamId = conf.appwriteTeamsId && conf.appwriteTeamsId !== "undefined" ? conf.appwriteTeamsId : null;
+      const docPermissions = [
+        Permission.read(Role.user(user_id)),
+        Permission.update(Role.user(user_id)),
+        Permission.delete(Role.user(user_id)),
+        ...(teamId ? [
+          Permission.read(Role.team(teamId)),
+          Permission.update(Role.team(teamId)),
+          Permission.delete(Role.team(teamId))
+        ] : [])
+      ];
+
       return await this.databases.createDocument(
         conf.appwriteDatabaseId,
         conf.appwriteSubscriptionCollection,
         ID.unique(),
         payload,
-        [
-          Permission.read(Role.user(user_id)),
-          Permission.update(Role.user(user_id)),
-          Permission.delete(Role.user(user_id)),
-        ]
+        docPermissions
       );
     } catch (error) {
       console.error("Appwrite :: createSubscription error ::", error);
@@ -781,11 +789,23 @@ export class appwriteConfigService {
 
     while (attempt < maxAttempts) {
       try {
+        const teamId = conf.appwriteTeamsId && conf.appwriteTeamsId !== "undefined" ? conf.appwriteTeamsId : null;
+        const docPermissions = [
+          Permission.read(Role.user(user_id)),
+          Permission.update(Role.user(user_id)),
+          ...(teamId ? [
+            Permission.read(Role.team(teamId)),
+            Permission.update(Role.team(teamId)),
+            Permission.delete(Role.team(teamId))
+          ] : [])
+        ];
+
         return await this.databases.createDocument(
           conf.appwriteDatabaseId,
           conf.appwriteOrdersCollection,
           docId,
-          payload
+          payload,
+          docPermissions
         );
       } catch (error) {
         attempt++;
