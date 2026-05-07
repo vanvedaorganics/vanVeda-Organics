@@ -31,7 +31,11 @@ const ordersSlice = createSlice({
       })
       .addCase(fetchOrders.fulfilled, (s, a) => {
         s.loading = false;
-        s.items = a.payload;
+        // Merge orders, avoiding duplicates by $id
+        const newItems = a.payload || [];
+        const existingIds = new Set(s.items.map(i => i.$id));
+        const uniqueNewItems = newItems.filter(i => !existingIds.has(i.$id));
+        s.items = [...s.items, ...uniqueNewItems];
         s.fetched = true;
       })
       .addCase(fetchOrders.rejected, (s, a) => {

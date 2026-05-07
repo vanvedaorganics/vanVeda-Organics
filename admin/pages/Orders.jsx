@@ -305,39 +305,48 @@ function Orders() {
           : "#";
 
         return (
-          <div className="flex items-center gap-3">
-            <a
-              href={waUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              title={phone ? "Message on WhatsApp" : "Phone number missing in order & profile"}
-              onClick={(e) => e.stopPropagation()}
-              className={`p-1.5 rounded-lg transition-all shadow-sm ${
-                phone
-                  ? "bg-green-50 text-green-600 hover:bg-green-600 hover:text-white"
-                  : "bg-gray-100 text-gray-400 cursor-not-allowed"
-              }`}
-            >
-              <MessageCircle size={16} />
-            </a>
-            <a
-              href={gmailUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              title={
-                destinationEmail
-                  ? "Send via Gmail (truesoilorganic@gmail.com)"
-                  : "Email missing in order & profile"
-              }
-              onClick={(e) => e.stopPropagation()}
-              className={`p-1.5 rounded-lg transition-all shadow-sm ${
-                destinationEmail
-                  ? "bg-blue-50 text-[#DB4437] hover:bg-[#DB4437] hover:text-white"
-                  : "bg-gray-100 text-gray-400 cursor-not-allowed"
-              }`}
-            >
-              <Mail size={16} />
-            </a>
+          <div className="flex flex-col gap-2 min-w-[180px]">
+            {/* Phone / WhatsApp */}
+            <div className="flex items-center gap-2">
+              <a
+                href={waUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                title={phone ? "Message on WhatsApp" : "Phone number missing"}
+                onClick={(e) => e.stopPropagation()}
+                className={`p-1.5 rounded-lg transition-all shadow-sm flex-shrink-0 ${
+                  phone
+                    ? "bg-green-50 text-green-600 hover:bg-green-600 hover:text-white"
+                    : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                }`}
+              >
+                <MessageCircle size={14} />
+              </a>
+              <span className="text-xs font-medium text-gray-700 truncate">
+                {phone ? `+91 ${phone}` : (row.userPhone || "—")}
+              </span>
+            </div>
+
+            {/* Email */}
+            <div className="flex items-center gap-2">
+              <a
+                href={gmailUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                title={destinationEmail ? "Send via Gmail" : "Email missing"}
+                onClick={(e) => e.stopPropagation()}
+                className={`p-1.5 rounded-lg transition-all shadow-sm flex-shrink-0 ${
+                  destinationEmail
+                    ? "bg-blue-50 text-[#DB4437] hover:bg-[#DB4437] hover:text-white"
+                    : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                }`}
+              >
+                <Mail size={14} />
+              </a>
+              <span className="text-xs font-medium text-gray-700 truncate max-w-[140px]">
+                {destinationEmail || "—"}
+              </span>
+            </div>
           </div>
         );
       },

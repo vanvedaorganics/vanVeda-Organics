@@ -149,7 +149,7 @@ function Profile() {
 
     setCurrentOrders(current);
     setPastOrders(past);
-  }, [allOrders, authUser]);
+  }, [allOrders, authUser, profile]);
 
   useEffect(() => {
     let active = true;

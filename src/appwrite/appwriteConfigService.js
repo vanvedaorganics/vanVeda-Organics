@@ -773,6 +773,7 @@ export class appwriteConfigService {
     let payload = {
       orderNumber: docId,
       userId: user_id,
+      user_id: user_id, // Duplicate for filter compatibility
       items: itemsPayload,
       shippingAddress,
       total_cents,
