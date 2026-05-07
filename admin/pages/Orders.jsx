@@ -186,7 +186,7 @@ function Orders() {
         const linkedUser = usersList?.find(
           (u) => u.$id === row.userId || u.user_id === row.userId
         );
-        return linkedUser?.displayName || row.userId?.slice(-6) || "—";
+        return linkedUser?.displayName || row.userName || row.userId?.slice(-6) || "—";
       },
     },
     {

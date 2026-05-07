@@ -743,6 +743,9 @@ export class appwriteConfigService {
     total_cents,
     paymentStatus,
     paymentMode,
+    userName,
+    userPhone,
+    userEmail,
   }) {
     // Generate a unique ID to use for both the document ID and the orderNumber attribute
     const docId = ID.unique();
@@ -776,6 +779,9 @@ export class appwriteConfigService {
       paymentStatus: normalizedPaymentStatus,
       fulfillmentStatus: "pending", 
       paymentMode: normalizedMode,
+      userName: userName || "",
+      userPhone: userPhone || "",
+      userEmail: userEmail || "",
     };
 
     let attempt = 0;
@@ -1149,10 +1155,15 @@ export class appwriteConfigService {
 
   async listUserProfiles(queries = []) {
     try {
+      // Increase limit to ensure admin can see more users
+      const q = [...queries];
+      if (!q.some(query => query.includes('limit'))) {
+        q.push(Query.limit(100));
+      }
       return await this.databases.listDocuments(
         conf.appwriteDatabaseId,
         conf.appwriteUsersCollection,
-        queries
+        q
       );
     } catch (error) {
       console.error("Appwrite :: listUserProfiles error ::", error);

@@ -4,7 +4,7 @@ import { useNavigate, useLocation, Link } from "react-router-dom";
 import appwriteConfigService from "../appwrite/appwriteConfigService";
 import appwriteAuthService from "../appwrite/authService";
 import { logout } from "../store/authSlice";
-import { updateOrder } from "../store/ordersSlice";
+import { updateOrder, fetchOrders } from "../store/ordersSlice";
 import { Button, Input } from "../components";
 import { 
   User, Phone, Mail, MapPin, X, LogOut, Package, 
@@ -90,6 +90,8 @@ function Profile() {
       navigate("/login");
       return;
     }
+    // Re-fetch orders when profile loads to ensure history is visible
+    dispatch(fetchOrders());
     const fetchProfile = async () => {
       if (!authUser?.$id) return;
       try {

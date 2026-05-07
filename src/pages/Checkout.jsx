@@ -447,6 +447,9 @@ function Checkout() {
           total_cents: totals.subtotalCents,
           paymentMode: pMode,
           paymentStatus: paymentId ? "Paid" : "Pending",
+          userName: profile.displayName || "",
+          userPhone: profile.phone || "",
+          userEmail: authUser.email || "",
         };
 
         const result = await appwriteService.createOrder(payload);
