@@ -131,7 +131,8 @@ function Profile() {
     const pid = String(profile?.$id || "").toLowerCase();
 
     const userOrders = allOrders.filter((order) => {
-      const orderUid = String(order.user_id || "").toLowerCase();
+      // Handle relationship object or plain ID string
+      const orderUid = String(order.user_id?.$id || order.user_id || "").toLowerCase();
       return orderUid === uid || orderUid === pid;
     });
     const pastStatuses = new Set(["delivered", "cancelled"]);
@@ -220,6 +221,7 @@ function Profile() {
       // Pass as fulfillmentStatus — updateOrder will remap to fulfillmentSattus
       const updatedOrder = await appwriteConfigService.updateOrder(orderId, {
         fulfillmentStatus: "cancelled",
+        cancelReason: reason || "User cancelled",
       });
       dispatch(updateOrder(updatedOrder));
     } catch (err) {
@@ -793,12 +795,30 @@ function OrderCard({ order, formatINR, safeJSONParse, normalizeStatus, onCancel 
                 </div>
               )}
               {normalizeStatus(fulfillmentStatus) === "pending" && (
-                <button
-                  onClick={() => onCancel(order.$id)}
-                  className="w-full py-3 text-xs font-black uppercase tracking-widest text-red-500 hover:text-red-700 transition-colors border-2 border-dashed border-red-100 rounded-2xl"
-                >
-                  Cancel Order
-                </button>
+                <div className="space-y-3 pt-2">
+                  <div className="text-center">
+                    <p className="text-[10px] font-black uppercase text-gray-400 mb-2">Want to cancel this order?</p>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <button
+                      onClick={() => {
+                        const reason = window.prompt("Please provide a reason for cancellation (Optional):");
+                        if (reason !== null) onCancel(order.$id, reason);
+                      }}
+                      className="w-full py-3 text-xs font-black uppercase tracking-widest text-red-500 hover:text-red-700 transition-colors border-2 border-red-50 rounded-2xl bg-red-50/30"
+                    >
+                      Cancel with Reason
+                    </button>
+                    <a
+                      href={`https://wa.me/919082716034?text=${encodeURIComponent(`Hello, I would like to cancel my order #${order.$id.slice(-6).toUpperCase()}.`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full py-3 text-xs font-black uppercase tracking-widest text-green-600 hover:text-green-700 transition-colors border-2 border-green-50 rounded-2xl bg-green-50/30 text-center"
+                    >
+                      Cancel via WhatsApp
+                    </a>
+                  </div>
+                </div>
               )}
             </div>
           </motion.div>

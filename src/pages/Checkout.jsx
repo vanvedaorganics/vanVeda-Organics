@@ -685,7 +685,7 @@ function Checkout() {
                   const msg = encodeURIComponent(
                     `Hello True Soil Organics, I just placed an order!\n\nOrder ID: #${orderId}\nCustomer: ${profile.displayName}\nAmount: ₹${amount}\n\nPlease confirm my order. Thank you!`
                   );
-                  window.open(`https://wa.me/919316417314?text=${msg}`, "_blank");
+                  window.open(`https://wa.me/919082716034?text=${msg}`, "_blank");
                 }}
                 className="w-full bg-[#28543d] hover:bg-[#1f4230] text-white py-3 rounded-xl flex items-center justify-center gap-2"
               >

@@ -183,9 +183,10 @@ function Orders() {
       header: "Customer",
       accessor: "user_id",
       render: (row) => {
-        const linkedUser = usersList?.find(
-          (u) => u.$id === row.user_id || u.user_id === row.user_id
-        );
+        const linkedUser = usersList?.find((u) => {
+          const orderUid = row.user_id?.$id || row.user_id;
+          return u.$id === orderUid || u.user_id === orderUid;
+        });
         return linkedUser?.displayName || row.userName || row.user_id?.slice(-6) || "—";
       },
     },
