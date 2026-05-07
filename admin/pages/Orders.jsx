@@ -39,8 +39,7 @@ function Orders() {
   const getCommunicationTemplates = (order, linkedUser) => {
     const orderId = order.$id?.slice(-8).toUpperCase();
     const customerName = linkedUser?.displayName || "Customer";
-    // fulfillmentSattus is the DB field (schema typo)
-    const status = (order.fulfillmentSattus || order.fulfillmentStatus || "pending").toLowerCase();
+    const status = (order.fulfillmentStatus || order.fulfillmentSattus || "pending").toLowerCase();
     const payment = (order.paymentStatus || "Pending").toLowerCase();
 
     let waMessage = "";
@@ -105,7 +104,7 @@ function Orders() {
     setRowLoading((prev) => ({ ...prev, [orderId]: true }));
 
     // Optimistic update: use the typo'd field name for local state
-    const displayField = field === "fulfillmentStatus" ? "fulfillmentSattus" : field;
+    const displayField = field;
     setRows((current) =>
       current.map((r) => (r.$id === orderId ? { ...r, [displayField]: value } : r))
     );
@@ -115,7 +114,6 @@ function Orders() {
       if (field === "paymentStatus") {
         payload.paymentStatus = value;
       } else if (field === "fulfillmentStatus") {
-        // updateOrder will remap fulfillmentStatus → fulfillmentSattus
         payload.fulfillmentStatus = value;
       } else if (field === "shipment_number") {
         payload.shipment_number = value;
@@ -223,9 +221,9 @@ function Orders() {
     },
     {
       header: "Order Status",
-      accessor: "fulfillmentSattus",
+      accessor: "fulfillmentStatus",
       render: (row) => {
-        const currentStatus = row.fulfillmentSattus || row.fulfillmentStatus || orderStatusOptions[0];
+        const currentStatus = row.fulfillmentStatus || row.fulfillmentSattus || orderStatusOptions[0];
         return (
           <select
             className={`border rounded px-2 py-1 text-sm ${getOrderStatusClass(currentStatus)}`}

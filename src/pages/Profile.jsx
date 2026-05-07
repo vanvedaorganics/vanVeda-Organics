@@ -133,8 +133,7 @@ function Profile() {
     const past = [];
 
     for (const order of userOrders) {
-      // Schema has typo "fulfillmentSattus" — check both for safety
-      const status = normalizeStatus(order.fulfillmentSattus || order.fulfillmentStatus);
+      const status = normalizeStatus(order.fulfillmentStatus || order.fulfillmentSattus);
       if (pastStatuses.has(status)) {
         past.push(order);
       } else {
@@ -712,8 +711,7 @@ function OrderCard({ order, formatINR, safeJSONParse, normalizeStatus, onCancel 
   const parsedItems = safeJSONParse(order.items, []);
   const itemsList = Array.isArray(parsedItems) ? parsedItems : (Array.isArray(parsedItems?.items) ? parsedItems.items : []);
   const shippingAddr = safeJSONParse(order.shippingAddress, null);
-  // fulfillmentSattus is the actual DB field (schema typo), fallback to fulfillmentStatus
-  const fulfillmentStatus = order.fulfillmentSattus || order.fulfillmentStatus || "pending";
+  const fulfillmentStatus = order.fulfillmentStatus || order.fulfillmentSattus || "pending";
 
   const getStatusBadge = (status) => {
     const s = normalizeStatus(status || fulfillmentStatus);

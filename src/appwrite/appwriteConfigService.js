@@ -772,7 +772,7 @@ export class appwriteConfigService {
       shippingAddress,
       total_cents,
       paymentStatus: normalizedPaymentStatus,
-      fulfillmentSattus: "pending", // schema has typo "Sattus" — must match exactly
+      fulfillmentStatus: "pending", 
       paymentMode: normalizedMode,
     };
 
@@ -847,10 +847,10 @@ export class appwriteConfigService {
   async updateOrder(orderDocId, updates) {
     let payload = { ...updates };
 
-    // Map "fulfillmentStatus" to the schema's typo'd field "fulfillmentSattus"
-    if ("fulfillmentStatus" in payload) {
-      payload.fulfillmentSattus = payload.fulfillmentStatus;
-      delete payload.fulfillmentStatus;
+    // Ensure fulfillmentStatus is present correctly
+    if ("fulfillmentSattus" in payload) {
+      payload.fulfillmentStatus = payload.fulfillmentSattus;
+      delete payload.fulfillmentSattus;
     }
     // Normalize paymentStatus enum
     if (payload.paymentStatus) {
