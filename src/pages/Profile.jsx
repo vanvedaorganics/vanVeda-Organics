@@ -125,8 +125,12 @@ function Profile() {
     }
 
     // Schema stores the user id as "userId" (camelCase) — filter by that
+    // We also include profile?.$id because some older orders were accidentally saved with the profile document ID instead of the auth user ID.
     const userOrders = allOrders.filter(
-      (order) => order.userId === authUser.$id || order.user_id === authUser.$id
+      (order) => 
+        order.userId === authUser.$id || 
+        order.user_id === authUser.$id || 
+        (profile && (order.userId === profile.$id || order.user_id === profile.$id))
     );
     const pastStatuses = new Set(["delivered", "cancelled"]);
     const current = [];

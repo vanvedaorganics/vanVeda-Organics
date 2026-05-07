@@ -441,7 +441,7 @@ function Checkout() {
         }
 
         const payload = {
-          user_id: profile.$id,
+          user_id: authUser.$id,
           items: itemsJson,
           shippingAddress,
           total_cents: totals.subtotalCents,
