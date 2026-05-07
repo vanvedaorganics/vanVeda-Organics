@@ -50,6 +50,7 @@ function Profile() {
 
   const allOrders = useSelector((state) => state.orders.items);
   const ordersLoading = useSelector((state) => state.orders.loading);
+  const ordersError = useSelector((state) => state.orders.error);
   const products = useSelector((state) => state.products.items);
 
   const [profile, setProfile] = useState(null);
@@ -628,6 +629,13 @@ function Profile() {
               ) : (
                 <motion.div key="tab-orders" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-12">
                   {ordersLoading && <div className="flex justify-center items-center py-20 bg-white rounded-[2rem]"><div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[#28543d]"></div></div>}
+                  {ordersError && (
+                    <div className="p-4 mb-6 rounded-2xl bg-amber-50 text-amber-700 border border-amber-100 text-sm flex flex-col gap-2">
+                      <div className="flex items-center gap-2 font-bold"><AlertCircle size={16} /> Data Fetching Issue</div>
+                      <p>We're having trouble loading your full order history. This usually happens if database indexes are missing or permissions are restricted. Any orders placed in this session should still appear below.</p>
+                      <p className="text-[10px] opacity-70">Technical details: {ordersError}</p>
+                    </div>
+                  )}
                   <section>
                     <div className="flex items-center gap-3 mb-6"><div className="w-8 h-8 bg-amber-50 rounded-full flex items-center justify-center"><Clock className="w-4 h-4 text-amber-600" /></div><h3 className="syne-bold text-xl text-[#201413]">Active Orders</h3><div className="h-px flex-1 bg-gray-100" /></div>
                     {currentOrders.length === 0 ? <div className="bg-white p-12 rounded-[2rem] border border-[#E7CE9D]/10 text-center"><p className="text-sm font-bold text-gray-400 uppercase tracking-widest">No active shipments</p></div> : (
