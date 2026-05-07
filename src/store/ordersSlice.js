@@ -6,6 +6,11 @@ export const fetchOrders = createAsyncThunk("orders/fetch", async () => {
   return res.documents;
 });
 
+export const fetchUserOrders = createAsyncThunk("orders/fetchUser", async (user_id) => {
+  const res = await appwriteService.listUserOrders(user_id);
+  return res.documents;
+});
+
 const ordersSlice = createSlice({
   name: "orders",
   initialState: { items: [], loading: false, error: null, fetched: false },
@@ -39,6 +44,22 @@ const ordersSlice = createSlice({
         s.fetched = true;
       })
       .addCase(fetchOrders.rejected, (s, a) => {
+        s.loading = false;
+        s.error = a.error.message;
+        s.fetched = true;
+      })
+      .addCase(fetchUserOrders.pending, (s) => {
+        s.loading = true;
+      })
+      .addCase(fetchUserOrders.fulfilled, (s, a) => {
+        s.loading = false;
+        const newItems = a.payload || [];
+        const existingIds = new Set(s.items.map(i => i.$id));
+        const uniqueNewItems = newItems.filter(i => !existingIds.has(i.$id));
+        s.items = [...s.items, ...uniqueNewItems];
+        s.fetched = true;
+      })
+      .addCase(fetchUserOrders.rejected, (s, a) => {
         s.loading = false;
         s.error = a.error.message;
         s.fetched = true;

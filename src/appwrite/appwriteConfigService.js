@@ -938,6 +938,36 @@ export class appwriteConfigService {
     }
   }
 
+  async listUserOrders(user_id) {
+    try {
+      // Try both userId and user_id for maximum compatibility
+      const res = await this.databases.listDocuments(
+        conf.appwriteDatabaseId,
+        conf.appwriteOrdersCollection,
+        [
+          Query.or([
+            Query.equal("userId", user_id),
+            Query.equal("user_id", user_id)
+          ]),
+          Query.orderDesc("$createdAt"),
+          Query.limit(100)
+        ]
+      );
+      return res;
+    } catch (error) {
+      // Fallback if Query.or is not supported or fails
+      return await this.databases.listDocuments(
+        conf.appwriteDatabaseId,
+        conf.appwriteOrdersCollection,
+        [
+          Query.equal("userId", user_id),
+          Query.orderDesc("$createdAt"),
+          Query.limit(100)
+        ]
+      );
+    }
+  }
+
   async getOrder(orderDocId) {
     try {
       return await this.databases.getDocument(

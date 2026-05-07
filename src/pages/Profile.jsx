@@ -4,7 +4,7 @@ import { useNavigate, useLocation, Link } from "react-router-dom";
 import appwriteConfigService from "../appwrite/appwriteConfigService";
 import appwriteAuthService from "../appwrite/authService";
 import { logout } from "../store/authSlice";
-import { updateOrder, fetchOrders } from "../store/ordersSlice";
+import { updateOrder, fetchUserOrders } from "../store/ordersSlice";
 import { Button, Input } from "../components";
 import { 
   User, Phone, Mail, MapPin, X, LogOut, Package, 
@@ -90,8 +90,8 @@ function Profile() {
       navigate("/login");
       return;
     }
-    // Re-fetch orders when profile loads to ensure history is visible
-    dispatch(fetchOrders());
+    // Specific fetch for this user's orders (more reliable than global list)
+    dispatch(fetchUserOrders(authUser.$id));
     const fetchProfile = async () => {
       if (!authUser?.$id) return;
       try {
@@ -126,14 +126,13 @@ function Profile() {
       return;
     }
 
-    // Schema stores the user id as "userId" (camelCase) — filter by that
-    // We also include profile?.$id because some older orders were accidentally saved with the profile document ID instead of the auth user ID.
-    const userOrders = allOrders.filter(
-      (order) => 
-        order.userId === authUser.$id || 
-        order.user_id === authUser.$id || 
-        (profile && (order.userId === profile.$id || order.user_id === profile.$id))
-    );
+    const uid = String(authUser.$id || "").toLowerCase();
+    const pid = String(profile?.$id || "").toLowerCase();
+
+    const userOrders = allOrders.filter((order) => {
+      const orderUid = String(order.userId || order.user_id || "").toLowerCase();
+      return orderUid === uid || orderUid === pid;
+    });
     const pastStatuses = new Set(["delivered", "cancelled"]);
     const current = [];
     const past = [];
