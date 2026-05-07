@@ -746,8 +746,6 @@ export class appwriteConfigService {
     const docId = ID.unique();
 
     // Items are already compact from Checkout.jsx (short keys, sliced).
-    // Do NOT add _meta here — it would risk exceeding Appwrite's 1000-char items field limit.
-    // Admin looks up customer info via userId from the user_profiles collection.
     const itemsPayload = typeof items === "string" ? items : JSON.stringify(items);
 
     // Normalize paymentMode to valid enum: UPI | Card | COD
@@ -766,8 +764,8 @@ export class appwriteConfigService {
       return "Pending";
     })();
 
-    // Send only the 8 attributes that exist in the Appwrite orders schema
-    const payload = {
+    // Send only the attributes that exist in the Appwrite orders schema
+    let payload = {
       orderNumber: docId,
       userId: user_id,
       items: itemsPayload,
@@ -778,48 +776,138 @@ export class appwriteConfigService {
       paymentMode: normalizedMode,
     };
 
-    // Single direct call — payload contains only the 8 valid schema attributes
-    try {
-      return await this.databases.createDocument(
-        conf.appwriteDatabaseId,
-        conf.appwriteOrdersCollection,
-        docId,
-        payload,
-        [Permission.read(Role.user(user_id))]
-      );
-    } catch (error) {
-      console.error("Appwrite :: createOrder error ::", error?.message, error);
-      throw error;
+    let attempt = 0;
+    const maxAttempts = 3;
+
+    while (attempt < maxAttempts) {
+      try {
+        return await this.databases.createDocument(
+          conf.appwriteDatabaseId,
+          conf.appwriteOrdersCollection,
+          docId,
+          payload,
+          [Permission.read(Role.user(user_id))]
+        );
+      } catch (error) {
+        attempt++;
+        const msg = error?.message || "";
+        console.warn(`[createOrder] Attempt ${attempt} failed: ${msg}`);
+
+        if (attempt >= maxAttempts) throw error;
+
+        // 1. Handle Enum mismatch (e.g. "Value must be one of: Online, COD, UPI")
+        const enumMatch = msg.match(/Value must be one of:\s*(.+)$/i) || msg.match(/one of the following values:\s*(.+)$/i);
+        if (enumMatch && (msg.includes('paymentMode') || msg.includes('paymentStatus'))) {
+           const allowed = enumMatch[1].split(',').map(s => s.trim().replace(/['"]/g, ''));
+           if (msg.includes('paymentMode')) {
+               const pmUpper = String(payload.paymentMode).toUpperCase();
+               payload.paymentMode = allowed.find(a => a.toUpperCase() === pmUpper) || 
+                                     (pmUpper === "CARD" ? allowed.find(a => a.toUpperCase() === "ONLINE") : null) || 
+                                     allowed[0];
+           }
+           if (msg.includes('paymentStatus')) {
+               const psUpper = String(payload.paymentStatus).toUpperCase();
+               payload.paymentStatus = allowed.find(a => a.toUpperCase() === psUpper) || allowed[0];
+           }
+           continue;
+        }
+
+        // 2. Handle Unknown attribute: "xxx"
+        const unknownMatch = msg.match(/Unknown attribute: "([^"]+)"/i) || msg.match(/Extra attribute: "([^"]+)"/i);
+        if (unknownMatch) {
+           const attr = unknownMatch[1];
+           delete payload[attr];
+           continue;
+        }
+
+        // 3. Handle Missing required attribute: "xxx"
+        const missingMatch = msg.match(/Missing required attribute "([^"]+)"/i) || msg.match(/Attribute "([^"]+)" is required/i) || msg.match(/Missing required attribute: "([^"]+)"/i);
+        if (missingMatch) {
+           const attr = missingMatch[1];
+           if (attr.toLowerCase() === 'user_id' || attr.toLowerCase() === 'userid') {
+               payload[attr] = user_id;
+           } else if (attr.toLowerCase() === 'fulfillmentstatus') {
+               payload[attr] = "pending";
+           } else if (attr.toLowerCase() === 'payment_mode' || attr.toLowerCase() === 'paymentmode') {
+               payload[attr] = payload.paymentMode || "COD";
+           } else if (attr.toLowerCase() === 'payment_status' || attr.toLowerCase() === 'paymentstatus') {
+               payload[attr] = payload.paymentStatus || "Pending";
+           } else {
+               payload[attr] = "NA"; 
+           }
+           continue;
+        }
+
+        // If error doesn't match above regexes, we cannot heal it
+        throw error;
+      }
     }
   }
 
   async updateOrder(orderDocId, updates) {
-    try {
-      // Map "fulfillmentStatus" to the schema's typo'd field "fulfillmentSattus"
-      const mapped = { ...updates };
-      if ("fulfillmentStatus" in mapped) {
-        mapped.fulfillmentSattus = mapped.fulfillmentStatus;
-        delete mapped.fulfillmentStatus;
+    let payload = { ...updates };
+
+    // Map "fulfillmentStatus" to the schema's typo'd field "fulfillmentSattus"
+    if ("fulfillmentStatus" in payload) {
+      payload.fulfillmentSattus = payload.fulfillmentStatus;
+      delete payload.fulfillmentStatus;
+    }
+    // Normalize paymentStatus enum
+    if (payload.paymentStatus) {
+      const s = String(payload.paymentStatus).toLowerCase();
+      payload.paymentStatus = s === "paid" ? "Paid" : s === "failed" ? "Failed" : "Pending";
+    }
+    // Normalize paymentMode enum
+    if (payload.paymentMode) {
+      const m = String(payload.paymentMode).toUpperCase();
+      payload.paymentMode = (m === "ONLINE" || m === "CARD") ? "Card" : m === "UPI" ? "UPI" : "COD";
+    }
+
+    let attempt = 0;
+    const maxAttempts = 3;
+
+    while (attempt < maxAttempts) {
+      try {
+        return await this.databases.updateDocument(
+          conf.appwriteDatabaseId,
+          conf.appwriteOrdersCollection,
+          orderDocId,
+          payload
+        );
+      } catch (error) {
+        attempt++;
+        const msg = error?.message || "";
+        console.warn(`[updateOrder] Attempt ${attempt} failed: ${msg}`);
+
+        if (attempt >= maxAttempts) throw error;
+
+        // 1. Handle Enum mismatch
+        const enumMatch = msg.match(/Value must be one of:\s*(.+)$/i) || msg.match(/one of the following values:\s*(.+)$/i);
+        if (enumMatch && (msg.includes('paymentMode') || msg.includes('paymentStatus'))) {
+           const allowed = enumMatch[1].split(',').map(s => s.trim().replace(/['"]/g, ''));
+           if (msg.includes('paymentMode') && payload.paymentMode) {
+               const pmUpper = String(payload.paymentMode).toUpperCase();
+               payload.paymentMode = allowed.find(a => a.toUpperCase() === pmUpper) || 
+                                     (pmUpper === "CARD" ? allowed.find(a => a.toUpperCase() === "ONLINE") : null) || 
+                                     allowed[0];
+           }
+           if (msg.includes('paymentStatus') && payload.paymentStatus) {
+               const psUpper = String(payload.paymentStatus).toUpperCase();
+               payload.paymentStatus = allowed.find(a => a.toUpperCase() === psUpper) || allowed[0];
+           }
+           continue;
+        }
+
+        // 2. Handle Unknown attribute
+        const unknownMatch = msg.match(/Unknown attribute: "([^"]+)"/i) || msg.match(/Extra attribute: "([^"]+)"/i);
+        if (unknownMatch) {
+           const attr = unknownMatch[1];
+           delete payload[attr];
+           continue;
+        }
+
+        throw error;
       }
-      // Normalize paymentStatus enum
-      if (mapped.paymentStatus) {
-        const s = String(mapped.paymentStatus).toLowerCase();
-        mapped.paymentStatus = s === "paid" ? "Paid" : s === "failed" ? "Failed" : "Pending";
-      }
-      // Normalize paymentMode enum
-      if (mapped.paymentMode) {
-        const m = String(mapped.paymentMode).toUpperCase();
-        mapped.paymentMode = (m === "ONLINE" || m === "CARD") ? "Card" : m === "UPI" ? "UPI" : "COD";
-      }
-      return await this.databases.updateDocument(
-        conf.appwriteDatabaseId,
-        conf.appwriteOrdersCollection,
-        orderDocId,
-        mapped
-      );
-    } catch (error) {
-      console.error("Appwrite :: updateOrder error ::", error);
-      throw error;
     }
   }
 

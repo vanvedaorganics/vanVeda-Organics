@@ -559,6 +559,7 @@ function Checkout() {
           prefill: {
             name: profile.displayName || "",
             email: authUser.email || "",
+            contact: profile.phone || "",
           },
           theme: {
             color: "#744531",
