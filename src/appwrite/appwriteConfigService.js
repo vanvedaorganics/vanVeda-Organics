@@ -772,8 +772,7 @@ export class appwriteConfigService {
     // Send only the attributes that exist in the Appwrite orders schema
     let payload = {
       orderNumber: docId,
-      userId: user_id,
-      user_id: user_id, // Duplicate for filter compatibility
+      user_id: user_id, // Standardize on user_id as per schema
       items: itemsPayload,
       shippingAddress,
       total_cents,
@@ -940,31 +939,19 @@ export class appwriteConfigService {
 
   async listUserOrders(user_id) {
     try {
-      // Try both userId and user_id for maximum compatibility
       const res = await this.databases.listDocuments(
         conf.appwriteDatabaseId,
         conf.appwriteOrdersCollection,
         [
-          Query.or([
-            Query.equal("userId", user_id),
-            Query.equal("user_id", user_id)
-          ]),
+          Query.equal("user_id", user_id),
           Query.orderDesc("$createdAt"),
           Query.limit(100)
         ]
       );
       return res;
     } catch (error) {
-      // Fallback if Query.or is not supported or fails
-      return await this.databases.listDocuments(
-        conf.appwriteDatabaseId,
-        conf.appwriteOrdersCollection,
-        [
-          Query.equal("userId", user_id),
-          Query.orderDesc("$createdAt"),
-          Query.limit(100)
-        ]
-      );
+      console.error("Appwrite :: listUserOrders error ::", error);
+      throw error;
     }
   }
 

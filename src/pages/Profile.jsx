@@ -131,7 +131,7 @@ function Profile() {
     const pid = String(profile?.$id || "").toLowerCase();
 
     const userOrders = allOrders.filter((order) => {
-      const orderUid = String(order.userId || order.user_id || "").toLowerCase();
+      const orderUid = String(order.user_id || "").toLowerCase();
       return orderUid === uid || orderUid === pid;
     });
     const pastStatuses = new Set(["delivered", "cancelled"]);

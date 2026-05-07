@@ -181,12 +181,12 @@ function Orders() {
     { header: "Order No.", accessor: "$id" },
     {
       header: "Customer",
-      accessor: "userId",
+      accessor: "user_id",
       render: (row) => {
         const linkedUser = usersList?.find(
-          (u) => u.$id === row.userId || u.user_id === row.userId
+          (u) => u.$id === row.user_id || u.user_id === row.user_id
         );
-        return linkedUser?.displayName || row.userName || row.userId?.slice(-6) || "—";
+        return linkedUser?.displayName || row.userName || row.user_id?.slice(-6) || "—";
       },
     },
     {
