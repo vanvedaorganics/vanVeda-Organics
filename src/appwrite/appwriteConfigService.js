@@ -785,8 +785,7 @@ export class appwriteConfigService {
           conf.appwriteDatabaseId,
           conf.appwriteOrdersCollection,
           docId,
-          payload,
-          [Permission.read(Role.user(user_id))]
+          payload
         );
       } catch (error) {
         attempt++;
@@ -915,7 +914,8 @@ export class appwriteConfigService {
     try {
       return await this.databases.listDocuments(
         conf.appwriteDatabaseId,
-        conf.appwriteOrdersCollection
+        conf.appwriteOrdersCollection,
+        [Query.orderDesc("$createdAt"), Query.limit(100)]
       );
     } catch (error) {
       console.error("Appwrite :: listOrders error ::", error);
