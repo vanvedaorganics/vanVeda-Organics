@@ -69,6 +69,53 @@ export const sendOrderEmail = async ({
 };
 
 /**
+ * Send a dedicated new-order alert email to the admin inbox.
+ * Fires independently from the customer confirmation so admin
+ * always gets a separate, clearly labelled notification.
+ *
+ * Uses the same EmailJS order template but routes to_email → admin.
+ */
+export const sendAdminOrderAlert = async ({
+  orderId,
+  customerName,
+  customerEmail,
+  amount,
+  paymentMode,
+  deliveryDate,
+  itemsList,
+  shippingAddress,
+}) => {
+  try {
+    init();
+
+    const templateParams = {
+      order_id: `[ADMIN] ${orderId}`,
+      customer_name: customerName,
+      customer_email: customerEmail,
+      amount,
+      payment_mode: paymentMode,
+      delivery_date: deliveryDate,
+      items_list: itemsList,
+      shipping_address: shippingAddress,
+      // Route this copy to the admin inbox
+      to_email: "truesoilorganic@gmail.com",
+      admin_email: "truesoilorganic@gmail.com",
+    };
+
+    await emailjs.send(
+      conf.emailjsServiceId,
+      conf.emailjsOrderTemplateId,
+      templateParams
+    );
+
+    console.log("✅ Admin order alert email sent via Gmail");
+  } catch (err) {
+    // Fire-and-forget — never block the order flow
+    console.error("❌ EmailJS admin alert email failed:", err);
+  }
+};
+
+/**
  * Send a contact-form enquiry email to the store inbox.
  *
  * @param {object} formData

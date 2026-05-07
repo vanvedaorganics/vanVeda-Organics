@@ -1,4 +1,4 @@
-import { sendOrderEmail } from "../utils/emailService.js";
+import { sendOrderEmail, sendAdminOrderAlert } from "../utils/emailService.js";
 import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Button, Input } from "../components";
@@ -508,8 +508,20 @@ function Checkout() {
             .filter(Boolean)
             .join(", ");
 
-          // Send branded Gmail email via EmailJS (fire-and-forget)
+          // 1️⃣ Customer confirmation email (fire-and-forget)
           sendOrderEmail({
+            orderId: `#${orderId}`,
+            customerName,
+            customerEmail,
+            amount,
+            paymentMode,
+            deliveryDate: farthestDeliveryDate,
+            itemsList: itemsListText,
+            shippingAddress: formattedAddress,
+          });
+
+          // 2️⃣ Admin alert email (fire-and-forget)
+          sendAdminOrderAlert({
             orderId: `#${orderId}`,
             customerName,
             customerEmail,
