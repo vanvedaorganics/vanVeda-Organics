@@ -1,5 +1,7 @@
 import emailjs from "@emailjs/browser";
 import conf from "../conf/conf.js";
+import { formatOrderId } from "./orderUtils.js";
+
 
 let _initialized = false;
 
@@ -189,7 +191,7 @@ export const sendSubscriptionEmail = async ({
     const itemsList = `${productName} (Subscription) x ${quantity} per ${interval.replace('ly', '')} for ${weeks} weeks`;
 
     const templateParams = {
-      order_id: `SUB-${subscriptionId.slice(-6).toUpperCase()}`,
+      order_id: `SUB-${formatOrderId(subscriptionId)}`,
       customer_name: customerName,
       customer_email: customerEmail,
       amount,

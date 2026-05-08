@@ -1,4 +1,6 @@
 import { sendOrderEmail, sendAdminOrderAlert } from "../utils/emailService.js";
+import { formatOrderId } from "../utils/orderUtils.js";
+
 import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Button, Input } from "../components";
@@ -486,7 +488,7 @@ function Checkout() {
 
       const sendOrderNotifications = async (order) => {
         try {
-          const orderId = order.$id?.slice(-8).toUpperCase();
+          const orderId = formatOrderId(order.$id);
           const amount = `₹${(order.total_cents / 100).toFixed(2)}`;
           const customerName = profile.displayName || "Customer";
           const customerEmail = authUser.email || "";
@@ -659,7 +661,7 @@ function Checkout() {
             <div className="bg-[#FAF8F4] rounded-2xl p-6 mb-8 text-left space-y-3">
               <div className="flex justify-between text-sm">
                 <span className="text-gray-500">Order ID:</span>
-                <span className="font-bold text-[#744531]">#{placedOrder?.$id?.slice(-8).toUpperCase() || "PENDING"}</span>
+                <span className="font-bold text-[#744531]">#{formatOrderId(placedOrder?.$id)}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-gray-500">Estimated Delivery:</span>
@@ -680,7 +682,7 @@ function Checkout() {
               </p>
               <Button
                 onClick={() => {
-                  const orderId = placedOrder?.$id?.slice(-8).toUpperCase();
+                  const orderId = formatOrderId(placedOrder?.$id);
                   const amount = (placedOrder.total_cents / 100).toFixed(2);
                   const msg = encodeURIComponent(
                     `Hello True Soil Organics, I just placed an order!\n\nOrder ID: #${orderId}\nCustomer: ${profile.displayName}\nAmount: ₹${amount}\n\nPlease confirm my order. Thank you!`

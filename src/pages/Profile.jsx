@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { motion, AnimatePresence } from "framer-motion";
+import { formatOrderId } from "../utils/orderUtils";
+
 
 // Helper functions
 const parseAddressArray = (addressArray) => {
@@ -745,7 +747,7 @@ function OrderCard({ order, formatINR, safeJSONParse, normalizeStatus, onCancel 
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-[2rem] p-6 shadow-sm border border-[#E7CE9D]/10 hover:shadow-xl transition-all duration-300">
       <div className="flex flex-col md:flex-row justify-between gap-6 mb-6">
         <div className="space-y-1">
-          <div className="flex items-center gap-3"><h4 className="syne-bold text-[#201413]">Order #{order.$id.slice(-6).toUpperCase()}</h4>{getStatusBadge(fulfillmentStatus)}</div>
+          <div className="flex items-center gap-3"><h4 className="syne-bold text-[#201413]">Order #{formatOrderId(order.$id)}</h4>{getStatusBadge(fulfillmentStatus)}</div>
           <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest">{new Date(order.$createdAt).toLocaleDateString()}</p>
         </div>
         <div className="flex items-center gap-4 text-right">
@@ -810,7 +812,7 @@ function OrderCard({ order, formatINR, safeJSONParse, normalizeStatus, onCancel 
                       Cancel with Reason
                     </button>
                     <a
-                      href={`https://wa.me/919082716034?text=${encodeURIComponent(`Hello, I would like to cancel my order #${order.$id.slice(-6).toUpperCase()}.`)}`}
+                      href={`https://wa.me/919082716034?text=${encodeURIComponent(`Hello, I would like to cancel my order #${formatOrderId(order.$id)}.`)}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="w-full py-3 text-xs font-black uppercase tracking-widest text-green-600 hover:text-green-700 transition-colors border-2 border-green-50 rounded-2xl bg-green-50/30 text-center"

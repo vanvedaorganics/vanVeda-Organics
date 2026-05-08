@@ -5,6 +5,8 @@ import { fetchOrders } from "../../src/store/ordersSlice";
 import { fetchUsers } from "../../src/store/usersSlice";
 import appwriteService from "../../src/appwrite/appwriteConfigService";
 import { MessageCircle, Mail } from "lucide-react";
+import { formatOrderId } from "../../src/utils/orderUtils";
+
 
 // Helper: safely parse JSON string
 const safeJSON = (str, fallback = {}) => {
@@ -37,7 +39,7 @@ function Orders() {
   const orderStatusOptions = ["pending", "cancelled", "delivered", "shipped"];
 
   const getCommunicationTemplates = (order, linkedUser) => {
-    const orderId = order.$id?.slice(-8).toUpperCase();
+    const orderId = formatOrderId(order.$id);
     const customerName = linkedUser?.displayName || "Customer";
     const status = (order.fulfillmentStatus || order.fulfillmentSattus || "pending").toLowerCase();
     const payment = (order.paymentStatus || "Pending").toLowerCase();
@@ -178,7 +180,7 @@ function Orders() {
   };
 
   const columns = [
-    { header: "Order No.", accessor: "$id" },
+    { header: "Order No.", accessor: "$id", render: (row) => formatOrderId(row.$id) },
     {
       header: "Customer",
       accessor: "user_id",
