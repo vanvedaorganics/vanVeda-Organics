@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import { Header, Footer } from "./components";
 import appwriteAuthService from "./appwrite/authService";
 import { login, logout } from "./store/authSlice";
@@ -10,6 +10,14 @@ import "./App.css";
 function App() {
   const [loading, setLoading] = useState(true);
   const dispatch = useDispatch();
+  const location = useLocation();
+
+  useEffect(() => {
+    // Track page view on route change
+    if (window.fbq) {
+      window.fbq("track", "PageView");
+    }
+  }, [location]);
 
  useEffect(() => {
   appwriteAuthService

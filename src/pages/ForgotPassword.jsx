@@ -56,7 +56,7 @@ export default function ForgotPassword() {
                   name="email"
                   type="email"
                   label="Email Address"
-                  placeholder="hello@vanveda.com"
+                  placeholder="hello@truesoil.com"
                   className="rounded-2xl border-[#E7CE9D]/40 focus:ring-[#28543d] focus:border-[#28543d]"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}

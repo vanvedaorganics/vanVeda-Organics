@@ -207,7 +207,7 @@ function ClientSignup() {
               <Input
                 label="Email Address"
                 type="email"
-                placeholder="hello@vanveda.com"
+                placeholder="hello@truesoil.com"
                 className="rounded-2xl border-[#E7CE9D]/40 focus:ring-[#28543d] focus:border-[#28543d]"
                 error={errors.email?.message}
                 {...register("email", {
