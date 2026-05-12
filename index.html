@@ -20,7 +20,6 @@
     s.parentNode.insertBefore(t,s)}(window, document,'script',
     'https://connect.facebook.net/en_US/fbevents.js');
     fbq('init', '1293209068922154');
-    fbq('track', 'PageView');
     </script>
     <!-- End Meta Pixel Code -->
   </head>
@@ -30,88 +29,20 @@
     /></noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
-    <!-- 
-      ============================================
-      SITESCOPE TRACKING SCRIPT
-      Paste this just before </body> on every page
-      ============================================
-    -->
+    
+    <!-- SiteScope Tracking (Moved to end) -->
     <script>
     (function() {
       var STORAGE_KEY = 'sitescope_data';
       var SESSION_KEY = 'sitescope_session';
-
-      // ── helpers ──────────────────────────────
-      function load() {
-        try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || initData(); }
-        catch(e) { return initData(); }
-      }
-      function save(d) {
-        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(d)); } catch(e) {}
-      }
-      function initData() {
-        return {
-          totalVisits: 0,
-          uniqueVisitors: 0,
-          pageViews: {},
-          events: [],
-          sessions: [],
-          hourly: {},
-          sources: {},
-          devices: { mobile: 0, desktop: 0 },
-          orders: [],
-          cartAdds: 0,
-          checkoutStarts: 0,
-          searches: 0,
-          signups: 0
-        };
-      }
-
-      // ── session tracking ──────────────────────
-      function getSession() {
-        var s = sessionStorage.getItem(SESSION_KEY);
-        return s ? JSON.parse(s) : null;
-      }
-      function setSession(s) {
-        sessionStorage.setItem(SESSION_KEY, JSON.stringify(s));
-      }
-
-      // ── source detection ──────────────────────
-      function getSource() {
-        var ref = document.referrer;
-        var params = new URLSearchParams(window.location.search);
-        if (params.get('utm_source')) return params.get('utm_source');
-        if (!ref) return 'Direct';
-        if (/google\./i.test(ref)) return 'Google Search';
-        if (/instagram\./i.test(ref)) return 'Instagram';
-        if (/facebook\./i.test(ref)) return 'Facebook';
-        if (/whatsapp\./i.test(ref)) return 'WhatsApp';
-        if (/twitter\.|t\.co/i.test(ref)) return 'Twitter';
-        if (/youtube\./i.test(ref)) return 'YouTube';
-        return 'Other';
-      }
-
-      // ── device detection ──────────────────────
-      function getDevice() {
-        return /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) ? 'mobile' : 'desktop';
-      }
-
-      // ── country (from timezone as proxy) ──────
-      function getRegion() {
-        try {
-          var tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-          if (/Kolkata|Calcutta|Mumbai|Delhi/i.test(tz)) return 'India';
-          if (/Dubai|Abu_Dhabi/i.test(tz)) return 'UAE';
-          if (/London/i.test(tz)) return 'UK';
-          if (/New_York|Chicago|Los_Angeles/i.test(tz)) return 'USA';
-          if (/Singapore/i.test(tz)) return 'Singapore';
-          if (/Karachi/i.test(tz)) return 'Pakistan';
-          if (/Riyadh|Jeddah/i.test(tz)) return 'Saudi Arabia';
-          return tz || 'Unknown';
-        } catch(e) { return 'Unknown'; }
-      }
-
-      // ── page view tracking ────────────────────
+      function load() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || initData(); } catch(e) { return initData(); } }
+      function save(d) { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(d)); } catch(e) {} }
+      function initData() { return { totalVisits: 0, uniqueVisitors: 0, pageViews: {}, events: [], sessions: [], hourly: {}, sources: {}, devices: { mobile: 0, desktop: 0 }, orders: [], cartAdds: 0, checkoutStarts: 0, searches: 0, signups: 0 }; }
+      function getSession() { var s = sessionStorage.getItem(SESSION_KEY); return s ? JSON.parse(s) : null; }
+      function setSession(s) { sessionStorage.setItem(SESSION_KEY, JSON.stringify(s)); }
+      function getSource() { var ref = document.referrer; var params = new URLSearchParams(window.location.search); if (params.get('utm_source')) return params.get('utm_source'); if (!ref) return 'Direct'; if (/google\./i.test(ref)) return 'Google Search'; if (/instagram\./i.test(ref)) return 'Instagram'; if (/facebook\./i.test(ref)) return 'Facebook'; if (/whatsapp\./i.test(ref)) return 'WhatsApp'; if (/twitter\.|t\.co/i.test(ref)) return 'Twitter'; if (/youtube\./i.test(ref)) return 'YouTube'; return 'Other'; }
+      function getDevice() { return /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) ? 'mobile' : 'desktop'; }
+      function getRegion() { try { var tz = Intl.DateTimeFormat().resolvedOptions().timeZone; if (/Kolkata|Calcutta|Mumbai|Delhi/i.test(tz)) return 'India'; if (/Dubai|Abu_Dhabi/i.test(tz)) return 'UAE'; if (/London/i.test(tz)) return 'UK'; if (/New_York|Chicago|Los_Angeles/i.test(tz)) return 'USA'; if (/Singapore/i.test(tz)) return 'Singapore'; if (/Karachi/i.test(tz)) return 'Pakistan'; if (/Riyadh|Jeddah/i.test(tz)) return 'Saudi Arabia'; return tz || 'Unknown'; } catch(e) { return 'Unknown'; } }
       function trackPageView() {
         var data = load();
         var now = new Date();
@@ -120,7 +51,6 @@
         var hourKey = dateKey + '_' + hour;
         var page = window.location.pathname || '/';
         var session = getSession();
-
         data.totalVisits = (data.totalVisits || 0) + 1;
         if (!session) {
           data.uniqueVisitors = (data.uniqueVisitors || 0) + 1;
@@ -130,144 +60,26 @@
           data.devices[dev] = (data.devices[dev] || 0) + 1;
           setSession({ start: Date.now(), page: page });
         }
-
         data.pageViews[page] = (data.pageViews[page] || 0) + 1;
         data.hourly[hourKey] = (data.hourly[hourKey] || 0) + 1;
-
         var region = getRegion();
         if (!data.regions) data.regions = {};
         data.regions[region] = (data.regions[region] || 0) + 1;
-
-        // keep last 100 events
-        data.events.unshift({
-          type: 'Page View',
-          page: page,
-          region: region,
-          ts: Date.now()
-        });
+        data.events.unshift({ type: 'Page View', page: page, region: region, ts: Date.now() });
         if (data.events.length > 100) data.events = data.events.slice(0, 100);
-
         save(data);
       }
-
-      // ── public API ────────────────────────────
       window.SiteScope = {
-        // Call this when customer adds to cart
-        // e.g. SiteScope.addToCart('Red Chili 500g', 350)
-        addToCart: function(productName, price) {
-          var data = load();
-          data.cartAdds = (data.cartAdds || 0) + 1;
-          data.events.unshift({
-            type: 'Add to Cart',
-            label: productName || '',
-            value: price || 0,
-            page: window.location.pathname,
-            region: getRegion(),
-            ts: Date.now()
-          });
-          if (data.events.length > 100) data.events = data.events.slice(0, 100);
-          save(data);
-        },
-
-        // Call this when checkout page loads
-        checkoutStart: function() {
-          var data = load();
-          data.checkoutStarts = (data.checkoutStarts || 0) + 1;
-          data.events.unshift({
-            type: 'Checkout Start',
-            page: window.location.pathname,
-            region: getRegion(),
-            ts: Date.now()
-          });
-          if (data.events.length > 100) data.events = data.events.slice(0, 100);
-          save(data);
-        },
-
-        // Call this when order is placed successfully
-        // e.g. SiteScope.order('ORD-001', 1350)
-        order: function(orderId, totalAmount) {
-          var data = load();
-          if (!data.orders) data.orders = [];
-          data.orders.push({
-            id: orderId || ('ORD-' + Date.now()),
-            amount: totalAmount || 0,
-            page: window.location.pathname,
-            region: getRegion(),
-            ts: Date.now()
-          });
-          data.events.unshift({
-            type: 'Purchase',
-            label: orderId || '',
-            value: totalAmount || 0,
-            page: window.location.pathname,
-            region: getRegion(),
-            ts: Date.now()
-          });
-          if (data.events.length > 100) data.events = data.events.slice(0, 100);
-          save(data);
-        },
-
-        // Call on signup form submit
-        signup: function() {
-          var data = load();
-          data.signups = (data.signups || 0) + 1;
-          data.events.unshift({
-            type: 'Sign Up',
-            page: window.location.pathname,
-            region: getRegion(),
-            ts: Date.now()
-          });
-          if (data.events.length > 100) data.events = data.events.slice(0, 100);
-          save(data);
-        },
-
-        // Call on search
-        search: function(query) {
-          var data = load();
-          data.searches = (data.searches || 0) + 1;
-          data.events.unshift({
-            type: 'Search',
-            label: query || '',
-            page: window.location.pathname,
-            region: getRegion(),
-            ts: Date.now()
-          });
-          if (data.events.length > 100) data.events = data.events.slice(0, 100);
-          save(data);
-        },
-
-        // For custom events
-        track: function(eventName, label, value) {
-          var data = load();
-          data.events.unshift({
-            type: eventName,
-            label: label || '',
-            value: value || 0,
-            page: window.location.pathname,
-            region: getRegion(),
-            ts: Date.now()
-          });
-          if (data.events.length > 100) data.events = data.events.slice(0, 100);
-          save(data);
-        }
+        addToCart: function(productName, price) { var data = load(); data.cartAdds = (data.cartAdds || 0) + 1; data.events.unshift({ type: 'Add to Cart', label: productName || '', value: price || 0, page: window.location.pathname, region: getRegion(), ts: Date.now() }); if (data.events.length > 100) data.events = data.events.slice(0, 100); save(data); },
+        checkoutStart: function() { var data = load(); data.checkoutStarts = (data.checkoutStarts || 0) + 1; data.events.unshift({ type: 'Checkout Start', page: window.location.pathname, region: getRegion(), ts: Date.now() }); if (data.events.length > 100) data.events = data.events.slice(0, 100); save(data); },
+        order: function(orderId, totalAmount) { var data = load(); if (!data.orders) data.orders = []; data.orders.push({ id: orderId || ('ORD-' + Date.now()), amount: totalAmount || 0, page: window.location.pathname, region: getRegion(), ts: Date.now() }); data.events.unshift({ type: 'Purchase', label: orderId || '', value: totalAmount || 0, page: window.location.pathname, region: getRegion(), ts: Date.now() }); if (data.events.length > 100) data.events = data.events.slice(0, 100); save(data); },
+        signup: function() { var data = load(); data.signups = (data.signups || 0) + 1; data.events.unshift({ type: 'Sign Up', page: window.location.pathname, region: getRegion(), ts: Date.now() }); if (data.events.length > 100) data.events = data.events.slice(0, 100); save(data); },
+        search: function(query) { var data = load(); data.searches = (data.searches || 0) + 1; data.events.unshift({ type: 'Search', label: query || '', page: window.location.pathname, region: getRegion(), ts: Date.now() }); if (data.events.length > 100) data.events = data.events.slice(0, 100); save(data); },
+        track: function(eventName, label, value) { var data = load(); data.events.unshift({ type: eventName, label: label || '', value: value || 0, page: window.location.pathname, region: getRegion(), ts: Date.now() }); if (data.events.length > 100) data.events = data.events.slice(0, 100); save(data); }
       };
-
-      // ── auto page view on load ─────────────────
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', trackPageView);
-      } else {
-        trackPageView();
-      }
-
-      // ── SPA support: track on URL change ──────
+      if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', trackPageView); } else { trackPageView(); }
       var lastPath = window.location.pathname;
-      setInterval(function() {
-        if (window.location.pathname !== lastPath) {
-          lastPath = window.location.pathname;
-          trackPageView();
-        }
-      }, 500);
-
+      setInterval(function() { if (window.location.pathname !== lastPath) { lastPath = window.location.pathname; trackPageView(); } }, 500);
     })();
     </script>
   </body>

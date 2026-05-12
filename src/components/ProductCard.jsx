@@ -90,7 +90,7 @@ const ProductCard = ({
     return firstAvailable?.images?.[0] || "";
   }, [activeSize, sizes]);
 
-  const imageUrl = activeMainImageId ? getImageUrl(activeMainImageId) : "/placeholder.svg";
+  const imageUrl = activeMainImageId ? getImageUrl(activeMainImageId, 600) : "/placeholder.svg";
 
   const baseCents =
     typeof activeSize?.price_cents !== "undefined" ? Number(activeSize.price_cents) : 0;

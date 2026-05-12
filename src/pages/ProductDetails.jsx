@@ -255,7 +255,7 @@ function ProductDetails() {
   // Main display image
   const mainImageUrl = useMemo(() => {
     const fid = images?.[activeImageIdx] || images?.[0];
-    return fid ? getImageUrl(fid) : "/placeholder.svg";
+    return fid ? getImageUrl(fid, 1000) : "/placeholder.svg";
   }, [images, activeImageIdx]);
 
   // Price (per selected size, fallback to legacy)
@@ -716,7 +716,7 @@ function ProductDetails() {
                         }`}
                       >
                         <img
-                          src={getImageUrl(fid)}
+                          src={getImageUrl(fid, 200)}
                           alt={`${product.name} thumbnail ${i + 1}`}
                           className="h-full w-full object-cover"
                           onError={(e) => {

@@ -15,7 +15,10 @@ function App() {
   useEffect(() => {
     // Track page view on route change
     if (window.fbq) {
+      console.log("[Meta Pixel] Initialized, tracking PageView");
       window.fbq("track", "PageView");
+    } else {
+      console.warn("[Meta Pixel] NOT found on window object");
     }
   }, [location]);
 

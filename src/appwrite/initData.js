@@ -9,7 +9,7 @@ import { initRealtimeSubscriptions } from "./realtimeService.js";
 
 export const initializeAppData = async () => {
   try {
-    // Dispatch initial fetches
+    console.log("[Init] Starting data fetch...");
     await Promise.all([
       store.dispatch(fetchProducts()),
       store.dispatch(fetchCategories()),
