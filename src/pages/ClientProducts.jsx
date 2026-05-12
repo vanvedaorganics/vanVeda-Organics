@@ -32,8 +32,10 @@ function ClientProducts() {
   }, [dispatch, fetched, loading]);
 
   useEffect(() => {
-    dispatch(fetchCategories());
-  }, [dispatch]);
+    if (categories.length === 0) {
+      dispatch(fetchCategories());
+    }
+  }, [dispatch, categories.length]);
 
   // Filter products based on category ID
   const filteredProducts = categoryFilter === "all" 
@@ -53,7 +55,7 @@ function ClientProducts() {
     : categories.find(c => (c.$id || c.slug) === categoryFilter)?.name || "Category";
 
   return (
-    <section className="bg-gray-100 flex items-center justify-center bg-gradient-to-br from-background to-muted py-16 md:py-12 animate-fadeInUp">
+    <section className="bg-gray-100 flex items-center justify-center bg-gradient-to-br from-background to-muted py-16 md:py-12">
       <div className="container mx-auto px-4">
         {/* Category Filter Icons (Dynamic) */}
         {!catLoading && categories.length > 0 && (
@@ -107,7 +109,7 @@ function ClientProducts() {
 
         {/* Products */}
         {loading ? (
-          <div className="grid gap-6 sm:gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 animate-fadeInUp delay-200">
+          <div className="grid gap-6 sm:gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 delay-200">
             {Array.from({ length: 4 }).map((_, i) => (
               <div
                 key={i}
@@ -123,7 +125,7 @@ function ClientProducts() {
             ))}
           </div>
         ) : (
-          <div className="animate-fadeInUp delay-300">
+          <div className="delay-300">
             <ProductsGrid products={filteredProducts} />
             {filteredProducts.length === 0 && (
               <div className="flex flex-col items-center justify-center py-20 px-4 min-h-[40vh]">
