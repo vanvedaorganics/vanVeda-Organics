@@ -220,6 +220,11 @@ function Checkout() {
   useEffect(() => {
     // Scroll to top on mount
     window.scrollTo(0, 0);
+
+    // SiteScope Tracking
+    if (window.SiteScope) {
+      window.SiteScope.checkoutStart();
+    }
   }, []);
   useEffect(() => {
     const boot = async () => {
@@ -482,6 +487,11 @@ function Checkout() {
           message: "Order placed successfully!",
         });
         
+        // SiteScope Tracking
+        if (window.SiteScope) {
+          window.SiteScope.order(result.$id, result.total_cents / 100);
+        }
+
         // NEW: Send Order Notifications
         sendOrderNotifications(result);
       };

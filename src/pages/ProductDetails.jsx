@@ -342,6 +342,13 @@ function ProductDetails() {
         }
 
         dispatch(addItemOne(key, selectedBatch));
+        
+        // SiteScope Tracking
+        if (window.SiteScope) {
+          const price = discountedCents / 100;
+          const name = `${product.name}${selectedSize ? ` (${selectedSize.size})` : ""}`;
+          window.SiteScope.addToCart(name, price);
+        }
       }
     });
   };
@@ -375,6 +382,13 @@ function ProductDetails() {
 
       if (quantity === 0) {
         dispatch(addItemOne(key, selectedBatch));
+        
+        // SiteScope Tracking
+        if (window.SiteScope) {
+          const price = discountedCents / 100;
+          const name = `${product.name}${selectedSize ? ` (${selectedSize.size})` : ""}`;
+          window.SiteScope.addToCart(name, price);
+        }
       }
       navigate("/checkout");
     });

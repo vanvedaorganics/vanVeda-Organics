@@ -244,6 +244,11 @@ export function Header() {
             <Input
               type="search"
               placeholder="Search..."
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && window.SiteScope) {
+                  window.SiteScope.search(e.target.value);
+                }
+              }}
               className="w-48 xl:w-56 rounded-2xl border border-[#E7CE9D]/50 bg-[#faf8f4] px-4 py-2 text-xs focus:ring-1 focus:ring-[#28543d] focus:border-[#28543d] transition-all"
             />
           </div>
@@ -369,6 +374,11 @@ export function Header() {
               <Input
                 type="search"
                 placeholder="Search products..."
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && window.SiteScope) {
+                    window.SiteScope.search(e.target.value);
+                  }
+                }}
                 className="w-full rounded-2xl border border-[#E7CE9D]/50 bg-[#faf8f4] px-4 py-2.5 text-sm focus:ring-1 focus:ring-[#28543d] focus:border-[#28543d]"
               />
 

@@ -85,6 +85,11 @@ function ClientSignup() {
       dispatch(login(user));
       await dispatch(fetchCart()).unwrap();
 
+      // SiteScope Tracking
+      if (window.SiteScope) {
+        window.SiteScope.signup();
+      }
+
       reset();
       navigate("/");
     } catch (err) {
