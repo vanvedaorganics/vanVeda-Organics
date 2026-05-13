@@ -11,8 +11,9 @@ const getCachedData = (key) => {
     const cached = localStorage.getItem(key);
     if (!cached) return null;
     const { data, timestamp } = JSON.parse(cached);
-    // Cache valid for 1 hour to prevent excessive API calls
-    if (Date.now() - timestamp > 3600000) return null;
+    // Cache valid for 10 minutes (600,000 ms) to keep products updated faster
+    if (Date.now() - timestamp > 600000) return null;
+
     return data;
   } catch (e) {
     return null;

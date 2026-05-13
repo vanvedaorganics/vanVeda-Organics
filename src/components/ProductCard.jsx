@@ -75,6 +75,8 @@ const ProductCard = ({
   // Card state
   const [activeIdx, setActiveIdx] = useState(0);
   const [imgError, setImgError] = useState(false);
+  const [errorType, setErrorType] = useState("");
+
 
   const activeSize = sizes[activeIdx] || null;
   
@@ -241,19 +243,21 @@ const ProductCard = ({
           loading="lazy"
           onError={(e) => {
             if (!imgError) {
-               console.error(`[ProductCard] Image load failed for ${name}. URL: ${imageUrl}. Possible Appwrite Storage Permission issue (403).`);
+               console.error(`[ProductCard] Image load failed for ${name}. URL: ${imageUrl}. Check if file ID exists and permissions are correct.`);
                setImgError(true);
+               setErrorType("Image Not Found");
             }
           }}
         />
         {imgError && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center">
-             <span className="text-[10px] font-bold text-[#744531] uppercase tracking-tighter opacity-60">
-               Permission Error (403)
+          <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center bg-gray-50/50 backdrop-blur-[2px]">
+             <span className="text-[10px] font-bold text-red-600 uppercase tracking-tighter opacity-90">
+               {errorType}
              </span>
-             <span className="text-[8px] text-gray-500 mt-1">Check Appwrite Bucket Settings</span>
+             <span className="text-[8px] text-gray-500 mt-1 font-medium">Re-upload image in Admin</span>
           </div>
         )}
+
 
         {/* Gradient scrim at bottom for text legibility */}
         <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />

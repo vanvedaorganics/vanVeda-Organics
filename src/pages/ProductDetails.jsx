@@ -684,14 +684,15 @@ function ProductDetails() {
                  <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center bg-white/60 backdrop-blur-sm">
                    <div className="bg-white/90 p-6 rounded-3xl shadow-xl border border-red-100 flex flex-col items-center">
                       <span className="text-sm font-bold text-red-800 uppercase tracking-widest mb-1">
-                        Permission Blocked (403)
+                        Image Not Found
                       </span>
                       <span className="text-xs text-gray-500 max-w-[200px] leading-relaxed">
-                        Appwrite Storage Bucket needs "Read" permissions for role "Any".
+                        The file ID for this image does not exist. Please re-upload it in the Admin panel.
                       </span>
                    </div>
                  </div>
               )}
+
               {hasDiscount && (
                 <div className="absolute top-6 left-6 bg-[#744531] text-white px-4 py-1.5 rounded-full text-xs font-bold shadow-lg tracking-wider">
                   {product.discount}% OFF
