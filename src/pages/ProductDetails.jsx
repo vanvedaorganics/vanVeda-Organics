@@ -295,7 +295,7 @@ function ProductDetails() {
 
   const ensureLoggedInThen = (cb) => {
     if (!authStatus || authStatus === false) {
-      navigate(`/login?returnTo=/product/${slug}`);
+      navigate(`/signup?returnTo=/products/${slug}`);
       return;
     }
     cb();

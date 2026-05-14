@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import appwriteAuthService from "../appwrite/authService";
 import appwriteConfigService from "../appwrite/appwriteConfigService";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { login } from "../store/authSlice";
 import { Button, Input } from "../components";
 import { useDispatch } from "react-redux";
@@ -17,6 +17,9 @@ function ClientSignup() {
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const returnTo = searchParams.get("returnTo") || "/";
+
   const dispatch = useDispatch();
   const { register, handleSubmit, reset, watch, formState: { errors } } = useForm();
 
@@ -91,7 +94,7 @@ function ClientSignup() {
       }
 
       reset();
-      navigate("/");
+      navigate(returnTo);
     } catch (err) {
       console.error("[Signup] Error:", err);
       setError(err.message || "Something went wrong during signup.");
@@ -369,7 +372,10 @@ function ClientSignup() {
             <div className="mt-10 text-center">
               <p className="text-gray-400 text-sm font-medium">
                 Already have an account?{" "}
-                <Link to="/login" className="text-[#28543d] font-bold hover:underline transition-all">
+                <Link 
+                  to={`/login${returnTo !== "/" ? `?returnTo=${encodeURIComponent(returnTo)}` : ""}`} 
+                  className="text-[#28543d] font-bold hover:underline transition-all"
+                >
                   Sign In
                 </Link>
               </p>

@@ -44,6 +44,7 @@ const ProductCard = ({
 }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const authStatus = useSelector((state) => state.auth.status);
 
   // Data arrives pre-normalized from Redux store via appwriteConfigService
   const sizes = packaging_size || [];
@@ -153,6 +154,11 @@ const ProductCard = ({
     stopNav(e);
     setBatchWarning("");
 
+    if (!authStatus) {
+      navigate("/signup?returnTo=/products");
+      return;
+    }
+
     // Require batch selection if product has batches
     if (hasBatches && !selectedBatch) {
       setBatchWarning("Please select a batch before adding to cart");
@@ -184,6 +190,11 @@ const ProductCard = ({
   const handleBuyNow = (e) => {
     stopNav(e);
     setBatchWarning("");
+
+    if (!authStatus) {
+      navigate("/signup?returnTo=/checkout");
+      return;
+    }
 
     // Require batch selection if product has batches
     if (hasBatches && !selectedBatch) {

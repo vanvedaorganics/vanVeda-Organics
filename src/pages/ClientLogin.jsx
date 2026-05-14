@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { Button, Input } from "../components";
@@ -11,6 +11,9 @@ import { fetchUsers } from "../store/usersSlice";
 
 export default function ClientLogin() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const returnTo = searchParams.get("returnTo") || "/";
 
   // Form state
   const [email, setEmail] = useState("");
@@ -56,6 +59,7 @@ export default function ClientLogin() {
         setError("Logged in but failed to fetch cart.");
       }
 
+      navigate(returnTo);
     } catch (err) {
       console.error("[ClientLogin] Error:", err);
       setError(err.message || "Login failed. Please try again.");
@@ -195,9 +199,12 @@ export default function ClientLogin() {
             <div className="mt-10 text-center">
               <p className="text-gray-400 text-sm font-medium">
                 Don’t have an account?{" "}
-                <a href="/signup" className="text-[#28543d] font-bold hover:underline transition-all">
+                <Link 
+                  to={`/signup${returnTo !== "/" ? `?returnTo=${encodeURIComponent(returnTo)}` : ""}`} 
+                  className="text-[#28543d] font-bold hover:underline transition-all"
+                >
                   Sign Up
-                </a>
+                </Link>
               </p>
             </div>
           </div>

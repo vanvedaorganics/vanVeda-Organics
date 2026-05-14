@@ -9,8 +9,8 @@ export default function ClientAuthLayout({ children, authentication = true }) {
 
   useEffect(() => {
     if (authentication && authStatus !== authentication) {
-      // If client is not logged in, redirect to client login
-      navigate("/login");
+      // If client is not logged in, redirect to client signup
+      navigate("/signup");
     } else if (!authentication && authStatus !== authentication) {
       // If already logged in but trying to access login/signup, redirect to client home
       navigate("/");
